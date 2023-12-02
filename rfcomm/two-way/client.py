@@ -1,6 +1,7 @@
 import bluetooth
 
 serverMACAddress = 'B8:27:EB:72:37:1B'
+hostMACAddress = '28:D0:EA:60:BC:E6'
 port = 3
 s = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
 s.connect((serverMACAddress, port))
@@ -8,7 +9,7 @@ s.connect((serverMACAddress, port))
 text = input()
 s.send(text)
 
-s.bind((serverMACAddress, port))
+s.bind((hostMACAddress, port))
 s.listen(1)
 
 client, clientInfo = s.accept()
