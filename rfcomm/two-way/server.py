@@ -13,10 +13,13 @@ while 1:
     data = client.recv(size)
     if data:
         print(data)
-        client.send(data) # Echo back to client
-    if data == b'quit':
-        break
-
+        if data == b'quit':
+            break 
+        text = input()
+        s.send(text) # Echo back to client
+        if text == "quit":
+            break
+        
 print("Closing socket")
 client.close()
 s.close()
