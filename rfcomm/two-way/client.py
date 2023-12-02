@@ -9,15 +9,14 @@ s.connect((serverMACAddress, port))
 text = input()
 s.send(text)
 
-client, clientInfo = s.accept()
 while 1:
-    data = client.recv(1024)
+    data = s.recv(1024)
     if data:
         print(data)
         if data == b'quit':
             break 
         text = input()
-        client.send(text)
+        s.send(text)
         if text == "quit":
             break
 s.close()
