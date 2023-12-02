@@ -16,7 +16,7 @@ while 1:
         if data == b'quit':
             break 
         text = input()
-        s.send(text) # Echo back to client
+        client.send(text) # Echo back to client
         if text == "quit":
             break
         
