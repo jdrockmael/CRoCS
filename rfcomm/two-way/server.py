@@ -14,7 +14,7 @@ while 1:
     if data:
         print(data)
         client.send(data) # Echo back to client
-    if data == 'quit':
+    if data == b'quit':
         break
 
 print("Closing socket")
