@@ -6,7 +6,7 @@ s = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
 s.connect((serverMACAddress, port))
 while 1:
     text = input()
+    s.send(text)
     if text == "quit":
         break
-    s.send(text)
 s.close()
