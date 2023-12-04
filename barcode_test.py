@@ -5,7 +5,7 @@ camera_id = 0
 delay = 1
 window_name = 'OpenCV Barcode'
 
-bd = cv2.barcode.BarcodeDetector()
+#bd = cv2.barcode.BarcodeDetector()
 cap = cv2.VideoCapture(camera_id)
 
 while True:
