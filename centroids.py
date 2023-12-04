@@ -3,6 +3,8 @@ import sys
 import numpy as np
 
 cap = cv2.VideoCapture(0)
+cap.set(cv2.CAP_PROP_FRAME_WIDTH, 540)
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 400)
 
 # define range of blue color in HSV
 lower_blue = np.array([104, 100, 225])
@@ -63,8 +65,6 @@ while(1):
             cv2.putText(res, "Red", (cX - 25, cY),cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
         elif mask_green[cY, cX] != 0:
             cv2.putText(res, "Green", (cX - 25, cY),cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
-        
-    
 
     cv2.imshow('frame',frame)
     cv2.imshow('mask_blue',mask_blue)
@@ -72,7 +72,6 @@ while(1):
     cv2.imshow('mask_green',mask_green)
     cv2.imshow('mask',mask)
     cv2.imshow('res',res)
-    #cv2.imshow('detects',im_with_keypoints)
 
     if cv2.waitKey(1) == ord('q'):
         break

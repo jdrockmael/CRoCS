@@ -3,6 +3,8 @@ import sys
 import numpy as np
 
 cap = cv2.VideoCapture(0)
+cap.set(cv2.CAP_PROP_FRAME_WIDTH, 540)
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 400)
 
 while(1):
     # Take each frame
