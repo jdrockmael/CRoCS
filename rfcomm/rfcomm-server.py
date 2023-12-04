@@ -4,7 +4,7 @@ server_sock=bluetooth.BluetoothSocket( bluetooth.RFCOMM )
 
 port = 3
 server_sock.bind(("",port))
-server_sock.listen(2)
+server_sock.listen(1)
 
 client_sock1,address1 = server_sock.accept()
 print("Accepted connection from ",address1)
