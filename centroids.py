@@ -33,14 +33,14 @@ while(1):
     mask_green = cv2.inRange(hsv, lower_green, upper_green)
 
     #create master mask for centroids
-    mask_f = cv2.bitwise_or(mask_blue,mask_red)
-    mask_f = cv2.bitwise_or(mask_f, mask_green)
+    mask = cv2.bitwise_or(mask_blue,mask_red)
+    mask = cv2.bitwise_or(mask, mask_green)
 
     # Bitwise-AND mask_f and original image
-    res = cv2.bitwise_and(mask_f, mask_f, frame)
+    res = cv2.bitwise_and(frame, frame, mask= mask)
 
     # convert the grayscale image to binary image
-    ret,thresh = cv2.threshold(mask_f,127,255,0)
+    ret,thresh = cv2.threshold(mask,127,255,0)
     # find contours in the binary image
     contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     for c in contours:
@@ -61,7 +61,7 @@ while(1):
     cv2.imshow('mask_blue',mask_blue)
     cv2.imshow('mask_red',mask_red)
     cv2.imshow('mask_green',mask_green)
-    cv2.imshow('mask_f',mask_f)
+    cv2.imshow('mask',mask)
     cv2.imshow('res',res)
     #cv2.imshow('detects',im_with_keypoints)
 
