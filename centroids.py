@@ -20,7 +20,7 @@ while(1):
     upper_red = np.array([179, 255, 255])
 
     # define range of green color in HSV
-    lower_green = np.array([62, 110, 225])
+    lower_green = np.array([52, 110, 225])
     upper_green = np.array([84, 215, 255])
 
     # Threshold the HSV image to get only blue colors
@@ -32,7 +32,7 @@ while(1):
     # Threshold the HSV image to get only blue colors
     mask_green = cv2.inRange(hsv, lower_green, upper_green)
 
-    #create master mask for centroids
+    # create master mask for centroids
     mask = cv2.bitwise_or(mask_blue,mask_red)
     mask = cv2.bitwise_or(mask, mask_green)
 
@@ -47,13 +47,22 @@ while(1):
         # calculate moments for each contour
         M = cv2.moments(c)
         # calculate x,y coordinate of center
-        if M["m00"] != 0:
+        # creates lower bound for centroids
+        if M["m00"] >= 50:
             cX = int(M["m10"] / M["m00"])
             cY = int(M["m01"] / M["m00"])
         else:
             cX, cY = 0, 0
         cv2.circle(res, (cX, cY), 5, (255, 255, 255), -1)
-        cv2.putText(res, "centroid %d , %d" % (cX, cY), (cX - 25, cY - 25),cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
+        cv2.putText(res, "centroid %d , %d with area %d" % (cX, cY, M["m00"]), (cX - 25, cY - 25),cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
+        
+        # here's some code to detect which color is at that centroid
+        if mask_blue[cY, cX] != 0:
+            cv2.putText(res, "Blue", (cX - 25, cY),cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
+        elif mask_red[cY, cX] != 0:
+            cv2.putText(res, "Red", (cX - 25, cY),cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
+        elif mask_green[cY, cX] != 0:
+            cv2.putText(res, "Green", (cX - 25, cY),cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
         
     
 
