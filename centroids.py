@@ -37,7 +37,7 @@ while(1):
     mask_f = cv2.bitwise_or(mask_f, mask_green)
 
     # Bitwise-AND mask_f and original image
-    res = cv2.bitwise_and(frame, frame, mask_f)
+    res = cv2.bitwise_and(mask_f, mask_f, frame)
 
     # convert the grayscale image to binary image
     ret,thresh = cv2.threshold(mask_f,127,255,0)
