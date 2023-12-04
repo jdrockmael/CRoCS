@@ -6,7 +6,7 @@ cap = cv2.VideoCapture(0)
 
 while(1):
 
-    # Take each frame
+    # Take each framee
     _, frame = cap.read()
 
     # Convert BGR to HSV
