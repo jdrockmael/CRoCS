@@ -1,6 +1,9 @@
 import bluetooth
 
-port = 3
+
+hostMACAddress = '28:D0:EA:60:BC:E6' # The MAC address of a Bluetooth adapter on the server. The server might have multiple Bluetooth adapters.
+port = 4
+
 backlog = 1
 size = 1024
 s = bluetooth.BluetoothSocket(bluetooth.RFCOMM)

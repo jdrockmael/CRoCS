@@ -2,7 +2,7 @@ import bluetooth
 
 serverMACAddress = 'B8:27:EB:72:37:1B'
 
-port = 3
+port = 4
 s = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
 s.connect((serverMACAddress, port))
 
@@ -20,3 +20,5 @@ while 1:
         if text == "quit":
             break
 s.close()
+
+
