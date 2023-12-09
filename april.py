@@ -26,29 +26,29 @@ LINE_LENGTH = 5
 CENTER_COLOR = (0, 255, 0)
 CORNER_COLOR = (255, 0, 255)
 
-criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
+#criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
 # prepare object points, like (0,0,0), (1,0,0), (2,0,0) ....,(6,5,0)
-objp = np.zeros((6*7,3), np.float32)
-objp[:,:2] = np.mgrid[0:7,0:6].T.reshape(-1,2)
+#objp = np.zeros((6*7,3), np.float32)
+#objp[:,:2] = np.mgrid[0:7,0:6].T.reshape(-1,2)
 # Arrays to store object points and image points from all the images.
-objpoints = [] # 3d point in real world space
-imgpoints = [] # 2d points in image plane.
-images = glob.glob('calib_data/*.jpg')
-cam_param = []
-for fname in images:
-    img = cv2.imread(fname)
-    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+#objpoints = [] # 3d point in real world space
+#imgpoints = [] # 2d points in image plane.
+#images = glob.glob('calib_data/*.jpg')
+#cam_param = []
+#for fname in images:
+#    img = cv2.imread(fname)
+#    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     # Find the chess board corners
-    ret, corners = cv2.findChessboardCorners(gray, (7,6), None)
+#    ret, corners = cv2.findChessboardCorners(gray, (7,6), None)
     # If found, add object points, image points (after refining them)
-    if ret == True:
-        objpoints.append(objp)
-        corners2 = cv2.cornerSubPix(gray,corners, (11,11), (-1,-1), criteria)
-        imgpoints.append(corners2)
+#    if ret == True:
+#        objpoints.append(objp)
+#        corners2 = cv2.cornerSubPix(gray,corners, (11,11), (-1,-1), criteria)
+#        imgpoints.append(corners2)
 
-        ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(objpoints, imgpoints, gray.shape[::-1], None, None)
-        cam_param = ( mtx[0,0], mtx[1,1], mtx[0,2], mtx[1,2] )
-
+#        ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(objpoints, imgpoints, gray.shape[::-1], None, None)
+#        cam_param = ( mtx[0,0], mtx[1,1], mtx[0,2], mtx[1,2] )
+#print(cam_param)
 ### Some utility functions to simplify drawing on the camera feed
 # draw a crosshair
 def plotPoint(image, center, color):
@@ -96,8 +96,8 @@ while(1):
     # camera_params = ( cameraMatrix[0,0], cameraMatrix[1,1], cameraMatrix[0,2], cameraMatrix[1,2] )
     # print(camera_params)
     # tags = at_detector.detect(img, True, camera_params, parameters['sample_test']['tag_size'])
-    tags =at_detector.detect(img, True, cam_param, 5)
-    
+    #tags =at_detector.detect(img, True, cam_param, 5)
+    tags = at_detector.detect(img)
 
     # color_img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
     
@@ -116,14 +116,14 @@ while(1):
                 # cv2.line(frame, tuple(tag.corners[idx-1, :].astype(int)), tuple(tag.corners[idx, :].astype(int)), (0, 255, 0))
             # print(width)
             width = np.average(width)
-            # print("FOCAL LENGTH: ", width * 60 / 5)
-            focal = 560
-            manual_dist = focal * 5 / width
+            #print("FOCAL LENGTH: ", width * 60 / 5)
+            focal = 788
+            manual_dist = focal * 2 / width
             
             # print(width)
             # Focal lenght = (Pixel weidth x dsitance) / Actual width
-            print("CALIB DIST", tag.pose_t[-1])
-            print("MANUAL DIST", manual_dist, " cm")
+            #print("CALIB DIST", tag.pose_t[-1])
+            print("MANUAL DIST", manual_dist, " in")
 
 
     if visualization:
