@@ -83,6 +83,8 @@ cap = cv2.VideoCapture(0)
 # with open('april_param.yaml', 'r') as stream:
 #     parameters = yaml.safe_load(stream)
 
+#parameters = []
+
 at_detector = Detector()
 
 while(1):
@@ -92,11 +94,11 @@ while(1):
     grayscale = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
     img = grayscale
-    # cameraMatrix = np.array(parameters['sample_test']['K']).reshape((3,3))
-    # camera_params = ( cameraMatrix[0,0], cameraMatrix[1,1], cameraMatrix[0,2], cameraMatrix[1,2] )
+    #cameraMatrix = np.array(parameters['sample_test']['K']).reshape((3,3))
+    #camera_params = ( cameraMatrix[0,0], cameraMatrix[1,1], cameraMatrix[0,2], cameraMatrix[1,2] )
     # print(camera_params)
-    # tags = at_detector.detect(img, True, camera_params, parameters['sample_test']['tag_size'])
-    #tags =at_detector.detect(img, True, cam_param, 5)
+    #tags = at_detector.detect(img, True, camera_params, parameters['sample_test']['tag_size'])
+    #tags =at_detector.detect(img, estimate_tag_pose=True, camera_params=cam_param, tag_size=5)
     tags = at_detector.detect(img)
 
     # color_img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
@@ -115,15 +117,17 @@ while(1):
                 width.append(max(abs(tag.corners[idx-1, :] - tag.corners[idx,:])))
                 # cv2.line(frame, tuple(tag.corners[idx-1, :].astype(int)), tuple(tag.corners[idx, :].astype(int)), (0, 255, 0))
             # print(width)
+            #print(tag.pos_R)
             width = np.average(width)
             #print("FOCAL LENGTH: ", width * 60 / 5)
-            focal = 788
-            manual_dist = focal * 2 / width
+            #these values work at 1.5inx1.5in 360 and 60
+            focal = 360
+            manual_dist = focal * 60 / width
             
             # print(width)
             # Focal lenght = (Pixel weidth x dsitance) / Actual width
             #print("CALIB DIST", tag.pose_t[-1])
-            print("MANUAL DIST", manual_dist, " in")
+            print("MANUAL DIST", manual_dist, " mm")
 
 
     if visualization:
