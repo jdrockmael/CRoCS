@@ -21,7 +21,7 @@ def handle_msg(croc, curr_client):
         if data:
             print(data)
 
-            if data == b'quit':
+            if data[0] == b'quit':
                 with lock:
                     list_of_clients.pop(croc)
                 print("Disconnected from ", croc)
