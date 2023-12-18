@@ -1,6 +1,6 @@
 import bluetooth
 from enum import Enum
-from threading import Thread
+import threading
 
 class croc_info(Enum):
     croc00 = 0
@@ -11,27 +11,8 @@ class croc_info(Enum):
     croc05 = 5
     croc06 = 6
 
-socket = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
-socket.bind(("", 4))
-
-socket.listen(1)
-print("Ready to connect")
-
-list_of_clients = {}
-
-for _ in range(2):
-    client, info = socket.accept()
-    print("Connecting to: ", croc_info(info[0]).name)
-    list_of_clients[croc_info(info[0]).name] = client
-
-copy_of_clients = list_of_clients.copy()
-while 1:
-    list_of_clients = copy_of_clients.copy()
-    if len(list_of_clients) == 0:
-        socket.close()
-        break
-
-    for croc, curr_client in list_of_clients.items():
+def handle_msg(croc, curr_client, list_of_clients):
+    while True:
         data = curr_client.recv(1024).split(b' ')
         if data:
             print(data)
@@ -42,6 +23,31 @@ while 1:
                 print(data[0], " is not a connected croc\n")
 
             if data == b'quit':
-                copy_of_clients.pop(croc)
+                list_of_clients.pop(croc)
                 print("Disconnected from ", croc)
                 curr_client.close()
+                break
+
+socket = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
+socket.bind(("", 4))
+
+socket.listen(1)
+print("Ready to connect")
+
+list_of_clients = {}
+client_threads = []
+
+for _ in range(2):
+    client, info = socket.accept()
+    print("Connecting to: ", croc_info(info[0]).name)
+    list_of_clients[croc_info(info[0]).name] = client
+
+for croc, curr_client in list_of_clients.items():
+    curr_thread = threading.Thread(target=handle_msg, args=(croc, curr_client, list_of_clients))
+    client_threads.append(curr_thread)
+    curr_thread.start()
+
+for t in client_threads:
+    t.join()
+
+socket.close()

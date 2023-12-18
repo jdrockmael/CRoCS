@@ -35,4 +35,6 @@ send_thread.start()
 rec_thread.join()
 send_thread.join()
 
+print("Closing sockect")
+
 s.close()
