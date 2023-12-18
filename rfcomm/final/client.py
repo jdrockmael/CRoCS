@@ -1,7 +1,7 @@
 import bluetooth
 import threading
 
-serverMACAddress = '28:D0:EA:60:BC:E6'
+serverMACAddress = '8C:88:2B:25:A9:4B'
 
 port = 4
 s = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
@@ -11,14 +11,17 @@ exit_event = threading.Event()
 
 def rec_msg(socket, event):
      while not event.is_set():
+        print("waiting to recieve data")
         data = socket.recv(1024)
         if data:
             print(data)
 
 def send_msg(socket, event):
     while True:
+            print("ready to take input")
             text = input()
             socket.send(text)
+
             if text == "quit":
                 event.set()
                 break
