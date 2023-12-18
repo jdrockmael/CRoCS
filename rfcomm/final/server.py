@@ -36,9 +36,9 @@ while 1:
         if data:
             print(data)
 
-            try:
+            if data[0].decode('ascii') in list_of_clients:
                 list_of_clients[data[0].decode('ascii')].send(data[1])
-            except:
+            else:
                 print(data[0], " is not a connected croc\n")
 
             if data == b'quit':
