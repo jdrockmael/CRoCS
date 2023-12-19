@@ -15,6 +15,18 @@ lock = threading.Lock()
 list_of_clients = {}
 client_threads = []
 
+def num_of_crocs():
+    croc_macs = [adr.value for adr in croc_info]
+    nearby_devices = bluetooth.discover_devices()
+    cnt = 0
+
+    for curr_adr in nearby_devices:
+        if curr_adr in croc_macs:
+            cnt = cnt + 1
+    
+    return cnt
+
+
 def handle_msg(croc, curr_client):
     while True:
         data = curr_client.recv(1024).split(b' ')
@@ -37,13 +49,18 @@ def handle_msg(croc, curr_client):
 socket = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
 socket.bind(("", 4))
 
+close_croc_cnt = num_of_crocs()
+print(close_croc_cnt, "crocs detected")
+
 socket.listen(1)
 print("Ready to connect")
 
-for _ in range(2):
+for _ in range(close_croc_cnt):
     client, info = socket.accept()
     print("Connecting to: ", croc_info(info[0]).name)
     list_of_clients[croc_info(info[0]).name] = client
+
+print("All available crocs connected")
 
 for croc, curr_client in list_of_clients.items():
     curr_thread = threading.Thread(target=handle_msg, args=(croc, curr_client))
@@ -53,4 +70,5 @@ for croc, curr_client in list_of_clients.items():
 for t in client_threads:
     t.join()
 
+print("closing server")
 socket.close()
