@@ -50,7 +50,7 @@ def handle_msg(croc, curr_client):
 os.system("bluetoothctl discoverable on")
 
 socket = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
-socket.bind(("", 5))
+socket.bind(("", 3))
 
 close_croc_cnt = num_of_crocs()
 print(close_croc_cnt, "crocs detected")
