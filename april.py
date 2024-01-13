@@ -93,11 +93,8 @@ while(1):
     grayscale = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
     img = grayscale
-    # cameraMatrix = np.array(parameters['sample_test']['K']).reshape((3,3))
-    # camera_params = ( cameraMatrix[0,0], cameraMatrix[1,1], cameraMatrix[0,2], cameraMatrix[1,2] )
-    # tags = at_detector.detect(img, True, camera_params, parameters['sample_test']['tag_size'])
-    # tags =at_detector.detect(img, estimate_tag_pose=True, camera_params=cam_param, tag_size=5)
-    tags = at_detector.detect(img)
+    tags =at_detector.detect(img, estimate_tag_pose=True, camera_params=cam_param, tag_size=5)
+    # tags = at_detector.detect(img)
 
     # color_img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
     
@@ -105,10 +102,9 @@ while(1):
         # print(tags)
         for tag in tags:
             # print(tag)
-            # print("AAAAAAAAAAAAAAAA", tag.pose_R[1][0])
-            # print("AAAAAAAAAAAAAAAA", tag.pose_R[0][0])
+            # Roll
             # print("YAWWWWWWWWWWWWW", math.degrees(math.atan2(tag.pose_R[1][0],tag.pose_R[0][0])))
-            # print("YAWWWWWWWWWWWWW", math.degrees(math.atan2(-tag.pose_R[2][0],math.sqrt(pow(tag.pose_R[2][1],2) + pow(tag.pose_R[2][2],2)))))
+            print("YAW", math.degrees(math.atan2(-tag.pose_R[2][0],math.sqrt(pow(tag.pose_R[2][1],2) + pow(tag.pose_R[2][2],2)))))
             # yaw=atan2(R(2,1),R(1,1));
             
             # print("tag_id: %s, center: %s" % (tag.tag_id, tag.center))
