@@ -1,7 +1,7 @@
 import bluetooth
 import threading
 
-serverMACAddress = '8C:88:2B:25:A9:4B'
+serverMACAddress = '28:D0:EA:60:BC:E6'
 
 port = 4
 s = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
