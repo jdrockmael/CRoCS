@@ -1,4 +1,5 @@
 import bluetooth
+import os
 from enum import Enum
 import threading
 
@@ -46,8 +47,10 @@ def handle_msg(croc, curr_client):
                 else:
                     print(data[0], " is not a connected croc\n")
 
+os.system("bluetoothctl discoverable on")
+
 socket = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
-socket.bind(("", 4))
+socket.bind(("", 5))
 
 close_croc_cnt = num_of_crocs()
 print(close_croc_cnt, "crocs detected")
@@ -72,3 +75,4 @@ for t in client_threads:
 
 print("closing server")
 socket.close()
+os.system("bluetoothctl discoverable off")
