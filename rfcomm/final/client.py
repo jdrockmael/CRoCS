@@ -1,9 +1,14 @@
+from enum import Enum
 import bluetooth
 import threading
 
-serverMACAddress = '28:D0:EA:60:BC:E6'
+class server_mac(Enum):
+    jason = '28:D0:EA:60:BC:E6'
 
+# Mac address of 
+serverMACAddress = '28:D0:EA:60:BC:E6'
 port = 4
+
 s = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
 s.connect((serverMACAddress, port))
 

@@ -8,7 +8,7 @@ class croc_info(Enum):
     croc01 = 'B8:27:EB:71:7B:FB'
     croc02 = 'B8:27:EB:72:37:1B'
     croc03 = 3
-    croc04 = 4
+    croc04 = 'B8:27:EB:CB:AB:FD'
     croc05 = 5
     croc06 = 6
 
