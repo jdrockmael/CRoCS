@@ -2,18 +2,19 @@ from enum import Enum
 import bluetooth
 import threading
 
-class server_mac(Enum):
+class server_macs(Enum):
     jason = '28:D0:EA:60:BC:E6'
-
-# Mac address of 
-serverMACAddress = '28:D0:EA:60:BC:E6'
-port = 4
-
-s = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
-s.connect((serverMACAddress, port))
 
 lock = threading.Lock()
 flag = False
+
+def find_server_mac():
+    possible_mac = [adr.value for adr in server_macs]
+    nearby_devices = bluetooth.discover_devices()
+
+    for curr_adr in nearby_devices:
+        if curr_adr in possible_mac:
+          return curr_adr
 
 def rec_msg(socket):
      while True:
@@ -36,6 +37,9 @@ def send_msg(socket):
                 with lock:
                      flag = True
                 break
+
+s = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
+s.connect((find_server_mac(), 4))
 
 rec_thread = threading.Thread(target=rec_msg, args=(s,))
 send_thread = threading.Thread(target=send_msg, args=(s,))
