@@ -9,12 +9,14 @@ lock = threading.Lock()
 flag = False
 
 def find_server_mac():
-    possible_mac = [adr.value for adr in server_macs]
-    nearby_devices = bluetooth.discover_devices()
-
-    for curr_adr in nearby_devices:
-        if curr_adr in possible_mac:
-          return curr_adr
+     possible_mac = [adr.value for adr in server_macs]
+     nearby_devices = bluetooth.discover_devices()
+     
+     for curr_adr in nearby_devices:
+          if curr_adr in possible_mac:
+               return curr_adr 
+          
+     return None
 
 def rec_msg(socket):
      while True:
