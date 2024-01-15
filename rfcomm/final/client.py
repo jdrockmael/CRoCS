@@ -4,6 +4,7 @@ import threading
 
 class server_macs(Enum):
     jason = '28:D0:EA:60:BC:E6'
+    tim = 'B0:DC:EF:86:98:0D'
 
 lock = threading.Lock()
 flag = False
