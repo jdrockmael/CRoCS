@@ -15,7 +15,7 @@ def find_server_mac():
      
      for curr_adr in nearby_devices:
           if curr_adr in possible_mac:
-               print("connecting to ", server_macs(curr_adr).name)
+               print("connecting to", server_macs(curr_adr).name)
                return curr_adr 
           
      return None
