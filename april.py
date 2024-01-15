@@ -123,8 +123,9 @@ while(1):
             print("YAW ", avg_yaw, " degree")
 
 
-    if visualization:
-        cv2.imshow('Detected tags', frame)
+    # Disable visualization for running on server
+    # if visualization:
+    #     cv2.imshow('Detected tags', frame)
 
     if cv2.waitKey(1) == ord('q'):
         break
