@@ -43,7 +43,9 @@ def handle_msg(croc, curr_client):
             
             with lock:
                 name = data[0].decode('ascii')
-                if name in list_of_clients:
+                if name == 'server':
+                    print(data[1])
+                elif name in list_of_clients:
                     list_of_clients[name].send(data[1])
                 else:
                     print(data[0], "is not a connected croc\n")
@@ -64,8 +66,6 @@ print(close_croc_cnt, "crocs detected")
 
 socket.listen(1)
 print("Ready to connect")
-
-list_of_clients['server'] = socket
 
 for _ in range(close_croc_cnt):
     client, info = socket.accept()

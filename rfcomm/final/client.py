@@ -54,6 +54,6 @@ send_thread.start()
 rec_thread.join()
 send_thread.join()
 
-print("Closing sockect")
+print("Closing socket")
 
 s.close()
