@@ -43,10 +43,10 @@ def handle_msg(croc, curr_client):
             
             with lock:
                 name = data[0].decode('ascii')
-                if name in list_of_clients:
-                    list_of_clients[name].send(data[1])
-                elif name == 'server':
+                if name == 'server':
                     print(data[1])
+                elif name in list_of_clients:
+                    list_of_clients[name].send(data[1])
                 else:
                     print(data[0], "is not a connected croc\n")
 
