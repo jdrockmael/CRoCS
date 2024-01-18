@@ -15,6 +15,7 @@ class croc_info(Enum):
 lock = threading.Lock()
 list_of_clients = {}
 client_threads = []
+close_croc_cnt = None
 
 def num_of_crocs():
     croc_macs = [adr.value for adr in croc_info]
@@ -27,7 +28,6 @@ def num_of_crocs():
     
     return cnt
 
-
 def handle_msg(croc, data):
     name = data[0].decode('ascii')
     if name == 'server':
@@ -38,6 +38,7 @@ def handle_msg(croc, data):
         print(data[0], "is not a connected croc\n")
 
 def rec_msg(croc, curr_client):
+    global close_croc_cnt
     while True:
         data = curr_client.recv(1024).split(b' ')
         if data:
@@ -45,6 +46,7 @@ def rec_msg(croc, curr_client):
 
             if data[0] == b'quit':
                 with lock:
+                    close_croc_cnt -= 1
                     list_of_clients.pop(croc)
                 print("Disconnected from", croc)
                 curr_client.close()
@@ -54,14 +56,12 @@ def rec_msg(croc, curr_client):
                 handle_msg(croc=croc, data=data)
 
 def send_msg():
-    while True:
+    while close_croc_cnt > 0:
         print("ready to take input")
-        text = input().encode('ascii')
+        text = input().encode('ascii').split(b' ')
 
-        handle_msg('server', text)
-
-        if text == "quit":
-            break
+        with lock:
+            handle_msg('server', text)
 
 os.system("bluetoothctl discoverable on")
 
@@ -81,17 +81,18 @@ for _ in range(close_croc_cnt):
 
 print("All available crocs connected")
 
+send_thread = threading.Thread(target=send_msg, args=())
+send_thread.start()
+
 for croc, curr_client in list_of_clients.items():
     curr_thread = threading.Thread(target=rec_msg, args=(croc, curr_client))
     client_threads.append(curr_thread)
     curr_thread.start()
 
+send_thread.join()
+
 for t in client_threads:
     t.join()
-
-send_thread = threading.Thread(target=send_msg, args=())
-send_thread.start()
-send_thread.join()
 
 print("closing server")
 socket.close()
