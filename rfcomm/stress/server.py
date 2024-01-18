@@ -56,12 +56,11 @@ def rec_msg(croc, curr_client):
                 handle_msg(croc=croc, data=data)
 
 def send_msg(text):
-    while close_croc_cnt > 0:
-        print("ready to take input")
-        text = input().encode('ascii').split(b' ')
+    print("ready to take input")
+    text = input().encode('ascii').split(b' ')
 
-        with lock:
-            handle_msg('server', text)
+    with lock:
+        handle_msg('server', text)
 
 def run_test():
     for i in range(6):
