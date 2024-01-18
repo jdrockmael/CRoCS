@@ -7,10 +7,10 @@ class croc_info(Enum):
     croc00 = 0
     croc01 = 'B8:27:EB:71:7B:FB'
     croc02 = 'B8:27:EB:72:37:1B'
-    croc03 = 3
+    croc03 = 'B8:27:EB:CA:AA:70'
     croc04 = 'B8:27:EB:CB:AB:FD'
     croc05 = 5
-    croc06 = 6
+    croc06 = 'B8:27:EB:10:4E:19'
 
 lock = threading.Lock()
 list_of_clients = {}
