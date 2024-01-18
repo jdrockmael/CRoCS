@@ -31,15 +31,12 @@ def rec_msg(socket):
         if data:
             print(data)
 
-def send_msg(socket, text):
-     socket.send(text)
-
 def run_test(socket):
     time.sleep(15)
     for i in range(6):
-        send_msg(socket, "server server_saying_hello_world")
+        socket.send("server server_saying_hello_world")
         for j in ["1", "2", "3", "4", "6"]:
-            send_msg(socket, "croc0" + j, "sending_message_hello_world")
+          socket.send("croc0" + j + " sending_message_hello_world")
 
 s = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
 s.connect((find_server_mac(), 4))
