@@ -31,7 +31,7 @@ def find_and_connect(port=4):
         sock = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
         for i in range(1, 3):
             try:
-                sock.connect((None, port))
+                sock.connect((adr, port))
                 return sock
             except Exception as e:
                 print("Failed to connect, try count:", i)
