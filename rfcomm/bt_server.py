@@ -102,12 +102,17 @@ if __name__ == "__main__":
     # starts the thread used for sending messages
     send_thread = threading.Thread(target=send_msg, args=())
     send_thread.start()
-    send_thread.join()
 
     # starts a thread for each client
+    client_threads = []
     for croc, curr_client in list_of_clients.items():
         curr_thread = threading.Thread(target=rec_msg, args=(croc, curr_client))
+        client_threads.append(curr_thread)
         curr_thread.start()
+
+    # kill threads once they finish
+    send_thread.join()
+    for t in curr_thread:
         curr_thread.join()
 
     # closes server and disables discoverable
