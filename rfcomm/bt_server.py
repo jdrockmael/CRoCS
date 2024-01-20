@@ -88,6 +88,7 @@ def rec_msg(croc, curr_client):
             
             handle_msg(croc=croc, data=data)
 
+# sends messages by taking in inputs and using handle message function
 def send_msg():
     while connect_croc_cnt > 0:
         text = input().encode('ascii').split(b' ')
