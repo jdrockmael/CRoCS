@@ -33,7 +33,10 @@ def find_and_connect(port=4):
         for i in range(1, 4):
             try:
                 sock.connect((adr, port))
-                return sock
+                if sock is not None:
+                    return sock
+                else:
+                    raise Exception("socket was none")
             except Exception as e:
                 print("Failed to connect, try count:", i)
                 print(e)

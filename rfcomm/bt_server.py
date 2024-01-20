@@ -112,8 +112,8 @@ if __name__ == "__main__":
 
     # kill threads once they finish
     send_thread.join()
-    for t in curr_thread:
-        curr_thread.join()
+    for t in client_threads:
+        t.join()
 
     # closes server and disables discoverable
     print("closing server")
