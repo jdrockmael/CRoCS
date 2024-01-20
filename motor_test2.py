@@ -2,7 +2,7 @@ from gpiozero import Servo
 #import RPi.GPIO as GPIO
 from time import sleep
 
-servo = Servo(12)
+servo = Servo(14)
 
 while True:
     servo.mid()
