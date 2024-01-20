@@ -29,12 +29,13 @@ def find_and_connect(port=4):
 
     if adr is not None:
         sock = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
-        for i in range(3):
+        for i in range(1, 3):
             try:
                 sock.connect((None, port))
                 return sock
-            except:
+            except Exception as e:
                 print("Failed to connect, try count:", i)
+                print(e)
         print("Failed to connect to server")
         return None
     else:
