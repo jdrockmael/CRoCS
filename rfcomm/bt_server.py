@@ -86,15 +86,12 @@ def rec_msg(croc, curr_client):
                 curr_client.close()
                 break
             
-            with lock:
-                handle_msg(croc=croc, data=data)
+            handle_msg(croc=croc, data=data)
 
 def send_msg():
     while connect_croc_cnt > 0:
         text = input().encode('ascii').split(b' ')
-
-        with lock:
-            handle_msg('server', text)
+        handle_msg('server', text)
 
 if __name__ == "__main__":
     s = setup(4)
