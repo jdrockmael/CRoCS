@@ -1,6 +1,7 @@
 from enum import Enum
 import bluetooth
 import threading
+from time import sleep
 
 # list of bt mac addresses that will be running server
 class server_macs(Enum):
@@ -29,13 +30,14 @@ def find_and_connect(port=4):
 
     if adr is not None:
         sock = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
-        for i in range(1, 3):
+        for i in range(1, 4):
             try:
                 sock.connect((adr, port))
                 return sock
             except Exception as e:
                 print("Failed to connect, try count:", i)
                 print(e)
+                sleep(1)
         print("Failed to connect to server")
         return None
     else:
