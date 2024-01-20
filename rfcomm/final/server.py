@@ -4,12 +4,12 @@ from enum import Enum
 import threading
 
 class croc_info(Enum):
-    croc00 = 0
+    croc00 = 'B8:27:EB:E3:F8:83'
     croc01 = 'B8:27:EB:71:7B:FB'
     croc02 = 'B8:27:EB:72:37:1B'
     croc03 = 'B8:27:EB:CA:AA:70'
     croc04 = 'B8:27:EB:CB:AB:FD'
-    croc05 = 5
+    croc05 = 'B8:27:EB:DC:84:5B'
     croc06 = 'B8:27:EB:10:4E:19'
 
 lock = threading.Lock()
