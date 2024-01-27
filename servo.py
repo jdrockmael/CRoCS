@@ -1,11 +1,12 @@
 #GPIO23 = pin 16 - Servo
+#2.5 = max clockwise, 12.5 = max ccw
 
 # Set up libraries and overall settings
 import RPi.GPIO as GPIO  # Imports the standard Raspberry Pi GPIO library
 from time import sleep   # Imports sleep (aka wait or pause) into the program
 GPIO.setmode(GPIO.BOARD) # Sets the pin numbering system to use the physical layout
 
-# Set up pin 11 for PWM
+# Set up pin 16 for PWM
 GPIO.setup(16,GPIO.OUT)  # Sets up pin 16 to an output (instead of an input)
 
 servo = GPIO.PWM(16, 50)     # Sets up pin 16 as a PWM pin
@@ -14,9 +15,13 @@ servo.start(0)               # Starts running PWM on the pin and sets it to 0
 
 
 # Move the servo back and forth
-servo.ChangeDutyCycle(3)     # Changes the pulse width to 3 (so moves the servo)
+servo.ChangeDutyCycle(2.5)     # Changes the pulse width to 3 (so moves the servo)
 sleep(1)                 # Wait 1 second
-servo.ChangeDutyCycle(12)
+servo.ChangeDutyCycle(12.5)
+sleep(1)
+servo.ChangeDutyCycle(7.5)     # Changes the pulse width to 3 (so moves the servo)
+sleep(1)                 # Wait 1 second
+servo.ChangeDutyCycle(2.5)
 sleep(1)
 
 # Clean up everything
