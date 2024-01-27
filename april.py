@@ -59,9 +59,10 @@ else:
 
 # Convert april tag pose to real world measurements in mm
 def pose2real(measurement):
-    measurements = np.array([20, 25, 30, 35, 40])
+    mm = np.array([20, 25, 30, 35, 40])
     # inches = np.array([10, 15, 18, 20])
-    mm = np.array([120, 142, 170, 186, 213]) # 6x6
+    measurements = np.array([120, 142, 170, 186, 213]) # 6x6
+    # measurements = np.array([7.88, 9.45, 11.52, 14.1, 15.6]) Alternate value# 6x6
 
     # Fit a linear model
     coefficients = np.polyfit(measurements, mm, 1)
