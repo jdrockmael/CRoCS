@@ -8,10 +8,10 @@ from time import sleep   # Imports sleep (aka wait or pause) into the program
 GPIO.setmode(GPIO.BOARD) # Sets the pin numbering system to use the physical layout
 
 # Set up pin 16 for PWM
-GPIO.setup(35,GPIO.OUT)  # Sets up pin 16 to an output (instead of an input)
+GPIO.setup(33,GPIO.OUT)  # Sets up pin 16 to an output (instead of an input)
 GPIO.setup(37,GPIO.OUT)  # Sets up pin 16 to an output (instead of an input)
 
-motor_fwd = GPIO.PWM(35, 50)     # Sets up pin 16 as a PWM pin
+motor_fwd = GPIO.PWM(33, 50)     # Sets up pin 16 as a PWM pin
 motor_rev = GPIO.PWM(37, 50)     # Sets up pin 16 as a PWM pin
 
 motor_fwd.start(0)               # Starts running PWM on the pin and sets it to 0
@@ -20,13 +20,13 @@ motor_rev.start(0)               # Starts running PWM on the pin and sets it to 
 
 # Move the motor back and forth
 motor_fwd.ChangeDutyCycle(2.5)     # Changes the pulse width to 3 (so moves the motor)
-sleep(1)                 # Wait 1 second
+sleep(2)                 # Wait 1 second
 motor_fwd.ChangeDutyCycle(12.5)
-sleep(1)
+sleep(2)
 motor_rev.ChangeDutyCycle(12.5)     # Changes the pulse width to 3 (so moves the motor)
-sleep(1)                 # Wait 1 second
+sleep(2)                 # Wait 1 second
 motor_rev.ChangeDutyCycle(2.5)
-sleep(1)
+sleep(2)
 
 # Clean up everything
 motor_fwd.stop()                 # At the end of the program, stop the PWM
