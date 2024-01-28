@@ -1,11 +1,11 @@
-from gpiozero import Servo
+from gpiozero import PhaseEnableMotor
 #import RPi.GPIO as GPIO
 from time import sleep
 
-servo = Servo(17)
+servo = PhaseEnableMotor(13)
 
 while True:
-    servo.mid()
+    servo.forward()
     sleep(0.5)
-    servo.max()
+    servo.backward()
     sleep(0.5)
