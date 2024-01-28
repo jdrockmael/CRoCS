@@ -9,26 +9,26 @@ GPIO.setmode(GPIO.BOARD) # Sets the pin numbering system to use the physical lay
 
 # Set up pin 16 for PWM
 GPIO.setup(33,GPIO.OUT)  # Sets up pin 16 to an output (instead of an input)
-GPIO.setup(37,GPIO.OUT)  # Sets up pin 16 to an output (instead of an input)
+#GPIO.setup(37,GPIO.OUT)  # Sets up pin 16 to an output (instead of an input)
 
 motor_fwd = GPIO.PWM(33, 50)     # Sets up pin 16 as a PWM pin
-motor_rev = GPIO.PWM(37, 50)     # Sets up pin 16 as a PWM pin
+#motor_rev = GPIO.PWM(37, 50)     # Sets up pin 16 as a PWM pin
 
 motor_fwd.start(7.5)               # Starts running PWM on the pin and sets it to 0
-motor_rev.start(7.5)               # Starts running PWM on the pin and sets it to 0
+#motor_rev.start(7.5)               # Starts running PWM on the pin and sets it to 0
 
-
+sleep(2)
 # Move the motor back and forth
-motor_fwd.ChangeDutyCycle(2.5)     # Changes the pulse width to 3 (so moves the motor)
+motor_fwd.ChangeDutyCycle(3)     # Changes the pulse width to 3 (so moves the motor)
 sleep(2)                 # Wait 1 second
-motor_fwd.ChangeDutyCycle(12.5)
+motor_fwd.ChangeDutyCycle(11)
 sleep(2)
-motor_rev.ChangeDutyCycle(12.5)     # Changes the pulse width to 3 (so moves the motor)
-sleep(2)                 # Wait 1 second
-motor_rev.ChangeDutyCycle(2.5)
-sleep(2)
+#motor_rev.ChangeDutyCycle(12.5)     # Changes the pulse width to 3 (so moves the motor)
+#sleep(2)                 # Wait 1 second
+#motor_rev.ChangeDutyCycle(2.5)
+#sleep(2)
 
 # Clean up everything
 motor_fwd.stop()                 # At the end of the program, stop the PWM
-motor_rev.stop()                 # At the end of the program, stop the PWM
+#motor_rev.stop()                 # At the end of the program, stop the PWM
 GPIO.cleanup()           # Resets the GPIO pins back to defaults
