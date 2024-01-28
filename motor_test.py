@@ -13,8 +13,8 @@ GPIO.setup(33,GPIO.OUT)  # Sets up pin 16 to an output (instead of an input)
 
 motor_fwd = GPIO.PWM(33, 50)     # Sets up pin 16 as a PWM pin
 #motor_rev = GPIO.PWM(37, 50)     # Sets up pin 16 as a PWM pin
-
-motor_fwd.start(7.5)               # Starts running PWM on the pin and sets it to 0
+motor_fwd.ChangeFrequency(1000)
+motor_fwd.start(7)               # Starts running PWM on the pin and sets it to 0
 #motor_rev.start(7.5)               # Starts running PWM on the pin and sets it to 0
 
 sleep(2)
