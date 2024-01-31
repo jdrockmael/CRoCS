@@ -59,8 +59,8 @@ else:
 
 # inches = np.array([10, 15, 18, 20])
 mm = np.array([20, 25, 30, 35, 40])
-measurements = np.array([120, 142, 170, 186, 213]) # 6x6
-# measurements = np.array([7.88, 9.45, 11.52, 14.1, 15.6]) Alternate value# 6x6
+#measurements = np.array([120, 142, 170, 186, 213]) # 6x6
+measurements = np.array([7.88, 9.45, 11.52, 14.1, 15.6]) #Alternate value# 6x6
 m, b = np.polyfit(measurements, mm, 1)
 
 # Convert april tag pose to real world measurements in mm
@@ -136,6 +136,12 @@ while(1):
             avg_hor_dist = round(np.average(hor_dist_l), 2)
             avg_range = round(np.average(range_l), 2)
             avg_bearing = round(np.average(bearing_l), 2)
+
+            #T_x_y - transformation matrix of y w.r.t x
+            T_cam_tag = np.vstack((np.hstack((tag.pose_R, tag.pose_t)), [0, 0, 0 ,1]))
+            T_map_tag = np.identity(4)
+            T_map_tag[0:3, -1] = np.array([10, 10, 0])
+            print(T_map_tag @ np.linalg.inv(T_cam_tag))
 
             print("ID ",tag.tag_id)
             print("YAW ", avg_yaw, " degree")
