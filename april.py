@@ -15,10 +15,10 @@ motor2 = PhaseEnableMotor(24, 23)
 
 servo.min()
 sleep(1)
-servo.max()
-motor1.forward(1)
-motor2.backward(1)
-sleep(3)
+#servo.max()
+#motor1.forward(1)
+#motor2.backward(1)
+#sleep(3)
 
 
 ardu = False
@@ -161,6 +161,10 @@ while(1):
             print("Range ", avg_range, " mm")
             print("Bearing ", avg_bearing, " degree")
 
+            motor1.forward(0.5)
+            motor2.backward(0.5)
+            if distance <= 100:
+                break
 
     # Disable visualization for running on server
     if not ardu:
@@ -168,5 +172,8 @@ while(1):
 
     if cv2.waitKey(1) == ord('q'):
         break
+
+servo.max()
+sleep(1)
 
 cv2.destroyAllWindows()
