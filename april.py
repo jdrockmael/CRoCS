@@ -57,17 +57,15 @@ else:
     # Arducam parameters
     cam_param = (534.0708862263613, 534.1191479816413, 341.5340710724817, 232.94565221113476)
 
+# inches = np.array([10, 15, 18, 20])
+mm = np.array([20, 25, 30, 35, 40])
+measurements = np.array([120, 142, 170, 186, 213]) # 6x6
+# measurements = np.array([7.88, 9.45, 11.52, 14.1, 15.6]) Alternate value# 6x6
+m, b = np.polyfit(measurements, mm, 1)
+
 # Convert april tag pose to real world measurements in mm
 def pose2real(measurement):
-    mm = np.array([20, 25, 30, 35, 40])
-    # inches = np.array([10, 15, 18, 20])
-    measurements = np.array([120, 142, 170, 186, 213]) # 6x6
-    # measurements = np.array([7.88, 9.45, 11.52, 14.1, 15.6]) Alternate value# 6x6
-
     # Fit a linear model
-    coefficients = np.polyfit(measurements, mm, 1)
-    m, b = coefficients
-
     return m * measurement + b
 
 yaw_l = collections.deque(maxlen=10)
@@ -150,8 +148,5 @@ while(1):
     # Disable visualization for running on server
     if not ardu:
         cv2.imshow('Detected tags', frame)
-
-    if cv2.waitKey(1) == ord('q'):
-        break
 
 cv2.destroyAllWindows()
