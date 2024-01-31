@@ -5,6 +5,21 @@ import glob
 import math
 import collections
 import platform
+from gpiozero import PhaseEnableMotor, Servo
+#motor forward ccw, backward cw
+from time import sleep
+
+servo = Servo(25)
+motor1 = PhaseEnableMotor(26, 13)
+motor2 = PhaseEnableMotor(24, 23)
+
+servo.min()
+sleep(1)
+servo.max()
+motor1.forward(1)
+motor2.backward(1)
+sleep(3)
+
 
 ardu = False
 if platform.node()[0:4] == "croc":
