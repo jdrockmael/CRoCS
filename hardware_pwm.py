@@ -1,6 +1,9 @@
 from gpiozero.pins.pigpio import PiGPIOFactory
+import pigpio
 from gpiozero import Servo
 from time import sleep
+
+pigpio.pi.hardware_PWM(18, 800, 250000) # 800Hz 25% dutycycle
 
 factory = PiGPIOFactory('192.168.1.169')
 servo = Servo(25, pin_factory=factory)
