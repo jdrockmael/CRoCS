@@ -19,7 +19,7 @@ sleep(1)
 """
 
 import pigpio
-import time
+from time import sleep 
 
 servo = 18
  
@@ -30,6 +30,7 @@ pwm.set_PWM_frequency(servo, 50)
 pwm.set_PWM_range(servo, 20000) # 1,000,000 / 50 = 20,000us for 100% duty cycle
 
 pwm.hardware_PWM(servo, 50, 2000)
-time.sleep(10)
+sleep(10)
 
-pwm.set_servo_pulsewidth(servo, 0)
+pwm.set_servo_pulsewidth(servo, 50)
+sleep(1)
