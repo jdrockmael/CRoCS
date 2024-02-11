@@ -27,13 +27,10 @@ pwm.hardware_PWM(motor1, 50, 2000)
 pwm.hardware_PWM(motor2, 50, 2000)
 sleep(1)
 
-pwm.set_servo_pulsewidth(servo, 500)
-sleep(1)
-pwm.set_servo_pulsewidth(servo, 2500)
-sleep(1)
-
-pwm.set_PWM_dutycycle(motor1, 50)
-pwm.set_PWM_dutycycle(motor2, 50)
-sleep(2)
-print(encoder1.value)
-print(encoder2.value)
+while(1):
+    pwm.set_PWM_dutycycle(motor1, 50)
+    pwm.set_PWM_dutycycle(motor2, 50)
+    sleep(1)
+    
+    if(encoder1.value > 0.5 or encoder2.value > 0.5 or encoder1.value < -0.5 or encoder2.value < -0.5):
+        break
