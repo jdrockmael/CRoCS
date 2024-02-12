@@ -21,6 +21,8 @@ pwm.set_PWM_frequency(motor1, 50)
 pwm.set_PWM_frequency(motor2, 50)
 pwm.set_PWM_range(motor1, 20000) # 1,000,000 / 50 = 20,000us for 100% duty cycle
 pwm.set_PWM_range(motor2, 20000) # 1,000,000 / 50 = 20,000us for 100% duty cycle
+pwm.hardware_PWM(motor1, 50, 2000)
+pwm.hardware_PWM(motor2, 50, 2000)
 sleep(1)
 
 pwm.set_servo_pulsewidth(servo, 500)
