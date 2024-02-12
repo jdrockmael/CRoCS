@@ -6,8 +6,8 @@ encoder1 = RotaryEncoder(5, 6)
 encoder2 = RotaryEncoder(20, 21)
 
 servo = 18
-motor1 = 13
-motor2 = 23
+motor1 = 23
+motor2 = 13
  
 pwm = pigpio.pi() 
 pwm.set_mode(servo, pigpio.OUTPUT)
