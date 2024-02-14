@@ -63,7 +63,7 @@ if __name__ == '__main__':
     while not rospy.is_shutdown():
         data = s.recv(1024)
         if data:
-            in_msgs_pub.publish(data)
+            in_msgs_pub.publish(data.decode())
 
     # close server
     print("Closing socket")
