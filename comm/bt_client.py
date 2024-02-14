@@ -50,7 +50,7 @@ s = find_and_connect(port=4)
 # sends given messages over bluetooth
 # takes the socket the server is connected to
 def send_msg(data):
-    s.send(data)
+    s.send(data.encode())
 
 if __name__ == '__main__':
     # init node
