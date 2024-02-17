@@ -18,31 +18,25 @@ in_msgs_pub = rospy.Publisher('incoming_msgs', String, queue_size=10)
 def find_and_connect(port=4):
     possible_mac = [adr.value for adr in server_macs]
     nearby_devices = bluetooth.discover_devices()
-    adr = None
      
     for curr_adr in nearby_devices:
         if curr_adr in possible_mac:
             print("connecting to", server_macs(curr_adr).name)
-            adr = curr_adr
-
-    if adr is not None:
-        sock = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
-        for i in range(1, 4):
-            try:
-                sock.connect((adr, port))
-                if sock is not None:
-                    return sock
-                else:
-                    raise Exception("socket was none")
-            except Exception as e:
-                print("Failed to connect, try count:", i)
-                print(e)
-                sleep(1)
-        print("Failed to connect to server")
-        return None
-    else:
-        print("The server was not found")
-        return None
+            sock = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
+            for i in range(1, 4):
+                try:
+                    sock.connect((curr_adr, port))
+                    if sock is not None:
+                        return sock
+                    else:
+                        raise Exception("socket was none")
+                except Exception as e:
+                    print("Failed to connect, try count:", i)
+                    print(e)
+                    sleep(1)
+        
+    print("The server was not found or could not connect")
+    return None
 
 # make sockect for gloabal use
 s = find_and_connect(port=4)
@@ -50,7 +44,7 @@ s = find_and_connect(port=4)
 # sends given messages over bluetooth
 # takes the socket the server is connected to
 def send_msg(data):
-    s.send(str(data))
+    s.send(str(data).encode())
 
 if __name__ == '__main__':
     # init node
