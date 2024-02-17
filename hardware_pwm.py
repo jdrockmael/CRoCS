@@ -1,6 +1,9 @@
 import pigpio
 from time import sleep 
-from gpiozero import RotaryEncoder
+from gpiozero import RotaryEncoder, Device
+from gpiozero.pins.pigpio import PiGPIOFactory
+
+Device.pin_factory = PiGPIOFactory()
 
 encoder1 = RotaryEncoder(5, 6)
 encoder2 = RotaryEncoder(20, 21)
