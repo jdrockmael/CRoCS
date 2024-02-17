@@ -30,19 +30,20 @@ class RobotEKF():
         self.P = np.eye(self.dim_x)                           # uncertainty covariance
         self.P[0,0] = 1e-2
         self.P[1,1] = 1e-2
+        self.P[2,2] = 1e-4
         self.Q = np.diag([VAR_ENC, VAR_ENC])                  # process uncertainty
         self.R = np.diag([VAR_POSE1, VAR_POSE1, VAR_POSE1, VAR_POSE2, VAR_POSE2])
 
         # Initializing variables
         x, y, theta, Vl, Vr, dt, x2, y2, b = symbols('x, y, theta, Vl, Vr, dt, x2, y2, b')
-        wr, wl = symbols('wr, wl')
+        wr, wl, wx, wy, wtheta = symbols('wr, wl, wx, wy, wtheta')
         vxk, vx2, vyk, vy2, vthetak = symbols('vxk, vx2, vyk, vy2, vthetak')
 
         # f matrix estimate the next state
         self.f = Matrix(
-            [[x + dt*(Vr + wr + Vl + wl)/2 * sympy.cos(theta)],
-            [y + dt*(Vr + wr + Vl + wl)/2 * sympy.sin(theta)],
-            [theta + dt*(Vr + wr - (Vl + wl))/b]]
+            [[x + dt*(Vr + wr + Vl + wl)/2 * sympy.cos(theta) + wx],
+            [y + dt*(Vr + wr + Vl + wl)/2 * sympy.sin(theta) + wy],
+            [theta + dt*(Vr + wr - (Vl + wl))/b + wtheta]]
         )
 
         # h matrix convert pose to measurement
@@ -61,14 +62,14 @@ class RobotEKF():
         self.W_j= self.f.jacobian(process_noise)
 
         self.subs = {x:0, y: 0, theta:0, Vl:0, Vr:0, dt:0, x2:0, y2:0, b:wheelbase, 
-                     wl: 0, wr:0, 
+                     wl: 0, wr:0, wx: 0, wy: 0, wtheta: 0,
                      vxk: 0, vx2: 0, vyk: 0, vy2: 0, vthetak: 0}
 
         self.dt = dt
         self.x_x, self.x_y, self.x_theta = x, y, theta
         self.x2_x, self.x2_y = x2, y2
         self.vl, self.vr = Vl, Vr
-        self.w_Wl, self.w_Wr = wl, wr
+        self.w_Wl, self.w_Wr, self.w_Wx, self.w_Wy, self.w_Wtheta = wl, wr, wx, wy, wtheta
         self.V_vxk, self.V_vx2, self.V_vyk, self.V_vy2, self.V_vthetak = vxk, vx2, vyk, vy2, vthetak
 
     def predict(self, u, dt):
@@ -198,16 +199,17 @@ class RobotEKF():
 
 ekf = RobotEKF(95.25)
 
-landmarks = np.array([[60, -20], [20, 30], [40, 20]])
+# landmarks = np.array([[60, -20], [20, 30], [40, 20]])
+landmarks = np.array([])
 dt = 0.1
 
-u = np.array([5, 12])
-
+u = np.array([5, 9])
 plt.figure()
 if landmarks.size != 0:
     plt.scatter(landmarks[:, 0], landmarks[:, 1], marker='s', s=60)
 
 track = []
+
 for i in range(100):
     ekf.predict(u, dt)
     sim_pos = ekf.pose.copy()
@@ -222,7 +224,7 @@ for i in range(100):
         z = ekf.z_landmark(lmark)
         ekf.update(z, lmark, dt)
 
-    if i % 10 == 0:
+    if landmarks.size != 0 and i % 10 == 0:
         plot_covariance_ellipse(
             (ekf.pose[0,0], ekf.pose[1,0]), ekf.P[0:2, 0:2],
             std=15, facecolor='g', alpha=0.8)
@@ -231,6 +233,6 @@ track = np.array(track)
 plt.plot(track[:, 0], track[:,1], color='k', lw=2)
 plt.axis('equal')
 plt.title("EKF Robot localization")
-# plt.ylim([-100, 100])
+# plt.ylim([-300, 300])
 # plt.xlim([-5, 80])
 plt.show()
