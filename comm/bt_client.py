@@ -1,6 +1,7 @@
 import rospy
 from enum import Enum
 import bluetooth
+from std_msgs.msg import String
 from time import sleep
 
 # list of bt mac addresses that will be running server
@@ -9,7 +10,7 @@ class server_macs(Enum):
     tim = 'B0:DC:EF:86:98:0D'
 
 # publisher that publishes incoming messages from the server
-in_msgs_pub = rospy.Publisher('incoming_msgs', str, queue_size=10)
+in_msgs_pub = rospy.Publisher('incoming_msgs', String, queue_size=10)
 
 # Finds which of the above listed macs are hosting the server and connect
 # returns the sockect object used to send messages
@@ -49,14 +50,14 @@ s = find_and_connect(port=4)
 # sends given messages over bluetooth
 # takes the socket the server is connected to
 def send_msg(data):
-    s.send(data)
+    s.send(str(data))
 
 if __name__ == '__main__':
     # init node
     rospy.init_node('client_comm')
 
     # subscribing to the out_going msgs topic that is sent to server
-    rospy.Subscriber("out_going_msgs", str, send_msg)
+    rospy.Subscriber("out_going_msgs", String, send_msg)
     
     # pubs the incoming messages from server
     while not rospy.is_shutdown():
