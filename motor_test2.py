@@ -1,6 +1,9 @@
-from gpiozero import PhaseEnableMotor, RotaryEncoder
+from gpiozero import Device, PhaseEnableMotor, RotaryEncoder
+from gpiozero.pins.pigpio import PiGPIOFactory
 #forward ccw, backward cw
 from time import sleep
+
+Device.pin_factory = PiGPIOFactory()
 
 motor1 = PhaseEnableMotor(26, 13)
 motor2 = PhaseEnableMotor(24, 23)
