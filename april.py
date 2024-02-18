@@ -33,7 +33,7 @@ class AprilCam():
 
         tags =self.at_detector.detect(grayscale, estimate_tag_pose=True, camera_params=self.cam_param, tag_size=5)
 
-        measurement = None
+        measurement = []
         
         if tags:
             for tag in tags:                    
@@ -51,14 +51,14 @@ class AprilCam():
 
                 print(tag.tag_id)
                 print(avg_range)
-                measurement = Float32MultiArray(data=[float(tag.tag_id), float(avg_range), float(avg_bearing), float(2)])
+                measurement.append(Float32MultiArray(data=[float(tag.tag_id), float(avg_range), float(avg_bearing), float(2)]))
                 # return {
                 #     "ID": tag.tag_id,
                 #     "Range": avg_range, # mm
                 #     "Bearing": avg_bearing, # Degrees
                 #     "AprilID": 2
                 # }
-                
+
         return measurement
 
     def stop(self):
@@ -72,9 +72,10 @@ def measure():
     cam = AprilCam()
 
     while not rospy.is_shutdown():
-        measurement = cam.get_measurements()                                                                                                                                                              
-        if measurement is not None:
-            range_pub.publish(measurement)
+        tags = cam.get_measurements()                                                                                                                                                              
+        if tags:
+            for measurement in tags:
+                range_pub.publish(measurement)
 
 if __name__ == "__main__":
     try:
