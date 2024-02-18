@@ -13,7 +13,7 @@ motor2.stop()
 sleep(1)
 
 encoder1 = RotaryEncoder(6, 5, max_steps = 256000)
-encoder2 = RotaryEncoder(27, 22, max_steps = 256000)
+encoder2 = RotaryEncoder(22, 27, max_steps = 256000)
 
 motor1.forward(0.5)
 motor2.backward(0.5)
@@ -40,5 +40,4 @@ while(j < 5000):
 sleep(1)
 motor1.stop()
 motor2.stop()
-
 
