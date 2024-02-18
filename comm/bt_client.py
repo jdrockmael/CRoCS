@@ -1,7 +1,7 @@
 import rospy
+from std_msgs.msg import String
 from enum import Enum
 import bluetooth
-from std_msgs.msg import String
 from time import sleep
 
 # list of bt mac addresses that will be running server
@@ -38,23 +38,23 @@ def find_and_connect(port=4):
     print("The server was not found or could not connect")
     return None
 
-# make sockect for gloabal use
-s = find_and_connect(port=4)
-
 # sends given messages over bluetooth
 # takes the socket the server is connected to
-def send_msg(data):
+def send_msg(data, socket):
     data = str(data).replace('"', "").split(" ")
     data.pop(0)
     data = " ".join(data)
-    s.send(data)
+    socket.send(data)
 
 if __name__ == '__main__':
     # init node
     rospy.init_node('client_comm')
 
+    # make sockect for gloabal use
+    s = find_and_connect(port=4)
+
     # subscribing to the out_going msgs topic that is sent to server
-    rospy.Subscriber("out_going_msgs", String, send_msg)
+    rospy.Subscriber("out_going_msgs", String, send_msg, callback_args= s)
     
     # pubs the incoming messages from server
     while not rospy.is_shutdown():
