@@ -58,9 +58,11 @@ if __name__ == '__main__':
     
     # pubs the incoming messages from server
     while not rospy.is_shutdown():
-        data = s.recv(1024)
-        if data:
-            in_msgs_pub.publish(data.decode())
+        data = s.recv(1024).decode()
+        if data and data != "quit":
+            in_msgs_pub.publish(data)
+        elif data and data == "quit":
+            rospy.signal_shutdown()
 
     # close server
     print("Closing socket")
