@@ -32,6 +32,8 @@ class AprilCam():
         grayscale = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
         tags =self.at_detector.detect(grayscale, estimate_tag_pose=True, camera_params=self.cam_param, tag_size=5)
+
+        measurement = None
         
         if tags:
             for tag in tags:                    
@@ -49,15 +51,15 @@ class AprilCam():
 
                 print(tag.tag_id)
                 print(avg_range)
-                return Float32MultiArray(data=[float(tag.tag_id), float(avg_range), float(avg_bearing), float(2)])
+                measurement = Float32MultiArray(data=[float(tag.tag_id), float(avg_range), float(avg_bearing), float(2)])
                 # return {
                 #     "ID": tag.tag_id,
                 #     "Range": avg_range, # mm
                 #     "Bearing": avg_bearing, # Degrees
                 #     "AprilID": 2
                 # }
-        else:
-            return None
+                
+        return measurement
 
     def stop(self):
         cv2.destroyAllWindows()
