@@ -20,17 +20,18 @@ motor2.backward(0.5)
 sleep(0.01)
 
 i = 0
-while(i < 1000):
+while(i < 3000):
     print("1: ", encoder1.steps)
     print("2: ", encoder2.steps)
     sleep(0.0001)
     i+=1
 
+'''
 motor1.backward(0.5)
 motor2.forward(0.5)
 sleep(0.01)
 
-'''
+
 j = 0
 while(j < 5000):
     print("1: ", encoder1.steps)
