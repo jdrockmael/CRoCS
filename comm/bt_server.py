@@ -1,5 +1,6 @@
+import rospy
+from std_msgs.msg import String
 import bluetooth
-import os
 from enum import Enum
 import threading
 
@@ -19,13 +20,12 @@ lock = threading.Lock()
 # dictionary relating croc names to client objects used to send messages
 list_of_clients = {}
 
-# the number of crocs that are connected
-connect_croc_cnt = None
+# publisher that publishes incoming messages from the server
+in_msgs_pub = rospy.Publisher('incoming_msgs', String, queue_size=10)
 
 # sets up and connects crocs to server
 # port is the port that you want the server to be bound to
 def setup(port=4):
-    global connect_croc_cnt
     croc_macs = [adr.value for adr in croc_info]
     nearby_devices = bluetooth.discover_devices()
     cnt = 0
@@ -34,20 +34,16 @@ def setup(port=4):
         if curr_adr in croc_macs:
             cnt = cnt + 1
 
-    # makes the server discoverable
-    os.system("bluetoothctl discoverable on")
-
     socket = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
     socket.bind(('', port))
 
-    connect_croc_cnt = cnt
-    print(connect_croc_cnt, "crocs detected")
+    print(cnt, "crocs detected")
 
     socket.listen(1)
     print("Ready to connect")
 
     # connects to crocs and stores their client object in global dicitonary
-    for _ in range(connect_croc_cnt):
+    for _ in range(cnt):
         client, info = socket.accept()
         print("Connecting to:", croc_info(info[0]).name)
         list_of_clients[croc_info(info[0]).name] = client
@@ -59,47 +55,48 @@ def setup(port=4):
 # croc is the croc sending the message
 # data is an array of b'' with 0 being the croc target
 # and data[1] is the message being sent
-def handle_msg(croc, data):
-    name = data[0].decode('ascii')
-    if name == 'server':
-        print(data[1], "from", croc)
+def handle_msg(data):
+    name = data[0]
+    if name == "server":
+        in_msgs_pub.publish(data[1])
     elif name in list_of_clients:
         list_of_clients[name].send(data[1])
     else:
-        print(data[0], "is not a connected croc\n")
+        print(name, "is not a connected croc\n")
 
 # takes messages from bt and uses handle message
 # croc is current croc recieveing the message
 # curr_client is the related client object with the current croc
 def rec_msg(croc, curr_client):
-    global connect_croc_cnt
     while True:
-        data = curr_client.recv(1024).split(b' ')
+        data = curr_client.recv(1024).decode().split(" ")
         if data:
             print(data)
 
-            if data[0] == b'quit':
+            if data[0] == "quit":
                 with lock:
-                    connect_croc_cnt -= 1
                     list_of_clients.pop(croc)
                 print("Disconnected from", croc)
                 curr_client.close()
                 break
             
-            handle_msg(croc=croc, data=data)
+            handle_msg(data)
 
 # sends messages by taking in inputs and using handle message function
-def send_msg():
-    while connect_croc_cnt > 0:
-        text = input().encode('ascii').split(b' ')
-        handle_msg('server', text)
+def send_msg(data):
+    data = str(data).replace('"', "").split(" ")
+    data.pop(0)
+    print(data)
+    handle_msg(data)
 
 if __name__ == "__main__":
-    s = setup(4)
+    # init node
+    rospy.init_node('server_comm')
 
-    # starts the thread used for sending messages
-    send_thread = threading.Thread(target=send_msg, args=())
-    send_thread.start()
+    # subscribing to the out_going msgs topic that is sent to server
+    rospy.Subscriber("out_going_msgs", String, send_msg)
+
+    s = setup(port=4)
 
     # starts a thread for each client
     client_threads = []
@@ -109,11 +106,9 @@ if __name__ == "__main__":
         curr_thread.start()
 
     # kill threads once they finish
-    send_thread.join()
     for t in client_threads:
         t.join()
 
     # closes server and disables discoverable
     print("closing server")
     s.close()
-    os.system("bluetoothctl discoverable off")
