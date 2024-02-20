@@ -39,7 +39,7 @@ while(j < 5000):
     sleep(0.0001)
     j+=1
 '''
-sleep(1)
+sleep(0.0001)
 motor1.stop()
 motor2.stop()
 
