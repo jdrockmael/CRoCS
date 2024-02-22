@@ -34,9 +34,9 @@ def control_loop(data : Float32MultiArray):
     heading_err = data[2] - 0.0
     distance_err = data[1] - 0.2 #m i think
     
-    linear = distance_err * 10
-    angular_l = heading_err * 20
-    angular_r = -heading_err * 20
+    linear = distance_err * 50
+    angular_l = heading_err * 70
+    angular_r = -heading_err * 70
     
     l_eff = bound_pwd(linear + angular_l)
     r_eff = bound_pwd(linear + angular_r)
