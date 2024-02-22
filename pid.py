@@ -63,3 +63,4 @@ if __name__ == '__main':
     right, _ = motor_list[1]
 
     rospy.Subscriber("range", Float32MultiArray, control_loop, callback_args= (left, right))
+    rospy.spin()
