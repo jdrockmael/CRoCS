@@ -33,28 +33,27 @@ def control_loop(data : Float32MultiArray):
 
     heading_err = data[2] - 0.0
     distance_err = data[1] - 0.2 #m i think
+    
+    linear = distance_err
+    angular_l = heading_err
+    angular_r = -heading_err
+    
+    l_eff = bound_pwd(linear + angular_l)
+    r_eff = bound_pwd(linear + angular_r)
 
-    while abs(heading_err) > 1 or abs(distance_err) > 100:
-        linear = distance_err
-        angular_l = heading_err
-        angular_r = -heading_err
-        
-        l_eff = bound_pwd(linear + angular_l)
-        r_eff = bound_pwd(linear + angular_r)
+    out_msgs_pub.publish("server left_effort=" + str(l_eff) + "_right_effort=" + str(r_eff))
 
-        out_msgs_pub.publish("server left_effort=" + str(l_eff) + "_right_effort=" + str(r_eff))
+    if l_eff >= 0:
+        motor_left.forward(l_eff)
+    else:
+        motor_left.backward(-l_eff)
 
-        if l_eff >= 0:
-            motor_left.forward(l_eff)
-        else:
-            motor_left.backward(-l_eff)
+    if r_eff >= 0:
+        motor_right.backward(r_eff)
+    else:
+        motor_right.forward(-r_eff)
 
-        if r_eff >= 0:
-            motor_right.backward(r_eff)
-        else:
-            motor_right.forward(-r_eff)
-
-        sleep(0.005)
+    sleep(0.005)
 
     motor_left.stop()
     motor_right.stop()
