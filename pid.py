@@ -23,22 +23,34 @@ def init_motors():
 
     return [(motor1, encoder1), (motor2, encoder2)]
 
-def control_loop(data, tuple_of_motors):
-    left, right = tuple_of_motors
+def set_motor_pwd(motor : PhaseEnableMotor, power):
+    if power > 1:
+        power = 1
+    elif power < -1:
+        power = -1
 
-    heading_err = data[2] - 0
-    distance_err = data[1] - 1000 #mm i think
+    if power >= 0:
+        motor.forward(power)
+    else:
+        motor.backward(power)
+
+def control_loop(data : Float32MultiArray, tuple_of_motors):
+    left, right = tuple_of_motors
+    data = data.data
+
+    heading_err = data[2] - 0.0
+    distance_err = data[1] - 0.2 #m i think
 
     while abs(heading_err) > 1 or abs(distance_err) > 100:
         linear = distance_err
-        angular_l = -heading_err
-        angular_r = heading_err
+        angular_l = heading_err
+        angular_r = -heading_err
 
         out_msgs_pub.publish("server left_effort=" + str(linear + angular_l) + "_right_effort=" + str(linear + angular_r))
 
-        left.forward(linear + angular_l)
-        right.backward(linear + angular_r)
-        sleep(0.01)
+        set_motor_pwd(left, linear + angular_l)
+        set_motor_pwd(right, -(linear + angular_r)) # because the motor goes the other way
+        sleep(0.005)
 
     left.stop()
     right.stop()
