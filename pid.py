@@ -55,7 +55,7 @@ def control_loop(data : Float32MultiArray, tuple_of_motors):
     left.stop()
     right.stop()
 
-if __name__ == '__main':
+if __name__ == '__main__':
     rospy.init_node('pid')
 
     motor_list = init_motors()
