@@ -41,13 +41,13 @@ class AprilCam():
                 bearing = math.degrees(math.atan2(hor_distance, distance))
 
                 # Moving average distance and yaw reading
-                self.range_l.append(range)
-                self.bearing_l.append(bearing)
+                # self.range_l.append(range)
+                # self.bearing_l.append(bearing)
 
-                avg_range = round(np.average(self.range_l), 2)
-                avg_bearing = round(np.average(self.bearing_l), 2)
+                # avg_range = round(np.average(self.range_l), 2)
+                # avg_bearing = round(np.average(self.bearing_l), 2)
 
-                measurement.append(Float32MultiArray(data=[float(tag.tag_id), float(avg_range), float(avg_bearing), float(2)]))
+                measurement.append(Float32MultiArray(data=[float(tag.tag_id), float(range), float(bearing), float(2)]))
                 # return {
                 #     "ID": tag.tag_id,
                 #     "Range": avg_range, # mm
