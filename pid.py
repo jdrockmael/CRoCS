@@ -8,34 +8,27 @@ from time import sleep
 
 out_msgs_pub = rospy.Publisher('out_going_msgs', String, queue_size=10)
 
-def init_motors():
-    Device.pin_factory = PiGPIOFactory()
+Device.pin_factory = PiGPIOFactory()
 
-    motor1 = PhaseEnableMotor(24, 23)
-    motor2 = PhaseEnableMotor(21, 20)
+motor_left = PhaseEnableMotor(24, 23)
+motor_right = PhaseEnableMotor(21, 20)
 
-    motor1.stop()
-    motor2.stop()
-    sleep(1)
+motor_left.stop()
+motor_right.stop()
+sleep(1)
 
-    encoder1 = RotaryEncoder(6, 5, max_steps = 256000)
-    encoder2 = RotaryEncoder(22, 27, max_steps = 256000)
+encoder_left = RotaryEncoder(6, 5, max_steps = 256000)
+encoder_right = RotaryEncoder(22, 27, max_steps = 256000)
 
-    return [(motor1, encoder1), (motor2, encoder2)]
-
-def set_motor_pwd(motor : PhaseEnableMotor, power):
+def bound_pwd(power):
     if power > 1:
         power = 1
     elif power < -1:
         power = -1
 
-    if power >= 0:
-        motor.forward(power)
-    else:
-        motor.backward(power)
+    return power
 
-def control_loop(data : Float32MultiArray, tuple_of_motors):
-    left, right = tuple_of_motors
+def control_loop(data : Float32MultiArray):
     data = data.data
 
     heading_err = data[2] - 0.0
@@ -45,22 +38,29 @@ def control_loop(data : Float32MultiArray, tuple_of_motors):
         linear = distance_err
         angular_l = heading_err
         angular_r = -heading_err
+        
+        l_eff = bound_pwd(linear + angular_l)
+        r_eff = bound_pwd(linear + angular_r)
 
-        out_msgs_pub.publish("server left_effort=" + str(linear + angular_l) + "_right_effort=" + str(linear + angular_r))
+        out_msgs_pub.publish("server left_effort=" + str(l_eff) + "_right_effort=" + str(r_eff))
 
-        set_motor_pwd(left, linear + angular_l)
-        set_motor_pwd(right, -(linear + angular_r)) # because the motor goes the other way
+        if l_eff >= 0:
+            motor_left.forward(l_eff)
+        else:
+            motor_left.backward(-l_eff)
+
+        if r_eff >= 0:
+            motor_right.backward(r_eff)
+        else:
+            motor_right.forward(-r_eff)
+
         sleep(0.005)
 
-    left.stop()
-    right.stop()
+    motor_left.stop()
+    motor_right.stop()
 
 if __name__ == '__main__':
     rospy.init_node('pid')
 
-    motor_list = init_motors()
-    left, _ = motor_list[0]
-    right, _ = motor_list[1]
-
-    rospy.Subscriber("range", Float32MultiArray, control_loop, callback_args= (left, right))
+    rospy.Subscriber("range", Float32MultiArray, control_loop)
     rospy.spin()
