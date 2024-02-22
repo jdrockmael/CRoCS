@@ -24,7 +24,7 @@ class AprilCam():
         grayscale = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
 
-        tags_side =self.at_detector.detect(grayscale, estimate_tag_pose=True, camera_params=self.cam_param, tag_size=0.02)
+        tags_side =self.at_detector.detect(grayscale, estimate_tag_pose=True, camera_params=self.cam_param, tag_size=0.122)
 
         #tags_face = self.at_detector.detect(grayscale, estimate_tag_pose=True, camera_params=self.cam_param, tag_size=0.122)
 
@@ -32,13 +32,13 @@ class AprilCam():
         if tags_side:
             for i, tag_side in enumerate(tags_side):
                 tag = tag_side
-                if tag_side.tag_id == 0:
+                if tag_side.tag_id != 0:
                     #tag = tags_face[i]
-                    tag = self.at_detector.detect(grayscale, estimate_tag_pose=True, camera_params=self.cam_param, tag_size=0.122)[i]
+                    tag = self.at_detector.detect(grayscale, estimate_tag_pose=True, camera_params=self.cam_param, tag_size=0.02)[i]
                 distance = tag.pose_t[2]
                 hor_distance = tag.pose_t[0] 
                 range = math.sqrt(distance**2 + hor_distance**2)
-                bearing = math.degrees(math.atan2(hor_distance, distance))
+                bearing = math.atan2(hor_distance, distance)
 
                 # Moving average distance and yaw reading
                 # self.range_l.append(range)
