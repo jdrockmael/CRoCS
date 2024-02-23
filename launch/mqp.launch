@@ -1,5 +1,5 @@
 <launch>
-    <node pkg="CRoCS" type="bt_client.py" name="client_comm">
-    <node pkg="CRoCS" type="april.py" name="april">
-    <node pkg="CRoCS" type="pid.py" name="pid">
+    <node pkg="CRoCs" type="bt_client.py" name="client_comm"/>
+    <node pkg="CRoCs" type="april.py" name="april"/>
+    <node pkg="CRoCs" type="pid.py" name="pid"/>
 </launch>
