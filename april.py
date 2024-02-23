@@ -15,9 +15,10 @@ class AprilCam():
 
         self.range_l = collections.deque(maxlen=10)
         self.bearing_l = collections.deque(maxlen=10)
-       
-        
-        #self.start = time.time()
+
+        self.prevM = {}          # Dictionary of previous measurements for moving average
+        self.start = time.time()
+
     def get_measurements(self):
         # Take each frame
         _, frame = self.cap.read()
@@ -31,8 +32,9 @@ class AprilCam():
         measurement = []
         if tags_side:
             for i, tag_side in enumerate(tags_side):
+                id = tag_side.tag_id
                 tag = tag_side
-                if tag_side.tag_id != 0:
+                if id != 0:
                     #tag = tags_face[i]
                     tag = self.at_detector.detect(grayscale, estimate_tag_pose=True, camera_params=self.cam_param, tag_size=0.02)[i]
                 distance = tag.pose_t[2]
@@ -40,23 +42,19 @@ class AprilCam():
                 range = math.sqrt(distance**2 + hor_distance**2)
                 bearing = math.atan2(hor_distance, distance)
 
-                # Moving average distance and yaw reading
-                # self.range_l.append(range)
-                # self.bearing_l.append(bearing)
+                if id not in self.prevM:
+                    self.prevM[id] = {"range": collections.deque(maxlen=10), "bearing": collections.deque(maxlen=10)}
 
-                # avg_range = round(np.average(self.range_l), 2)
-                # avg_bearing = round(np.average(self.bearing_l), 2)
+                self.prevM[id]["range"].append(range)
+                self.prevM[id]["bearing"].append(bearing)
+                
+                print(id)
+                # Return an array of [ID, range(m), bearing(radian)]
+                measurement.append(Float32MultiArray(data=[float(id), float(np.average(self.prevM[id]["range"])), float(np.average(self.prevM[id]["bearing"]))]))
 
-                measurement.append(Float32MultiArray(data=[float(tag.tag_id), float(range), float(bearing), float(2)]))
-                # return {
-                #     "ID": tag.tag_id,
-                #     "Range": avg_range, # mm
-                #     "Bearing": avg_bearing, # Degrees
-                #     "AprilID": 2
-                # }
-        #self.end = time.time()
-        #print("Elapased time: ", self.end - self.start)
-        #self.start = time.time()
+        self.end = time.time()
+        print("Elapased time: ", self.end - self.start)
+        self.start = time.time()
         return measurement
 
     def stop(self):
