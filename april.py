@@ -4,7 +4,7 @@ import numpy as np
 import math
 import collections
 import rospy
-from std_msgs.msg import Float32MultiArray
+from std_msgs.msg import Float32MultiArray, Bool
 import time
 
 class AprilCam():
@@ -64,6 +64,7 @@ class AprilCam():
 
 def measure():
     range_pub = rospy.Publisher('range', Float32MultiArray, queue_size=10)
+    no_tag_pub = rospy.Publisher('no_tag', Bool, queue_size=10)
     rospy.init_node("april")
 
     rospy.loginfo("Starting Arducam node")
@@ -74,6 +75,10 @@ def measure():
         if tags:
             for measurement in tags:
                 range_pub.publish(measurement)
+        else:
+            no_tag_pub.publish(True)
+
+
 
 if __name__ == "__main__":
     try:

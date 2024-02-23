@@ -1,7 +1,7 @@
 from gpiozero import Device, PhaseEnableMotor, RotaryEncoder
 from gpiozero.pins.pigpio import PiGPIOFactory
 import rospy
-from std_msgs.msg import Float32MultiArray, String
+from std_msgs.msg import Float32MultiArray, String, Bool
 from time import sleep
 
 #forward ccw, backward cw
@@ -34,9 +34,9 @@ def control_loop(data : Float32MultiArray):
     heading_err = data[2] - 0.0
     distance_err = data[1] - 0.2 #m i think
     
-    linear = distance_err * 50
-    angular_l = heading_err * 70
-    angular_r = -heading_err * 70
+    linear = distance_err * 10
+    angular_l = heading_err * 20
+    angular_r = -heading_err * 20
     
     l_eff = bound_pwd(linear + angular_l)
     r_eff = bound_pwd(linear + angular_r)
@@ -55,6 +55,8 @@ def control_loop(data : Float32MultiArray):
 
     sleep(0.005)
 
+def stop_motor(data):
+    sleep(0.1)
     motor_left.stop()
     motor_right.stop()
 
@@ -62,4 +64,5 @@ if __name__ == '__main__':
     rospy.init_node('pid')
 
     rospy.Subscriber("range", Float32MultiArray, control_loop)
+    rospy.Subscriber('no_tag', Bool, stop_motor)
     rospy.spin()
