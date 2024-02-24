@@ -1,4 +1,5 @@
-#!/bin/python3.9
+#!/usr/bin/python3
+#/bin/python3.9
 import cv2
 from dt_apriltags import Detector
 import numpy as np
@@ -38,9 +39,9 @@ class AprilCam():
             for i, tag_side in enumerate(tags_side):
                 id = tag_side.tag_id
                 tag = tag_side
-                if id != 0:
+                # if id != 0:
                     #tag = tags_face[i]
-                    tag = self.at_detector.detect(grayscale, estimate_tag_pose=True, camera_params=self.cam_param, tag_size=0.02)[i]
+                    # tag = self.at_detector.detect(grayscale, estimate_tag_pose=True, camera_params=self.cam_param, tag_size=0.02)[i]
                 distance = tag.pose_t[2]
                 hor_distance = tag.pose_t[0] 
                 range = math.sqrt(distance**2 + hor_distance**2)
@@ -52,13 +53,13 @@ class AprilCam():
                 self.prevM[id]["range"].append(range)
                 self.prevM[id]["bearing"].append(bearing)
                 
-                print(id)
+                # print(id)
                 # Return an array of [ID, range(m), bearing(radian)]
                 measurement.append(Float32MultiArray(data=[float(id), float(np.average(self.prevM[id]["range"])), float(np.average(self.prevM[id]["bearing"]))]))
 
-        self.end = time.time()
-        print("Elapased time: ", self.end - self.start)
-        self.start = time.time()
+        # self.end = time.time()
+        # print("Elapased time: ", self.end - self.start)
+        # self.start = time.time()
         return measurement
 
     def stop(self):
