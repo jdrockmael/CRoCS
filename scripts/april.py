@@ -23,6 +23,14 @@ class AprilCam():
 
         self.prevM = {}          # Dictionary of previous measurements for moving average
         self.start = time.time()
+        meter = np.array([0.05, 0.08, 0.15, 0.2, 0.3])
+        measure1x1 = np.array([0.304, 0.461, 0.886, 1.173, 1.761]) # Readings for 1x1 in tag
+        self.m, self.b = np.polyfit(measure1x1, meter, 1)
+
+    # Convert 1x1 april tag pose to real world measurements in m
+    def pose2real(self, measurement):
+        # Fit a linear model
+        return self.m * measurement + self.b
 
     def get_measurements(self):
         # Take each frame
@@ -32,18 +40,20 @@ class AprilCam():
 
         tags_side =self.at_detector.detect(grayscale, estimate_tag_pose=True, camera_params=self.cam_param, tag_size=0.122)
 
-        #tags_face = self.at_detector.detect(grayscale, estimate_tag_pose=True, camera_params=self.cam_param, tag_size=0.122)
-
         measurement = []
         if tags_side:
             for i, tag_side in enumerate(tags_side):
                 id = tag_side.tag_id
                 tag = tag_side
-                # if id != 0:
-                    #tag = tags_face[i]
-                    # tag = self.at_detector.detect(grayscale, estimate_tag_pose=True, camera_params=self.cam_param, tag_size=0.02)[i]
-                distance = tag.pose_t[2]
-                hor_distance = tag.pose_t[0] 
+                x = tag.pose_t[0]
+                z = tag.pose_t[2]
+
+                # Convert reading to proper distance for 1x1 tags
+                if id != 0:
+                    x = self.pose2real(x)
+                    z = self.pose2real(z)
+                distance = z
+                hor_distance = x
                 range = math.sqrt(distance**2 + hor_distance**2)
                 bearing = math.atan2(hor_distance, distance)
 
@@ -74,6 +84,7 @@ def measure():
     cam = AprilCam()
 
     while not rospy.is_shutdown():
+        rospy.sleep(0.005)              # Sleep for 5ms
         tags = cam.get_measurements()                                                                                                                                                              
         if tags:
             for measurement in tags:
