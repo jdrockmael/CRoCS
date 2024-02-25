@@ -29,14 +29,7 @@ def bound_pwd(power):
 
     return power
 
-d_prior_err = 0
-r_prior_err = 0
-l_prior_err = 0
-
 def control_loop(data : Float32MultiArray):
-    global d_prior_err
-    global r_prior_err
-    global l_prior_err
     data = data.data
     delta_t = 0.001
 
@@ -44,13 +37,9 @@ def control_loop(data : Float32MultiArray):
         heading_err = data[2] - 0.0
         distance_err = data[1] - 0.2 #m i think
         
-        linear = distance_err * 5 + ((distance_err - d_prior_err)/delta_t) * 1
-        angular_l = heading_err * 1 + ((heading_err - l_prior_err)/delta_t) * 1
-        angular_r = -heading_err * 1 + ((-heading_err - r_prior_err)/delta_t) * 1
-        
-        d_prior_err = distance_err
-        r_prior_err = angular_r
-        l_prior_err = angular_l
+        linear = distance_err * 5
+        angular_l = heading_err * 1
+        angular_r = -heading_err * 1
 
         l_eff = bound_pwd(linear + angular_l)
         r_eff = bound_pwd(linear + angular_r)
@@ -69,9 +58,6 @@ def control_loop(data : Float32MultiArray):
 
         sleep(delta_t)
     else:
-        d_prior_err = 0
-        r_prior_err = 0
-        l_prior_err = 0
         motor_left.stop()
         motor_right.stop()
 
