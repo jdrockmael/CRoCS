@@ -76,7 +76,7 @@ class AprilCam():
         cv2.destroyAllWindows()
 
 def measure():
-    range_pub = rospy.Publisher('range', Float32MultiArray, queue_size=10)
+    range_pub = rospy.Publisher('range', Float32MultiArray, queue_size=1)
     rospy.init_node("april")
 
     rospy.loginfo("Starting Arducam node")
