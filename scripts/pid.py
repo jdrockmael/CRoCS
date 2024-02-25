@@ -32,38 +32,37 @@ def bound_pwd(power):
 def control_loop(data : Float32MultiArray):
     data = data.data
 
-    heading_err = data[2] - 0.0
-    distance_err = data[1] - 0.2 #m i think
-    
-    linear = distance_err * 10
-    angular_l = heading_err * 20
-    angular_r = -heading_err * 20
-    
-    l_eff = bound_pwd(linear + angular_l)
-    r_eff = bound_pwd(linear + angular_r)
+    if len(data) != 0:
+        heading_err = data[2] - 0.0
+        distance_err = data[1] - 0.2 #m i think
+        
+        linear = distance_err * 10
+        angular_l = heading_err * 10
+        angular_r = -heading_err * 10
+        
+        l_eff = bound_pwd(linear + angular_l)
+        r_eff = bound_pwd(linear + angular_r)
 
-    out_msgs_pub.publish("server left_effort=" + str(l_eff) + "_right_effort=" + str(r_eff))
+        out_msgs_pub.publish("server left_effort=" + str(l_eff) + "_right_effort=" + str(r_eff))
 
-    if l_eff >= 0:
-        motor_left.forward(l_eff)
+        if l_eff >= 0:
+            motor_left.forward(l_eff)
+        else:
+            motor_left.backward(-l_eff)
+
+        if r_eff >= 0:
+            motor_right.backward(r_eff)
+        else:
+            motor_right.forward(-r_eff)
+
+        sleep(0.005)
     else:
-        motor_left.backward(-l_eff)
-
-    if r_eff >= 0:
-        motor_right.backward(r_eff)
-    else:
-        motor_right.forward(-r_eff)
-
-    sleep(0.005)
-
-def stop_motor(data):
-    sleep(0.1)
-    motor_left.stop()
-    motor_right.stop()
+        motor_left.stop()
+        motor_right.stop()
 
 if __name__ == '__main__':
     rospy.init_node('pid')
 
     rospy.Subscriber("range", Float32MultiArray, control_loop)
-    rospy.Subscriber('no_tag', Bool, stop_motor)
+
     rospy.spin()

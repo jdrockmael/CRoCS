@@ -77,7 +77,6 @@ class AprilCam():
 
 def measure():
     range_pub = rospy.Publisher('range', Float32MultiArray, queue_size=10)
-    no_tag_pub = rospy.Publisher('no_tag', Bool, queue_size=10)
     rospy.init_node("april")
 
     rospy.loginfo("Starting Arducam node")
@@ -85,12 +84,12 @@ def measure():
 
     while not rospy.is_shutdown():
         rospy.sleep(0.005)              # Sleep for 5ms
-        tags = cam.get_measurements()                                                                                                                                                              
+        tags = cam.get_measurements()
         if tags:
             for measurement in tags:
                 range_pub.publish(measurement)
         else:
-            no_tag_pub.publish(True)
+            range_pub.publish(Float32MultiArray([]))
 
 if __name__ == "__main__":
     try:
