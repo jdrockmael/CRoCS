@@ -89,7 +89,7 @@ def measure():
             for measurement in tags:
                 range_pub.publish(measurement)
         else:
-            range_pub.publish(Float32MultiArray([]))
+            range_pub.publish(Float32MultiArray(data=[]))
 
 if __name__ == "__main__":
     try:
