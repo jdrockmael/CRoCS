@@ -34,6 +34,9 @@ r_prior_err = 0
 l_prior_err = 0
 
 def control_loop(data : Float32MultiArray):
+    global d_prior_err
+    global r_prior_err
+    global l_prior_err
     data = data.data
     delta_t = 0.001
 
