@@ -44,9 +44,9 @@ def control_loop(data : Float32MultiArray):
         heading_err = data[2] - 0.0
         distance_err = data[1] - 0.2 #m i think
         
-        linear = distance_err * 10 + ((distance_err - d_prior_err)/delta_t) * 3
-        angular_l = heading_err * 3 + ((heading_err - l_prior_err)/delta_t) * 3
-        angular_r = -heading_err * 3 + ((-heading_err - r_prior_err)/delta_t) * 3
+        linear = distance_err * 5 + ((distance_err - d_prior_err)/delta_t) * 1
+        angular_l = heading_err * 1 + ((heading_err - l_prior_err)/delta_t) * 1
+        angular_r = -heading_err * 1 + ((-heading_err - r_prior_err)/delta_t) * 1
         
         d_prior_err = distance_err
         r_prior_err = angular_r
