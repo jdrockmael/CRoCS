@@ -1,5 +1,6 @@
 from gpiozero import Device, PhaseEnableMotor, RotaryEncoder
 from gpiozero.pins.pigpio import PiGPIOFactory
+from math import pi
 
 class Motor():
     motor_object = None
@@ -9,8 +10,7 @@ class Motor():
     def __init__(self, phase, enable, encoder_pin_a, encoder_pin_b, pwd_multplier = 1) -> None:
         global motor_object
         global encoder_object
-        # negative one means no and one means yes
-        global is_ccw_positive
+        global is_ccw_positive   # negative one means no and one means yes
 
         is_ccw_positive = pwd_multplier
 
@@ -37,4 +37,7 @@ class Motor():
         motor_object.stop()
 
     def get_distance():
-        pass
+        tick_per_rev = 128
+        r_of_wheel = 0.02 # in meters
+
+        return (encoder_object.steps / tick_per_rev) * (2 * pi * r_of_wheel)
