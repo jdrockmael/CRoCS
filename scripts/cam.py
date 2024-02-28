@@ -77,7 +77,7 @@ class AprilCam():
 
 def measure():
     range_pub = rospy.Publisher('range', Float32MultiArray, queue_size=1)
-    rospy.init_node("april")
+    rospy.init_node("cam")
 
     rospy.loginfo("Starting Arducam node")
     cam = AprilCam()

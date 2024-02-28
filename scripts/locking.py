@@ -62,7 +62,7 @@ def control_loop(data : Float32MultiArray):
         motor_right.stop()
 
 if __name__ == '__main__':
-    rospy.init_node('pid')
+    rospy.init_node('locking')
 
     rospy.Subscriber("range", Float32MultiArray, control_loop)
 

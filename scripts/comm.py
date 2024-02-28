@@ -49,7 +49,7 @@ def send_msg(data, socket):
 
 if __name__ == '__main__':
     # init node
-    rospy.init_node('client_comm')
+    rospy.init_node('comm')
 
     # make sockect for gloabal use
     s = find_and_connect(port=4)

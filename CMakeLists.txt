@@ -49,7 +49,6 @@ find_package(catkin REQUIRED COMPONENTS
 ## Generate messages in the 'msg' folder
 add_message_files(
   FILES
-  April.msg
 )
 
 ## Generate services in the 'srv' folder
@@ -164,9 +163,9 @@ include_directories(
 #   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 # )
 catkin_install_python(PROGRAMS
-   scripts/bt_client.py
-   scripts/april.py
-   scripts/pid.py
+   scripts/comm.py
+   scripts/cam.py
+   scripts/locking.py
    DESTINATION .
 )
 
