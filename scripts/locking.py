@@ -1,33 +1,11 @@
 #!/usr/bin/python3
-from gpiozero import Device, PhaseEnableMotor, RotaryEncoder
-from gpiozero.pins.pigpio import PiGPIOFactory
 import rospy
-from std_msgs.msg import Float32MultiArray, String, Bool
+from std_msgs.msg import Float32MultiArray
 from time import sleep
+from drivers.motor_dr import Motor
 
-#forward ccw, backward cw
-
-out_msgs_pub = rospy.Publisher('out_going_msgs', String, queue_size=10)
-
-Device.pin_factory = PiGPIOFactory()
-
-motor_left = PhaseEnableMotor(24, 23)
-motor_right = PhaseEnableMotor(21, 20)
-
-motor_left.stop()
-motor_right.stop()
-sleep(1)
-
-encoder_left = RotaryEncoder(6, 5, max_steps = 256000)
-encoder_right = RotaryEncoder(22, 27, max_steps = 256000)
-
-def bound_pwd(power):
-    if power > 1:
-        power = 1
-    elif power < -1:
-        power = -1
-
-    return power
+motor_left = Motor(24, 23, 6, 5, 1)
+motor_right = Motor(21, 20, 22, 27, -1)
 
 def control_loop(data : Float32MultiArray):
     data = data.data
@@ -35,26 +13,17 @@ def control_loop(data : Float32MultiArray):
 
     if len(data) != 0:
         heading_err = data[2] - 0.0
-        distance_err = data[1] - 0.2 #m i think
+        distance_err = data[1] - 0.2 # in meters
         
         linear = distance_err * 5
         angular_l = heading_err * 1
         angular_r = -heading_err * 1
 
-        l_eff = bound_pwd(linear + angular_l)
-        r_eff = bound_pwd(linear + angular_r)
+        l_eff = linear + angular_l
+        r_eff = linear + angular_r
 
-        out_msgs_pub.publish("server left_effort=" + str(l_eff) + "_right_effort=" + str(r_eff))
-
-        if l_eff >= 0:
-            motor_left.forward(l_eff)
-        else:
-            motor_left.backward(-l_eff)
-
-        if r_eff >= 0:
-            motor_right.backward(r_eff)
-        else:
-            motor_right.forward(-r_eff)
+        motor_left.drive(l_eff)
+        motor_right.drive(r_eff)
 
         sleep(delta_t)
     else:
