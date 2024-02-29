@@ -14,8 +14,6 @@ class Motor():
 
         is_ccw_positive = pwd_multplier
 
-        Device.pin_factory = PiGPIOFactory()
-
         motor_object = PhaseEnableMotor(phase, enable)
 
         encoder_object = RotaryEncoder(encoder_pin_a, encoder_pin_b, max_steps = 256000)

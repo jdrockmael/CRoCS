@@ -3,7 +3,10 @@ import rospy
 from std_msgs.msg import Float32MultiArray
 from time import sleep
 from drivers.motor_dr import Motor
+from gpiozero import Device, PhaseEnableMotor, RotaryEncoder
+from gpiozero.pins.pigpio import PiGPIOFactory
 
+Device.pin_factory = PiGPIOFactory()
 motor_left = Motor(24, 23, 6, 5, 1)
 motor_right = Motor(21, 20, 22, 27, -1)
 
