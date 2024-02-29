@@ -20,7 +20,7 @@ class Motor():
 
         encoder_object = RotaryEncoder(encoder_pin_a, encoder_pin_b, max_steps = 256000)
 
-    def drive(pwd : int):
+    def drive(self, pwd : int):
         pwd = pwd * is_ccw_positive
 
         if pwd > 1:
@@ -33,10 +33,10 @@ class Motor():
         else:
             motor_object.backward(-pwd)
 
-    def stop():
+    def stop(self):
         motor_object.stop()
 
-    def get_distance():
+    def get_distance(self):
         tick_per_rev = 128
         r_of_wheel = 0.02 # in meters
 
