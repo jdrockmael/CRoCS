@@ -3,12 +3,8 @@ import rospy
 from std_msgs.msg import Float32MultiArray
 from time import sleep
 from drivers.motor_dr import Motor
-from gpiozero import Device, PhaseEnableMotor, RotaryEncoder
-from gpiozero.pins.pigpio import PiGPIOFactory
 
-Device.pin_factory = PiGPIOFactory()
-motor_left = Motor(24, 23, 6, 5, 1)
-motor_right = Motor(21, 20, 22, 27, -1)
+motor = Motor()
 
 def control_loop(data : Float32MultiArray):
     data = data.data
@@ -25,13 +21,11 @@ def control_loop(data : Float32MultiArray):
         l_eff = linear + angular_l
         r_eff = linear + angular_r
 
-        motor_left.drive(l_eff)
-        motor_right.drive(r_eff)
+        motor.drive(l_eff, r_eff)
 
         sleep(delta_t)
     else:
-        motor_left.stop()
-        motor_right.stop()
+        motor.stop()
 
 if __name__ == '__main__':
     rospy.init_node('locking')
