@@ -1,0 +1,127 @@
+<?xml version="1.0"?>
+<robot name="cube" xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <!-- Set constants -->
+  <!-- Mass in kg, distance in meter -->
+  <xacro:property name="cube_length" value="0.1524" />
+  <xacro:property name="cube_mass" value="1" />
+
+  <xacro:property name="wheel_radius" value="0.01905"/>
+  <xacro:property name="wheel_length" value="0.00635"/>
+  <xacro:property name="wheel_mass" value="0.1"/>
+  <xacro:property name="wheel_offset_up" value="0.015243"/>
+  <xacro:property name="wheel_offset_forward" value="0.033966"/>
+  <xacro:property name="wheel_offset_side" value="0.05041"/>
+
+  <!-- Intertial for cube -->
+  <xacro:macro name="cube_inertial">
+    <inertial>
+      <mass value="${cube_mass}"/>
+      <inertia ixx="${cube_mass / 12 * (cube_length*cube_length*2)}" iyy="${cube_mass / 12 * (cube_length*cube_length*2)}" izz="${cube_mass / 12 * (cube_length*cube_length*2)}" ixy="0.0" ixz="0.0" iyz="0.0"/>
+    </inertial>
+  </xacro:macro>
+
+  <!-- Intertial for cylinder -->
+  <xacro:macro name="wheel_inertial">
+    <inertial>
+      <mass value="${wheel_mass}"/>
+      <inertia ixx="${wheel_mass/12 * (3*wheel_radius*wheel_radius + wheel_length*wheel_length)}" iyy="${wheel_mass/12 * (3*wheel_radius*wheel_radius + wheel_length*wheel_length)}" izz="${wheel_mass/2 * wheel_radius*wheel_radius}" ixy="0.0" ixz="0.0" iyz="0.0"/>
+    </inertial>
+  </xacro:macro>
+
+  <!-- Intertial for sphere -->
+  <xacro:macro name="caster_intertial" params="mass radius">
+    <inertial>
+      <mass value="${mass}"/>
+      <inertia ixx="${2 * mass / 5 * radius*radius}" iyy="${2 * mass / 5 * radius*radius}" izz="${2 * mass / 5 * radius*radius}" ixy="0.0" ixz="0.0" iyz="0.0"/>
+    </inertial>
+  </xacro:macro>
+
+  <!-- Create cube -->
+  <xacro:macro name="cube">
+    <!-- Dummy to attach cube to and get rid of warning and stuffs -->
+    <link name="dummy">
+    </link>
+
+    <!-- Build cube shape -->
+    <link name="cube">
+      <visual>
+        <geometry>
+          <box size="${cube_length} ${cube_length} ${cube_length}"/>
+        </geometry>
+        <!-- Lift it up a bit to avoid clipping -->
+        <origin xyz="0 0 0.08"/>
+      </visual>
+      <collision>
+        <geometry>
+          <box size="${cube_length} ${cube_length} ${cube_length}"/>
+        </geometry>
+        <origin xyz="0 0 0.08"/>
+      </collision>
+
+      <xacro:cube_inertial/>
+    </link>
+
+    <joint name="dummy_joint" type="fixed">
+      <parent link="dummy"/>
+      <child link="cube"/>
+    </joint>
+  </xacro:macro>
+
+
+  <!-- Create wheel -->
+  <xacro:macro name="wheel" params="direction">
+    <!-- Build the shape -->
+    <link name="${direction}_wheel">
+      <visual>
+        <geometry>
+          <cylinder length="${wheel_length}" radius="${wheel_radius}"/>
+        </geometry>
+        <origin rpy="${pi/2} 0 0"/>
+      </visual>
+      <collision>
+        <geometry>
+          <cylinder length="${wheel_length}" radius="${wheel_radius}"/>
+        </geometry>
+        <origin rpy="${pi/2} 0 0"/>
+      </collision>
+
+      <xacro:wheel_inertial/>
+    </link>
+
+    <!-- Add gazebo physics -->
+    <gazebo reference="${direction}_wheel">
+      <mu1 value="200.0"/>
+      <mu2 value="100.0"/>
+      <kp value="10000000.0" />
+      <kd value="1.0" />
+      <material>Gazebo/Grey</material>
+    </gazebo>
+
+    <!-- Attach to cube accordingly based on left/right wheel -->
+    <joint name="${direction}_wheel_joint" type="continuous">
+      <parent link="cube"/>
+      <child link="${direction}_wheel"/>
+
+      <xacro:if value="${direction=='left'}"> 
+        <origin xyz="${wheel_offset_forward} ${wheel_offset_side} ${wheel_offset_up}"/>
+      </xacro:if>
+
+      <xacro:if value="${direction=='right'}"> 
+        <origin xyz="${wheel_offset_forward} ${-wheel_offset_side} ${wheel_offset_up}"/>
+      </xacro:if>
+      <axis xyz="0 1 0"/>
+    </joint>
+
+    <!-- For control -->
+    <transmission name="${direction}_wheel_trans">
+      <type>transmission_interface/SimpleTransmission</type>
+      <actuator name="${direction}_wheel_motor">
+        <mechanicalReduction>1</mechanicalReduction>
+      </actuator>
+      <joint name="${direction}_wheel_joint">
+        <hardwareInterface>hardware_interface/VelocityJointInterface</hardwareInterface>
+      </joint>
+    </transmission>
+  </xacro:macro>
+
+</robot>

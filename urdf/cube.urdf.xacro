@@ -1,0 +1,65 @@
+<?xml version="1.0"?>
+<robot name="cube" xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <xacro:property name="caster_radius" value="0.006"/>
+  <xacro:property name="caster_mass" value="0.1"/>
+  <xacro:property name="caster_offset_back" value="-0.0508"/>
+
+  <xacro:include filename="$(find CRoCS)/urdf/cube_macro.xacro"/>
+  <xacro:include filename="$(find CRoCS)/urdf/camera.xacro"/>
+  <xacro:include filename="$(find CRoCS)/urdf/apriltag_marker.urdf.xacro" />
+
+  <!-- Add cube -->
+  <xacro:cube/>
+
+  <!-- Add April Tags -->
+  <!-- left -->
+  <xacro:apriltag_marker namespace="" name="$cube_tag_01" parent="cube"
+           family="36h11" ID="01" size="0.15243">
+           <origin xyz="0 ${0.15243/2 + 0.001} ${0.15243/2 + 0.004}" rpy="1.571 0 0" />
+  </xacro:apriltag_marker>
+
+  <!-- right -->
+  <xacro:apriltag_marker namespace="" name="$cube_tag_02" parent="cube"
+           family="36h11" ID="02" size="0.15243">
+           <origin xyz="0 ${-(0.15243/2 + 0.001)} ${0.15243/2 + 0.004}" rpy="-1.571 0 0" />
+  </xacro:apriltag_marker>
+
+  <!-- Add wheels -->
+  <xacro:wheel direction="left"/>
+  <xacro:wheel direction="right"/>
+
+  <link name="caster">
+    <visual>
+      <geometry>
+        <sphere radius="${caster_radius}"/>
+      </geometry>
+    </visual>
+    <collision>
+      <geometry>
+        <sphere radius="${caster_radius}"/>
+      </geometry>
+    </collision>
+    <xacro:caster_intertial mass="${caster_mass}" radius="${caster_radius}"/>
+  </link>
+
+  <joint name="base_to_caster" type="fixed">
+    <parent link="cube"/>
+    <child link="caster"/>
+    <origin xyz="${caster_offset_back} 0 0"/>
+  </joint>
+
+  <gazebo reference="caster">
+    <mu1 value="0.0"/>
+    <mu2 value="0.0"/>
+    <kp value="10000000.0" />
+    <kd value="1.0" />
+    <material>Gazebo/Grey</material>
+  </gazebo>
+
+  <!-- Gazebo plugin for ROS Control -->
+  <gazebo>
+    <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
+      <robotNamespace>/</robotNamespace>
+    </plugin>
+  </gazebo>
+</robot>
