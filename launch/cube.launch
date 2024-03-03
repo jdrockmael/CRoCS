@@ -1,0 +1,41 @@
+<launch>
+  <arg name="robot_name" default="cube"/>
+  <arg name="x_pos" default="0.0"/>
+  <arg name="y_pos" default="0.0"/>
+  <arg name="model" default="$(find CRoCS)/urdf/cube.urdf.xacro"/>
+  <arg name="rvizconfig" default="$(find CRoCS)/rviz/cube.rviz" />
+
+  <!-- Set cube urdf as a parameter -->
+  <param name="robot_description" command="$(find xacro)/xacro $(arg model) robot_name:='$(arg robot_name)'" />
+
+  <!-- Spawn cube with provided position and name -->
+  <node name="$(arg robot_name)_urdf_spawner" pkg="gazebo_ros" type="spawn_model"
+    args="-x $(arg x_pos) -y $(arg y_pos) -z 0.5 -unpause -urdf -model $(arg robot_name) -param robot_description" respawn="false" output="screen" />
+
+  <!-- robot_state_publisher to publish robot's state to tf for rviz -->
+  <node pkg="robot_state_publisher" type="robot_state_publisher"  name="$(arg robot_name)_state_publisher" >
+    <param name="publish_frequency" type="double" value="30.0" />
+    <!-- <remap from="/joint_states" to="/$(arg robot_name)/joint_states"/> -->
+  </node>
+
+  <!-- Launch rviz with preset settings -->
+  <node name="$(arg robot_name)_rviz" pkg="rviz" type="rviz" args="-d $(arg rvizconfig)" />
+
+  <rosparam command="load" file="$(find CRoCS)/config/joints.yaml" ns="/$(arg robot_name)/joint_state_controller" />
+  <rosparam command="load" file="$(find CRoCS)/config/diffdrive.yaml" ns="/$(arg robot_name)/diff_drive_controller" />
+
+  <!-- Match variable parameters in diffdrive.yaml to match with the corresponding robot name -->
+  <param name="/$(arg robot_name)/diff_drive_controller/right_wheel"  value="$(arg robot_name)_right_wheel_joint"/>
+  <param name="/$(arg robot_name)/diff_drive_controller/left_wheel"  value="$(arg robot_name)_left_wheel_joint"/>
+  <param name="/$(arg robot_name)/diff_drive_controller/base_frame_id"  value="$(arg robot_name)"/>
+
+  <node name="$(arg robot_name)_controller_spawner" pkg="controller_manager" type="spawner"
+    args="/$(arg robot_name)/joint_state_controller
+          /$(arg robot_name)/diff_drive_controller
+          --shutdown-timeout 3"/>
+
+  <!-- Control the robot -->
+  <node name="$(arg robot_name)_rqt_steering" pkg="rqt_robot_steering" type="rqt_robot_steering">
+    <param name="default_topic" value="/$(arg robot_name)/diff_drive_controller/cmd_vel"/>
+  </node>
+</launch>

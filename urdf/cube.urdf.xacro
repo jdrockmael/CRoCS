@@ -1,65 +1,38 @@
 <?xml version="1.0"?>
 <robot name="cube" xmlns:xacro="http://www.ros.org/wiki/xacro">
-  <xacro:property name="caster_radius" value="0.006"/>
-  <xacro:property name="caster_mass" value="0.1"/>
-  <xacro:property name="caster_offset_back" value="-0.0508"/>
 
   <xacro:include filename="$(find CRoCS)/urdf/cube_macro.xacro"/>
-  <xacro:include filename="$(find CRoCS)/urdf/camera.xacro"/>
+  <!-- <xacro:include filename="$(find CRoCS)/urdf/camera.xacro"/> -->
   <xacro:include filename="$(find CRoCS)/urdf/apriltag_marker.urdf.xacro" />
 
+  <xacro:arg name="robot_name" default="cube1"/>
+
   <!-- Add cube -->
-  <xacro:cube/>
+  <xacro:cube name="$(arg robot_name)"/>
 
   <!-- Add April Tags -->
-  <!-- left -->
-  <xacro:apriltag_marker namespace="" name="$cube_tag_01" parent="cube"
-           family="36h11" ID="01" size="0.15243">
-           <origin xyz="0 ${0.15243/2 + 0.001} ${0.15243/2 + 0.004}" rpy="1.571 0 0" />
+  <xacro:apriltag_marker namespace="$(arg robot_name)" name="left_tag_01" ID="01" size="0.15243"> 
+    <origin xyz="0 ${0.15243/2 + 0.001} ${0.15243/2 + 0.004}" rpy="${pi/2} 0 0" />
   </xacro:apriltag_marker>
 
-  <!-- right -->
-  <xacro:apriltag_marker namespace="" name="$cube_tag_02" parent="cube"
-           family="36h11" ID="02" size="0.15243">
-           <origin xyz="0 ${-(0.15243/2 + 0.001)} ${0.15243/2 + 0.004}" rpy="-1.571 0 0" />
+  <xacro:apriltag_marker namespace="$(arg robot_name)" name="right_tag_02" ID="02" size="0.15243">
+    <origin xyz="0 ${-(0.15243/2 + 0.001)} ${0.15243/2 + 0.004}" rpy="${-pi/2} 0 0" />
   </xacro:apriltag_marker>
 
   <!-- Add wheels -->
-  <xacro:wheel direction="left"/>
-  <xacro:wheel direction="right"/>
+  <xacro:wheel  direction="left" name="$(arg robot_name)"/>
+  <xacro:wheel  direction="right" name="$(arg robot_name)"/>
 
-  <link name="caster">
-    <visual>
-      <geometry>
-        <sphere radius="${caster_radius}"/>
-      </geometry>
-    </visual>
-    <collision>
-      <geometry>
-        <sphere radius="${caster_radius}"/>
-      </geometry>
-    </collision>
-    <xacro:caster_intertial mass="${caster_mass}" radius="${caster_radius}"/>
-  </link>
+  <!-- Add caster -->
+  <xacro:caster name="$(arg robot_name)"/>
 
-  <joint name="base_to_caster" type="fixed">
-    <parent link="cube"/>
-    <child link="caster"/>
-    <origin xyz="${caster_offset_back} 0 0"/>
-  </joint>
-
-  <gazebo reference="caster">
-    <mu1 value="0.0"/>
-    <mu2 value="0.0"/>
-    <kp value="10000000.0" />
-    <kd value="1.0" />
-    <material>Gazebo/Grey</material>
-  </gazebo>
+  <!-- Add camera-->
+  <xacro:cam name="$(arg robot_name)"/>
 
   <!-- Gazebo plugin for ROS Control -->
   <gazebo>
     <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
-      <robotNamespace>/</robotNamespace>
+      <robotNamespace></robotNamespace>
     </plugin>
   </gazebo>
 </robot>
