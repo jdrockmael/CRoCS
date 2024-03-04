@@ -53,13 +53,13 @@
           <box size="${cube_length} ${cube_length} ${cube_length}"/>
         </geometry>
         <!-- Lift it up a bit to avoid clipping -->
-        <origin xyz="0 0 0.08"/>
+        <origin xyz="0 0 0.08" />
       </visual>
       <collision>
         <geometry>
           <box size="${cube_length} ${cube_length} ${cube_length}"/>
         </geometry>
-        <origin xyz="0 0 0.08"/>
+        <origin xyz="0 0 0.08" />
       </collision>
 
       <xacro:cube_inertial/>
@@ -68,7 +68,8 @@
     <joint name="${name}_dummy_joint" type="fixed">
       <parent link="${name}_dummy"/>
       <child link="${name}"/>
-      <origin xyz="0 0 0"/>
+      <!-- Rotate the robot by (rotate) degrees, after converting it to radians -->
+      <origin xyz="0 0 0" rpy="0 0 ${rotate}"/>
     </joint>
   </xacro:macro>
 
@@ -108,11 +109,11 @@
       <child link="${name}_${direction}_wheel"/>
 
       <xacro:if value="${direction=='left'}"> 
-        <origin xyz="${wheel_offset_forward} ${wheel_offset_side} ${wheel_offset_up}"/>
+        <origin xyz="${wheel_offset_forward} ${wheel_offset_side} ${wheel_offset_up}" />
       </xacro:if>
 
       <xacro:if value="${direction=='right'}"> 
-        <origin xyz="${wheel_offset_forward} ${-wheel_offset_side} ${wheel_offset_up}"/>
+        <origin xyz="${wheel_offset_forward} ${-wheel_offset_side} ${wheel_offset_up}" />
       </xacro:if>
       <axis xyz="0 1 0"/>
     </joint>
@@ -148,7 +149,7 @@
     <joint name="${name}_to_caster" type="fixed">
       <parent link="${name}"/>
       <child link="${name}_caster"/>
-      <origin xyz="${caster_offset_back} 0 0"/>
+      <origin xyz="${caster_offset_back} 0 0" />
     </joint>
 
     <gazebo reference="${name}_caster">
@@ -173,7 +174,7 @@
       <joint name="${name}_camera_joint" type="fixed">
           <parent link="${name}"/>
           <child link="${name}_camera_link"/>
-          <origin xyz="0.0762 0 0.0762" rpy="0 0 0"/>
+          <origin xyz="0.0762 0 0.0762" />
       </joint>
 
       <link name="${name}_camera_link_optical"></link>
@@ -205,7 +206,7 @@
                   </clip>
               </camera>
               <plugin name="${name}_camera_controller" filename="libgazebo_ros_camera.so">
-                  <cameraName>${name}/camera</cameraName>
+                  <cameraName>camera</cameraName>
                   <imageTopicName>image_raw</imageTopicName>
                   <cameraInfoTopicName>camera_info</cameraInfoTopicName>
                   <frameName>${name}_camera_link</frameName>

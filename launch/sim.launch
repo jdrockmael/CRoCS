@@ -8,27 +8,27 @@
     <arg name="headless" value="false"/>
   </include>
 
-  <!-- BEGIN ROBOT 1-->
-  <!-- <group ns="robot1">
-    <param name="tf_prefix" value="robot1_tf" />
-    <include file="$(find your_pkg)/launch/one_robot.launch" >
-      <arg name="init_pose" value="-x 1 -y 1 -z 0" />
-      <arg name="robot_name"  value="Robot1" />
-    </include>
-  </group> -->
-
-
   <!-- BEGIN CUBE 1 -->
-  <include file="$(find CRoCS)/launch/cube.launch">
-    <arg name="robot_name" value="cube1"/>
-    <arg name="x_pos" value="0.0"/>
-    <arg name="y_pos" value="0.0"/>
-  </include>
+  <group ns="cube1">
+    <include file="$(find CRoCS)/launch/cube.launch">
+      <arg name="robot_name" value="cube1"/>
+      <arg name="x_pos" value="0.0"/>
+      <arg name="y_pos" value="0.0"/>
+      <arg name="rotate" value="0.0"/>
+      <arg name="rviz" value="true"/>
+      <arg name="control" value="true"/>
+    </include>
+  </group>
 
-  <!-- Create cube
-  <include file="$(find CRoCS)/launch/cube.launch">
-    <arg name="robot_name" value="cube2"/>
-    <arg name="x_pos" value="3.0"/>
-    <arg name="y_pos" value="0.0"/>
-  </include> -->
+  <!-- BEGIN CUBE 2 -->
+  <group ns="cube2">
+    <include file="$(find CRoCS)/launch/cube.launch">
+      <arg name="robot_name" value="cube2"/>
+      <arg name="x_pos" value="1"/>
+      <arg name="y_pos" value="0.0"/>
+      <arg name="rotate" value="90.0"/>
+    </include>
+  </group>
+
+
 </launch>

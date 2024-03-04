@@ -6,6 +6,9 @@
   <xacro:include filename="$(find CRoCS)/urdf/apriltag_marker.urdf.xacro" />
 
   <xacro:arg name="robot_name" default="cube1"/>
+  <xacro:arg name="rotate" default="0.0"/>
+  <xacro:property name="temp" value="$(arg rotate)"/>
+  <xacro:property name="rotate" value="${temp * pi / 180}"/>
 
   <!-- Add cube -->
   <xacro:cube name="$(arg robot_name)"/>
@@ -32,7 +35,8 @@
   <!-- Gazebo plugin for ROS Control -->
   <gazebo>
     <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
-      <robotNamespace></robotNamespace>
+      <robotNamespace>/$(arg robot_name)</robotNamespace>
+      <robotParam>$(arg robot_name)/robot_description</robotParam>
     </plugin>
   </gazebo>
 </robot>
