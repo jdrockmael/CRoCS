@@ -7,6 +7,7 @@
   <arg name="rvizconfig" default="$(find CRoCS)/rviz/$(arg robot_name).rviz" />
   <arg name="rviz" default="false"/>
   <arg name="control" default="false"/>
+  <arg name="sim" default="false"/>
 
   <param name="tf_prefix" value="$(arg robot_name)_tf" />
 
@@ -36,6 +37,7 @@
   <param name="/$(arg robot_name)/diff_drive_controller/left_wheel"  value="$(arg robot_name)_left_wheel_joint"/>
   <param name="/$(arg robot_name)/diff_drive_controller/base_frame_id"  value="$(arg robot_name)"/>
 
+  <!-- Joint velocity is in angular velocity, w = v/r -->
   <node name="controller_spawner" pkg="controller_manager" type="spawner"
     args="joint_state_controller
           diff_drive_controller"/>
@@ -44,4 +46,15 @@
   <node if="$(arg control)" name="rqt_steering" pkg="rqt_robot_steering" type="rqt_robot_steering">
     <param name="default_topic" value="diff_drive_controller/cmd_vel"/>
   </node>
+
+  <node if="$(arg control)" pkg="CRoCS" name="cam" type="cam.py" output="screen">
+      <param name="robot_name" value="$(arg robot_name)" />
+      <param name="sim" value="$(arg sim)" />
+  </node>
+  
+  <node pkg="CRoCS" name="localization" type="localization.py" output="screen">
+      <param name="robot_name" value="$(arg robot_name)" />
+  </node>
+
+  
 </launch>

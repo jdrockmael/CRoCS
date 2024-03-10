@@ -1,5 +1,4 @@
 #!/usr/bin/python3
-#/bin/python3.9
 import cv2
 from dt_apriltags import Detector
 import numpy as np
@@ -7,15 +6,24 @@ import math
 import collections
 import rospy
 from std_msgs.msg import Float32MultiArray, Bool
-# from CRoCs.msg import April
+from cv_bridge import CvBridge
+from sensor_msgs.msg import Image
 
 
 import time
 
 class AprilCam():
-    def __init__(self):
+    def __init__(self, robot_name, sim=False):
+        self.sim = sim
+        if sim:
+            self.bridge = CvBridge()
+        else:
+            self.cap = cv2.VideoCapture(0)
+
+        self.robot_name = robot_name
+        self.range_pub = rospy.Publisher(str('/' + robot_name + "/apriltag"), Float32MultiArray, queue_size=1)
+
         self.cam_param = (534.0708862263613, 534.1191479816413, 341.5340710724817, 232.94565221113476)
-        self.cap = cv2.VideoCapture(0)
         self.at_detector = Detector()
 
         self.range_l = collections.deque(maxlen=10)
@@ -32,11 +40,13 @@ class AprilCam():
         # Fit a linear model
         return self.m * measurement + self.b
 
-    def get_measurements(self):
+    def get_measurements(self, msg):
         # Take each frame
-        _, frame = self.cap.read()
-        grayscale = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-
+        if self.sim:
+            grayscale = self.bridge.imgmsg_to_cv2(msg, desired_encoding='mono8')
+        else:
+            _, frame = self.cap.read()
+            grayscale = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
         tags_side =self.at_detector.detect(grayscale, estimate_tag_pose=True, camera_params=self.cam_param, tag_size=0.122)
 
@@ -63,37 +73,43 @@ class AprilCam():
                 self.prevM[id]["range"].append(range)
                 self.prevM[id]["bearing"].append(bearing)
                 
-                # print(id)
                 # Return an array of [ID, range(m), bearing(radian)]
-                measurement.append(Float32MultiArray(data=[float(id), float(np.average(self.prevM[id]["range"])), float(np.average(self.prevM[id]["bearing"]))]))
+                reading = Float32MultiArray(data=[float(id), float(np.average(self.prevM[id]["range"])), float(np.average(self.prevM[id]["bearing"]))])
+                self.range_pub.publish(reading)
+                measurement.append(reading)
 
-        # self.end = time.time()
-        # print("Elapased time: ", self.end - self.start)
-        # self.start = time.time()
-        return measurement
+        # if measurement:
+        #     for tag in measurement:
+        #         self.range_pub.publish(measurement)
+        #     else:
+        #         self.range_pub.publish(Float32MultiArray(data=[]))
 
     def stop(self):
         cv2.destroyAllWindows()
 
 def measure():
-    range_pub = rospy.Publisher('range', Float32MultiArray, queue_size=1)
+    robot_name = rospy.get_param('cam/robot_name')
+    sim = rospy.get_param('cam/sim')
+
     rospy.init_node("cam")
 
     rospy.loginfo("Starting Arducam node")
-    cam = AprilCam()
+    
+    cam = AprilCam(robot_name, sim)
 
-    while not rospy.is_shutdown():
-        rospy.sleep(0.005)              # Sleep for 5ms
-        tags = cam.get_measurements()
-        if tags:
-            for measurement in tags:
-                range_pub.publish(measurement)
-        else:
-            range_pub.publish(Float32MultiArray(data=[]))
+    # while not rospy.is_shutdown():
+        # rate.sleep()
+    rospy.Subscriber(str("/" + robot_name + "/camera/image_raw"), Image, cam.get_measurements)
+    rospy.spin()
+        # tags = cam.get_measurements()
+        # if tags:
+        #     for measurement in tags:
+        #         range_pub.publish(measurement)
+        # else:
+        #     range_pub.publish(Float32MultiArray(data=[]))
 
 if __name__ == "__main__":
     try:
         measure()
     except rospy.ROSInterruptException:
         pass
-    

@@ -14,13 +14,35 @@
   <xacro:cube name="$(arg robot_name)"/>
 
   <!-- Add April Tags -->
-  <xacro:apriltag_marker namespace="$(arg robot_name)" name="left_tag_01" ID="01" size="0.15243"> 
-    <origin xyz="0 ${0.15243/2 + 0.001} ${0.15243/2 + 0.004}" rpy="${pi/2} 0 0" />
+  <xacro:apriltag_marker namespace="$(arg robot_name)" name="left_tag_05" ID="05" size="0.15243"> 
+    <origin xyz="0 ${0.15243/2 + 0.001} ${0.15243/2 + 0.004}" rpy="${pi/2} 0 ${pi} " />
   </xacro:apriltag_marker>
 
-  <xacro:apriltag_marker namespace="$(arg robot_name)" name="right_tag_02" ID="02" size="0.15243">
-    <origin xyz="0 ${-(0.15243/2 + 0.001)} ${0.15243/2 + 0.004}" rpy="${-pi/2} 0 0" />
+  <xacro:apriltag_marker namespace="$(arg robot_name)" name="right_tag_05" ID="05" size="0.15243">
+    <origin xyz="0 ${-(0.15243/2 + 0.001)} ${0.15243/2 + 0.004}" rpy="${-pi/2} ${pi}  ${pi} " />
   </xacro:apriltag_marker>
+
+  <!-- <model name='Apriltag36_11_00000'>
+    <link name='main'>
+      <pose>0 0 0 0 -0 0</pose>
+      <visual name='main_Visual'>
+        <geometry>
+          <box>
+            <size>1 1 0.01</size>
+          </box>
+        </geometry>
+        <material>
+          <script>
+            <uri>model://Apriltag36_11_00000/materials/scripts</uri>
+            <uri>model://Apriltag36_11_00000/materials/textures</uri>
+            <name>Apriltag36_11_00000</name>
+          </script>
+        </material>
+      </visual>
+    </link>
+    <static>1</static>
+    <pose>4.05194 0.010848 0 0 -0 0</pose>
+  </model> -->
 
   <!-- Add wheels -->
   <xacro:wheel  direction="left" name="$(arg robot_name)"/>
