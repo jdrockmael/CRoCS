@@ -2,9 +2,7 @@
 import rospy
 from std_msgs.msg import Float32MultiArray
 from time import sleep
-from drivers.motor_dr import Motor
-
-motor = Motor()
+from drivers.motor_dr import motor
 
 def control_loop(data : Float32MultiArray):
     data = data.data
@@ -29,7 +27,5 @@ def control_loop(data : Float32MultiArray):
 
 if __name__ == '__main__':
     rospy.init_node('locking')
-
     rospy.Subscriber("range", Float32MultiArray, control_loop)
-
     rospy.spin()

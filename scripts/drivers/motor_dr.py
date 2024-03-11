@@ -52,3 +52,5 @@ class Motor():
         right = (encoder_right.steps / tick_per_rev) * (2 * pi * r_of_wheel)
 
         return (left, right)
+    
+motor = Motor()
