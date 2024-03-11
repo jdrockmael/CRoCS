@@ -52,7 +52,11 @@
       <param name="sim" value="$(arg sim)" />
   </node>
   
-  <node pkg="CRoCS" name="localization" type="localization.py" output="screen">
+  <node if="$(arg control)" pkg="CRoCS" name="localization" type="localization.py" output="screen">
+      <param name="robot_name" value="$(arg robot_name)" />
+  </node>
+
+  <node if="$(arg control)" pkg="CRoCS" name="square" type="square.py" output="screen">
       <param name="robot_name" value="$(arg robot_name)" />
   </node>
 

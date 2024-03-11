@@ -93,7 +93,7 @@
         <visual name='main_Visual'>
           <geometry>
             <box>
-              <size>1 1 0.01</size>
+              <size>0.15243 0.15243 0.0001</size>
             </box>
           </geometry>
           <material>
@@ -112,15 +112,15 @@
       <pose>4.05194 0.010848 0 0 -0 0</pose>
     </model>
     <state world_name='default'>
-      <sim_time>62 392000000</sim_time>
-      <real_time>63 299867877</real_time>
-      <wall_time>1710028524 748160157</wall_time>
-      <iterations>62392</iterations>
+      <sim_time>256 160000000</sim_time>
+      <real_time>195 134751309</real_time>
+      <wall_time>1710111082 23219351</wall_time>
+      <iterations>193768</iterations>
       <model name='Apriltag36_11_00000'>
-        <pose>4.05361 1.40141 0.571171 0 -1.56787 0</pose>
+        <pose>2.087 0 0.08 0 -1.56787 0</pose>
         <scale>1 1 1</scale>
         <link name='main'>
-          <pose>4.05361 1.40141 0.571171 0 -1.56787 0</pose>
+          <pose>3.0 0 0.08 0 -1.56787 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
@@ -142,7 +142,7 @@
     </state>
     <gui fullscreen='0'>
       <camera name='user_camera'>
-        <pose>6.43424 -6.0372 2.47195 0 0.275643 2.35619</pose>
+        <pose>4.02955 -1.87294 1.15598 0 0.395643 2.49619</pose>
         <view_controller>orbit</view_controller>
         <projection_type>perspective</projection_type>
       </camera>

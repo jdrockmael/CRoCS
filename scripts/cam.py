@@ -8,9 +8,12 @@ import rospy
 from std_msgs.msg import Float32MultiArray, Bool
 from cv_bridge import CvBridge
 from sensor_msgs.msg import Image
-
+# from contextlib import contextmanager,redirect_stderr,redirect_stdout
 
 import time
+import os
+import sys
+from contextlib import contextmanager
 
 class AprilCam():
     def __init__(self, robot_name, sim=False):
@@ -41,6 +44,7 @@ class AprilCam():
         return self.m * measurement + self.b
 
     def get_measurements(self, msg):
+        
         # Take each frame
         if self.sim:
             grayscale = self.bridge.imgmsg_to_cv2(msg, desired_encoding='mono8')
@@ -49,7 +53,6 @@ class AprilCam():
             grayscale = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
         tags_side =self.at_detector.detect(grayscale, estimate_tag_pose=True, camera_params=self.cam_param, tag_size=0.122)
-
         measurement = []
         if tags_side:
             for i, tag_side in enumerate(tags_side):
@@ -110,6 +113,8 @@ def measure():
 
 if __name__ == "__main__":
     try:
+        sys.stdout = open(os.devnull, 'w')
+        sys.stderr = open(os.devnull, 'w')
         measure()
     except rospy.ROSInterruptException:
         pass

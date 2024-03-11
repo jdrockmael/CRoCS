@@ -71,7 +71,7 @@
         <origin xyz="0 0 0" rpy="0 0 0" />
         <geometry>
           <!-- use Python str to convert family name and to generate leading zeros -->
-          <mesh filename="file:///$(find CRoCS)/meshes/tag36_11_${str(ID).zfill(5)}.dae" scale="${10*mesh_size} ${10*mesh_size} 1"/>
+          <mesh filename="file:///$(find CRoCS)/models/tag36_11_${str(ID).zfill(5)}.dae" scale="${10*mesh_size} ${10*mesh_size} 1"/>
         </geometry>
       </visual>
     </link>
