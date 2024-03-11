@@ -6,6 +6,8 @@
 
   <env name="GAZEBO_MODEL_PATH" value="$GAZEBO_MODEL_PATH:$(find CRoCS)/models"/>
 
+  <node pkg="CRoCS" type="ik.py" name="ik"/>
+
   <!-- BEGIN CUBE 1 -->
   <group ns="cube1">
     <include file="$(find CRoCS)/launch/cube.launch">
