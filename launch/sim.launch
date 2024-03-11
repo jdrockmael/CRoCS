@@ -4,6 +4,8 @@
     <arg name="world_name" value="$(find CRoCS)/worlds/sim.sdf"/>
   </include>
 
+  <node pkg="CRoCS" type="ik.py" name="ik"/>
+
   <!-- BEGIN CUBE 1 -->
   <group ns="cube1">
     <include file="$(find CRoCS)/launch/cube.launch">
