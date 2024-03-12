@@ -16,7 +16,7 @@ def calc_wheel_vel(prev_wheel_dis, curr_wheel_dis, delta_t):
 
     return (left_vel, right_vel)
 
-def fk(wheel_vel, curr_pose, delta_t):
+def calc_fk(wheel_vel, curr_pose, delta_t):
     l = 0.101 # meters
     vl, vr = wheel_vel
 
@@ -52,7 +52,7 @@ if __name__ == '__main__':
         dt = curr_t - prev_t
 
         wheel_vel = calc_wheel_vel(prev_dist, curr_dist, dt)
-        pose = fk(wheel_vel, pose, dt)
+        pose = calc_fk(wheel_vel, pose, dt)
 
         prev_dist = curr_dist
         prev_t = curr_t
