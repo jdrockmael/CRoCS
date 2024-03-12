@@ -32,10 +32,6 @@ def update_pose(pose : Float32MultiArray):
     global curr_pose
     curr_pose = pose.data
 
-def drive_to_point(desired : Float32MultiArray):
-    desired_pose = desired.data
-    desired_heading = atan2(desired_pose[1], desired_pose[0])
-
 def drive_to(pose):
     distance = sqrt((pose[0]-curr_pose[0])^2 + (pose[1]-curr_pose[1])^2)
     heading = atan2(pose[1], pose[0])
@@ -43,9 +39,9 @@ def drive_to(pose):
     while(distance > 0.1):
         distance = sqrt((pose[0]-curr_pose[0])^2 + (pose[1]-curr_pose[1])^2)
         
-        linear = distance * 5
-        angular_l = curr_pose[2] - heading * 1
-        angular_r = -curr_pose[2] + heading * 1
+        linear = distance * 5.0
+        angular_l = curr_pose[2] - heading * 1.0
+        angular_r = -curr_pose[2] + heading * 1.0
 
         l_eff = linear + angular_l
         r_eff = linear + angular_r
@@ -61,18 +57,25 @@ def turn_to(heading):
     error = curr_pose[2] - desired_heading
 
     while(error > 0.1):
-        angular_l = error * 1
-        angular_r = -error * 1
+        angular_l = error * 1.0
+        angular_r = -error * 1.0
 
         l_eff = angular_l
         r_eff = angular_r
 
         motor.drive(l_eff, r_eff)
 
-        sleep(0.001)
+        # not sure if I need the sleep or not but we can test
+        #sleep(0.001)
     
     motor.stop()
 
+def drive_to_point(desired : Float32MultiArray):
+    desired_pose = desired.data
+    desired_heading = atan2(desired_pose[1], desired_pose[0])
+    turn_to(desired_heading)
+    drive_to(desired_pose)
+    turn_to(desired_pose[2])
 
 if __name__ == '__main__':
     rospy.init_node('ik')
