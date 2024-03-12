@@ -5,34 +5,51 @@ from std_msgs.msg import Float32MultiArray
 from time import clock_gettime
 from drivers.motor_dr import motor
 
-pose = [0.0, 0.0, 0.0]
-
 pose_pub = rospy.Publisher('curr_pose', Float32MultiArray, queue_size= 1)
 
-def fk():
-    global pose
-    curr = None
+def calc_wheel_vel(prev_wheel_dis, curr_wheel_dis, delta_t):
+    delta_l = curr_wheel_dis[0][0] - prev_wheel_dis[0][0]
+    delta_r = curr_wheel_dis[0][1] - prev_wheel_dis[0][1]
+
+    left_vel = delta_l / delta_t
+    right_vel = delta_r / delta_t
+
+    return (left_vel, right_vel)
+
+def fk(wheel_vel, curr_pose, delta_t):
     l = 0.101 # meters
-    prev = ((0.0, 0.0), clock_gettime(0))
+    vl, vr = wheel_vel
 
-    curr = (motor.get_distance(), clock_gettime(0))
-
-    vl = (curr[0][0] - prev[0][0]) / (curr[1] - prev[1])
-    vr = (curr[0][1] - prev[0][1]) / (curr[1] - prev[1])
-
-    prev = curr
-
-    r = (l / 2) * ((vl + vr) / (vr - vl))
+    r = (l / 2.0) * ((vl + vr) / (vr - vl))
     omega = (vr - vl) / l
 
-    x, y, theta = pose[0], pose[1], pose[2]
+    x, y, theta = curr_pose[0], curr_pose[1], curr_pose[2]
     icc_x = x - r * sin(theta)
     icc_y = y + r * cos(theta)
 
-    new_x = (x - icc_x) * cos()
+    new_x = (x - icc_x) * cos(omega * delta_t) + (y - icc_y) * -sin(omega * delta_t) + icc_x
+    new_y = (x - icc_x) * sin(omega * delta_t) + (y - icc_y) * cos(omega * delta_t) + icc_y
+    new_theta = theta + omega * delta_t
+
+    return [new_x, new_y, new_theta]
 
 if __name__ == '__main__':
     rospy.init_node('fk')
 
+    pose = [0.0, 0.0, 0.0]
+    prev_dist = (0.0, 0.0)
+    prev_t = clock_gettime(0)
+
     while rospy.is_shutdown():
-        pass
+        curr_dist = motor.get_distance()
+        curr_t = clock_gettime(0)
+
+        dt = curr_t - prev_t
+
+        wheel_vel = calc_wheel_vel(prev_dist, curr_dist, dt)
+        pose = fk(wheel_vel, pose, dt)
+
+        prev_dist = curr_dist
+        prev_t = curr_t
+
+        pose_pub.publish(Float32MultiArray(data=pose))
