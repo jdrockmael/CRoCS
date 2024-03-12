@@ -54,8 +54,24 @@ def drive_to(pose):
 
         sleep(0.001)
 
+    motor.stop()
+
 def turn_to(heading):
     desired_heading = heading
+    error = curr_pose[2] - desired_heading
+
+    while(error > 0.1):
+        angular_l = error * 1
+        angular_r = -error * 1
+
+        l_eff = angular_l
+        r_eff = angular_r
+
+        motor.drive(l_eff, r_eff)
+
+        sleep(0.001)
+    
+    motor.stop()
 
 
 if __name__ == '__main__':
