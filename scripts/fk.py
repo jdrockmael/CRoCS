@@ -20,16 +20,21 @@ def fk(wheel_vel, curr_pose, delta_t):
     l = 0.101 # meters
     vl, vr = wheel_vel
 
-    r = (l / 2.0) * ((vl + vr) / (vr - vl))
     omega = (vr - vl) / l
+    vel = (vr + vl) / 2
+    # r = (l / 2.0) * ((vl + vr) / (vr - vl))
 
     x, y, theta = curr_pose[0], curr_pose[1], curr_pose[2]
-    icc_x = x - r * sin(theta)
-    icc_y = y + r * cos(theta)
+    # icc_x = x - r * sin(theta)
+    # icc_y = y + r * cos(theta)
 
-    new_x = (x - icc_x) * cos(omega * delta_t) + (y - icc_y) * -sin(omega * delta_t) + icc_x
-    new_y = (x - icc_x) * sin(omega * delta_t) + (y - icc_y) * cos(omega * delta_t) + icc_y
-    new_theta = theta + omega * delta_t
+    # new_x = (x - icc_x) * cos(omega * delta_t) + (y - icc_y) * -sin(omega * delta_t) + icc_x
+    # new_y = (x - icc_x) * sin(omega * delta_t) + (y - icc_y) * cos(omega * delta_t) + icc_y
+    # new_theta = theta + omega * delta_t
+
+    new_x = x + delta_t * vel * cos(theta)
+    new_y = y + delta_t * vel * sin(theta)
+    new_theta = theta + delta_t * omega
 
     return [new_x, new_y, new_theta]
 

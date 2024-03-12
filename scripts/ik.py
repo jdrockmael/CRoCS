@@ -26,6 +26,6 @@ def control_loop(data : Float32MultiArray):
         motor.stop()
 
 if __name__ == '__main__':
-    rospy.init_node('locking')
+    rospy.init_node('ik')
     rospy.Subscriber("range", Float32MultiArray, control_loop)
     rospy.spin()
