@@ -1,12 +1,11 @@
 import numpy as np
 import math
 import sympy
-from copy import deepcopy
 from sympy import symbols, Matrix
-# from filterpy.stats import plot_covariance_ellipse
 from math import sqrt, tan, cos, sin, atan2
 import matplotlib.pyplot as plt
 from numpy.random import randn
+import rospy
 # from IPython.display import display
 sympy.init_printing(use_latex='mathjax')
 
@@ -29,7 +28,7 @@ class RobotEKF():
         self.P = np.eye(self.dim_x)                           # uncertainty covariance
         self.P[0,0] = 1e-2
         self.P[1,1] = 1e-2
-        self.P[2,2] = 1e-4
+        self.P[2,2] = 1e-3
         self.Q = np.diag([VAR_ENC, VAR_ENC])                  # process uncertainty
         self.R = np.diag([VAR_POSE1, VAR_POSE1, VAR_POSE1, VAR_POSE2, VAR_POSE2])
 
@@ -60,7 +59,7 @@ class RobotEKF():
         self.A_j = self.f.jacobian(pose)
         self.W_j= self.f.jacobian(process_noise)
 
-        self.subs = {x:0, y: 0, theta:0, Vl:0, Vr:0, dt:0, x2:0, y2:0, b:wheelbase, 
+        self.subs = {x:0, y: 0, theta:0, Vl:0, Vr:0, dt:0, x2:0, y2:0, b:self.wheelbase, 
                      wl: 0, wr:0, wx: 0, wy: 0, wtheta: 0,
                      vxk: 0, vx2: 0, vyk: 0, vy2: 0, vthetak: 0}
 
@@ -81,10 +80,6 @@ class RobotEKF():
     
         self.subs[self.dt] = dt
 
-        self.subs[self.x_x] = self.pose[0,0]
-        self.subs[self.x_y] = self.pose[1,0]
-        self.subs[self.x_theta] = self.pose[2,0]
-
         self.subs[self.vl] = u[0]
         self.subs[self.vr] = u[1]
 
@@ -93,6 +88,9 @@ class RobotEKF():
 
         # Update pose
         self.pose = np.array(self.f.evalf(subs=self.subs)).astype(float)  
+        self.subs[self.x_x] = self.pose[0,0]
+        self.subs[self.x_y] = self.pose[1,0]
+        self.subs[self.x_theta] = self.pose[2,0]
 
         # Set the process noise
         w = np.random.normal(0, self.Q)
@@ -114,11 +112,6 @@ class RobotEKF():
         :pose2: 2x1 vector consisting of x2 and y2
         :dt: elapsed time
         """
-        # Set poses
-        self.subs[self.x_x] = self.pose[0,0]
-        self.subs[self.x_y] = self.pose[1,0]
-        self.subs[self.x_theta] = self.pose[2,0]
-
         self.subs[self.x2_x] = pose2[0]
         self.subs[self.x2_y] = pose2[1]
 
@@ -135,14 +128,18 @@ class RobotEKF():
         H = np.array(self.H_j.evalf(subs=self.subs)).astype(float) 
         V = np.array(self.V_j.evalf(subs=self.subs)).astype(float) 
         K = self.P @ H.T @ np.linalg.inv(H @ self.P @ H.T + V @ self.R @ V.T)
-        # print("K: ", K)
         self.pose += K @ self.residual(z, pose2)
+
+        # Set poses
+        self.subs[self.x_x] = self.pose[0,0]
+        self.subs[self.x_y] = self.pose[1,0]
+        self.subs[self.x_theta] = self.pose[2,0]
         
         # Update covariance, equivalent to P = (I - KH)P
         self.P -= K @ H @ self.P
 
     def residual(self, z, pose2):
-        """ Helper function to convert pose to measurement with h matrix
+        """ Helper function to calculate the residual
         """
         # Set pose
         self.subs[self.x_x] = self.pose[0,0]
@@ -159,20 +156,13 @@ class RobotEKF():
         self.subs[self.V_vx2] = 0
         self.subs[self.V_vy2] = 0
 
-        # print("Pose2: ", pose2)
-        # print("Pose: ", self.pose)
-
         innovation = np.array(self.h.evalf(subs=self.subs)).astype(float) 
-        
-        # print("Innovation: ", innovation)
         zx = z - innovation
 
         # Normalize bearing to [-pi, pi]
         zx[-1] = zx[-1] % (2 * np.pi)
         if zx[-1] > np.pi:             
             zx[-1] -= 2 * np.pi
-
-        # print("Zx: ", zx)
 
         return zx
     
@@ -195,36 +185,3 @@ class RobotEKF():
         self.subs[self.V_vy2] = 0
 
         return np.array(self.h.evalf(subs=self.subs)).astype(float) 
-
-# ekf = RobotEKF(95.25)
-
-# # landmarks = np.array([[60, -20], [20, 30], [40, 20]])
-# landmarks = np.array([])
-# dt = 0.1
-
-# u = np.array([5, 9])
-# plt.figure()
-# if landmarks.size != 0:
-#     plt.scatter(landmarks[:, 0], landmarks[:, 1], marker='s', s=60)
-
-# track = []
-
-# for i in range(100):
-#     ekf.predict(u, dt)
-#     sim_pos = ekf.pose.copy()
-#     track.append(sim_pos)
-
-#     if i % 10 == 0:
-#         plot_covariance_ellipse(
-#             (ekf.pose[0,0], ekf.pose[1,0]), ekf.P[0:2, 0:2], 
-#                 std=15, facecolor='k', alpha=0.3)
-
-#     for lmark in landmarks:
-#         z = ekf.z_landmark(lmark)
-#         ekf.update(z, lmark, dt)
-
-#     if landmarks.size != 0 and i % 10 == 0:
-#         plot_covariance_ellipse(
-#             (ekf.pose[0,0], ekf.pose[1,0]), ekf.P[0:2, 0:2],
-#             std=15, facecolor='g', alpha=0.8)
-            

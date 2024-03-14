@@ -8,12 +8,7 @@ import rospy
 from std_msgs.msg import Float32MultiArray, Bool
 from cv_bridge import CvBridge
 from sensor_msgs.msg import Image
-# from contextlib import contextmanager,redirect_stderr,redirect_stdout
-
 import time
-import os
-import sys
-from contextlib import contextmanager
 
 class AprilCam():
     def __init__(self, robot_name, sim=False):
@@ -62,9 +57,9 @@ class AprilCam():
                 z = tag.pose_t[2]
 
                 # Convert reading to proper distance for 1x1 tags
-                if id != 0:
-                    x = self.pose2real(x)
-                    z = self.pose2real(z)
+                # if id != 0:
+                #     x = self.pose2real(x)
+                #     z = self.pose2real(z)
                 distance = z
                 hor_distance = x
                 range = math.sqrt(distance**2 + hor_distance**2)
@@ -100,21 +95,11 @@ def measure():
     
     cam = AprilCam(robot_name, sim)
 
-    # while not rospy.is_shutdown():
-        # rate.sleep()
     rospy.Subscriber(str("/" + robot_name + "/camera/image_raw"), Image, cam.get_measurements)
     rospy.spin()
-        # tags = cam.get_measurements()
-        # if tags:
-        #     for measurement in tags:
-        #         range_pub.publish(measurement)
-        # else:
-        #     range_pub.publish(Float32MultiArray(data=[]))
 
 if __name__ == "__main__":
     try:
-        sys.stdout = open(os.devnull, 'w')
-        sys.stderr = open(os.devnull, 'w')
         measure()
     except rospy.ROSInterruptException:
         pass
