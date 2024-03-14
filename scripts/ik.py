@@ -80,5 +80,5 @@ def drive_to_point(desired : Float32MultiArray):
 if __name__ == '__main__':
     rospy.init_node('ik')
     #rospy.Subscriber("range", Float32MultiArray, control_loop)
-    rospy.Subscriber("curr_pose", Float32MultiArray, control_loop)
+    rospy.Subscriber("curr_pose", Float32MultiArray, update_pose)
     rospy.spin()
