@@ -8,8 +8,8 @@ from drivers.motor_dr import motor
 pose_pub = rospy.Publisher('curr_pose', Float32MultiArray, queue_size= 1)
 
 def calc_wheel_vel(prev_wheel_dis, curr_wheel_dis, delta_t):
-    delta_l = curr_wheel_dis[0][0] - prev_wheel_dis[0][0]
-    delta_r = curr_wheel_dis[0][1] - prev_wheel_dis[0][1]
+    delta_l = curr_wheel_dis[0] - prev_wheel_dis[0]
+    delta_r = curr_wheel_dis[1] - prev_wheel_dis[1]
 
     left_vel = delta_l / delta_t
     right_vel = delta_r / delta_t
@@ -45,7 +45,7 @@ if __name__ == '__main__':
     prev_dist = (0.0, 0.0)
     prev_t = clock_gettime(0)
 
-    while rospy.is_shutdown():
+    while not rospy.is_shutdown():
         curr_dist = motor.get_distance()
         curr_t = clock_gettime(0)
 
