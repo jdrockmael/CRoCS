@@ -31,7 +31,7 @@ def calc_fk(wheel_vel : Float32MultiArray, delta_t):
     pose_pub.publish(Float32MultiArray(data=pose))
 
 if __name__ == '__main__':
-    delta_t = 1.0 # seconds
+    delta_t = 0.3 # seconds
     rospy.init_node('fk')
     rospy.Subscriber('wheel_vel', Float32MultiArray, calc_fk, callback_args=delta_t)
     rospy.spin()
