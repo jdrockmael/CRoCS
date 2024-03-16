@@ -6,9 +6,8 @@ from std_msgs.msg import Float32MultiArray
 pose = [0.0, 0.0, 0.0]
 pose_pub = rospy.Publisher('curr_pose', Float32MultiArray, queue_size= 1)
 
-def calc_fk(wheel_vel : Float32MultiArray):
+def calc_fk(wheel_vel : Float32MultiArray, delta_t):
     global pose
-    delta_t = 0.2 # seconds
     l = 0.101 # meters
     vl, vr = wheel_vel.data
 
@@ -32,6 +31,7 @@ def calc_fk(wheel_vel : Float32MultiArray):
     pose_pub.publish(Float32MultiArray(data=pose))
 
 if __name__ == '__main__':
+    delta_t = 1.0 # seconds
     rospy.init_node('fk')
-    rospy.Subscriber('wheel_vel', Float32MultiArray, calc_fk)
+    rospy.Subscriber('wheel_vel', Float32MultiArray, calc_fk, callback_args=delta_t)
     rospy.spin()

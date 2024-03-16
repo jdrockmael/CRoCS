@@ -65,7 +65,7 @@ def calc_wheel_vel(prev_wheel_dis, curr_wheel_dis, delta_t):
     return (left_vel, right_vel)
 
 if __name__ == '__main__':
-    delta_t = 0.2
+    delta_t = 1.0
     rospy.init_node('locomotion')
     init()
     rospy.Subscriber("wheel_effort", Float32MultiArray, drive)
@@ -75,7 +75,8 @@ if __name__ == '__main__':
         sleep(delta_t)
         curr_dist = get_distance()
 
-        wheel_vel = calc_wheel_vel(prev_dist, curr_dist, 1)
-        prev_dist = curr_dist
+        if prev_dist != curr_dist:
+            wheel_vel = calc_wheel_vel(prev_dist, curr_dist, 1)
+            prev_dist = curr_dist
 
-        vel_pub.publish(Float32MultiArray(data=wheel_vel))
+            vel_pub.publish(Float32MultiArray(data=wheel_vel))
