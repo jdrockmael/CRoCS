@@ -50,8 +50,8 @@ def drive(effort : Float32MultiArray):
 def get_distance():
     tick_per_rev = 128.0
     r_of_wheel = 0.04245 # in meters
-    left = (encoder_left.steps / tick_per_rev) * (2.0 * pi * r_of_wheel)
-    right = (-encoder_right.steps / tick_per_rev) * (2.0 * pi * r_of_wheel)
+    left = (-encoder_left.steps / tick_per_rev) * (2.0 * pi * r_of_wheel)
+    right = (encoder_right.steps / tick_per_rev) * (2.0 * pi * r_of_wheel)
 
     return (left, right)
 
@@ -75,8 +75,7 @@ if __name__ == '__main__':
         sleep(delta_t)
         curr_dist = get_distance()
 
-        if prev_dist != curr_dist:
-            wheel_vel = calc_wheel_vel(prev_dist, curr_dist, 1)
-            prev_dist = curr_dist
+        wheel_vel = calc_wheel_vel(prev_dist, curr_dist, 1)
+        prev_dist = curr_dist
 
-            vel_pub.publish(Float32MultiArray(data=wheel_vel))
+        vel_pub.publish(Float32MultiArray(data=wheel_vel))
