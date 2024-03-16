@@ -49,7 +49,7 @@ def drive(effort : Float32MultiArray):
 
 def get_distance():
     tick_per_rev = 128.0
-    r_of_wheel = 0.04245 # in meters
+    r_of_wheel = 0.021225 # in meters
     left = (-encoder_left.steps / tick_per_rev) * (2.0 * pi * r_of_wheel)
     right = (encoder_right.steps / tick_per_rev) * (2.0 * pi * r_of_wheel)
 
