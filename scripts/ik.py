@@ -33,11 +33,11 @@ def update_pose(pose : Float32MultiArray):
     curr_pose = pose.data
 
 def drive_to(pose):
-    distance = sqrt((pose[0]-curr_pose[0])^2 + (pose[1]-curr_pose[1])^2)
+    distance = sqrt(pow(pose[0]-curr_pose[0], 2) + pow(pose[1]-curr_pose[1], 2))
     heading = atan2(pose[1], pose[0])
     
     while(distance > 0.1):
-        distance = sqrt((pose[0]-curr_pose[0])^2 + (pose[1]-curr_pose[1])^2)
+        distance = sqrt(pow(pose[0]-curr_pose[0], 2) + pow(pose[1]-curr_pose[1], 2))
         
         linear = distance * 5.0
         angular_l = curr_pose[2] - heading * 1.0
