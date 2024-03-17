@@ -18,10 +18,6 @@ class AprilCam():
         self.cap = cv2.VideoCapture(0)
         self.at_detector = Detector()
 
-        self.range_l = collections.deque(maxlen=10)
-        self.bearing_l = collections.deque(maxlen=10)
-
-        self.prevM = {}          # Dictionary of previous measurements for moving average
         self.start = time.time()
         meter = np.array([0.05, 0.08, 0.15, 0.2, 0.3])
         measure1x1 = np.array([0.304, 0.461, 0.886, 1.173, 1.761]) # Readings for 1x1 in tag
@@ -54,18 +50,12 @@ class AprilCam():
                     z = self.pose2real(z)
                 distance = z
                 hor_distance = x
-                range = math.sqrt(distance**2 + hor_distance**2)
+                hyp = math.sqrt(distance**2 + hor_distance**2)  # Range to april tag
                 bearing = math.atan2(hor_distance, distance)
 
-                if id not in self.prevM:
-                    self.prevM[id] = {"range": collections.deque(maxlen=10), "bearing": collections.deque(maxlen=10)}
-
-                self.prevM[id]["range"].append(range)
-                self.prevM[id]["bearing"].append(bearing)
-                
                 # print(id)
                 # Return an array of [ID, range(m), bearing(radian)]
-                measurement.append(Float32MultiArray(data=[float(id), float(np.average(self.prevM[id]["range"])), float(np.average(self.prevM[id]["bearing"]))]))
+                measurement.append(Float32MultiArray(data=[float(id), float(hyp), float(bearing)]))
 
         # self.end = time.time()
         # print("Elapased time: ", self.end - self.start)
@@ -83,7 +73,7 @@ def measure():
     cam = AprilCam()
 
     while not rospy.is_shutdown():
-        rospy.sleep(0.005)              # Sleep for 5ms
+        rospy.sleep(0.15)              # Sleep for 5ms
         tags = cam.get_measurements()
         if tags:
             for measurement in tags:
