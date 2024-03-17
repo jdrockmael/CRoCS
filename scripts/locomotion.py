@@ -52,7 +52,7 @@ def get_distance():
     r_of_wheel = 0.021225 # in meters
     left = (-encoder_left.steps / tick_per_rev) * (2.0 * pi * r_of_wheel)
     right = (encoder_right.steps / tick_per_rev) * (2.0 * pi * r_of_wheel)
-
+    rospy.logerr((left, right))
     return (left, right)
 
 def calc_wheel_vel(prev_wheel_dis, curr_wheel_dis, delta_t):
