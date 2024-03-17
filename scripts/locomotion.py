@@ -24,8 +24,8 @@ def init():
     motor_left = PhaseEnableMotor(24, 23)
     motor_right = PhaseEnableMotor(21, 20)
 
-    encoder_left = RotaryEncoder(6, 5, max_steps = 256000)
-    encoder_right = RotaryEncoder(22, 27, max_steps = 256000)
+    encoder_left = RotaryEncoder(27, 22, max_steps = 256000)
+    encoder_right = RotaryEncoder(5, 6, max_steps = 256000)
 
 def drive_one_wheel(pwd, is_left):
     if pwd > 1:
