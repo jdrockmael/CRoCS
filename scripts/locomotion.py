@@ -11,6 +11,8 @@ motor_right = None
 encoder_left = None
 encoder_right = None
 
+curr_vel = (0.0, 0.0)
+
 vel_pub = rospy.Publisher('wheel_vel', Float32MultiArray, queue_size= 1)
 
 def init():
@@ -42,10 +44,20 @@ def drive_one_wheel(pwd, is_left):
     else:
         motor_right.forward(-pwd)
     
-def drive(effort : Float32MultiArray):
-    left_p, right_p = effort.data
-    drive_one_wheel(left_p, True)
-    drive_one_wheel(right_p, False)
+def drive(twist : Float32MultiArray):
+    global curr_vel
+    linear, angular = twist.data
+    l = 0.101 # meters
+    tolerance = 0.01
+
+    desired_vl = linear - ((angular * l)/2)
+    desired_vr = linear + ((angular * l)/2)
+
+    while abs(desired_vl - curr_vel[0]) > tolerance or abs(desired_vr - curr_vel[1]) > tolerance:
+        left_p = desired_vl - curr_vel[0]
+        right_p = desired_vr - curr_vel[1]
+        drive_one_wheel(left_p, True)
+        drive_one_wheel(right_p, False)
 
 def get_distance():
     tick_per_rev = 128.0
@@ -68,7 +80,7 @@ if __name__ == '__main__':
     delta_t = 0.3
     rospy.init_node('locomotion')
     init()
-    rospy.Subscriber("wheel_effort", Float32MultiArray, drive)
+    rospy.Subscriber("robot_twist", Float32MultiArray, drive)
 
     prev_dist = get_distance()
     while not rospy.is_shutdown():
@@ -77,6 +89,7 @@ if __name__ == '__main__':
 
         wheel_vel = calc_wheel_vel(prev_dist, curr_dist, delta_t)
         prev_dist = curr_dist
+        curr_vel = wheel_vel
 
         vel_pub.publish(Float32MultiArray(data=wheel_vel))
         

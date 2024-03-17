@@ -4,8 +4,8 @@ from std_msgs.msg import Float32MultiArray
 from time import sleep
 from math import atan2, sqrt
 
-curr_pose = None
-eff_pub = rospy.Publisher("wheel_effort", Float32MultiArray, queue_size=1)
+curr_pose = [0.0, 0.0, 0.0]
+eff_pub = rospy.Publisher("robot_twist", Float32MultiArray, queue_size=1)
 
 # def control_loop(cam : Float32MultiArray):
 #     data = cam.data
@@ -46,7 +46,7 @@ def drive_to(pose):
         l_eff = linear + angular_l
         r_eff = linear + angular_r
 
-        eff_pub.publish(Float32MultiArray(data=[l_eff, r_eff]))
+        eff_pub.publish(Float32MultiArray(data=[0, 0]))
 
         sleep(0.001)
 
@@ -63,7 +63,7 @@ def turn_to(heading):
         l_eff = angular_l
         r_eff = angular_r
 
-        eff_pub.publish(Float32MultiArray(data=[l_eff, r_eff]))
+        eff_pub.publish(Float32MultiArray(data=[0, 0]))
 
         sleep(0.001)
     
