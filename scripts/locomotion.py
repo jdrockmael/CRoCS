@@ -47,17 +47,22 @@ def drive_one_wheel(pwd, is_left):
 def drive(twist : Float32MultiArray):
     global curr_vel
     linear, angular = twist.data
-    l = 0.101 # meters
-    tolerance = 0.01
+    
+    if linear != 0.0 and angular != 0.0:
+        l = 0.101 # meters
+        tolerance = 0.01
 
-    desired_vl = linear - ((angular * l)/2)
-    desired_vr = linear + ((angular * l)/2)
+        desired_vl = linear - ((angular * l)/2)
+        desired_vr = linear + ((angular * l)/2)
 
-    while abs(desired_vl - curr_vel[0]) > tolerance or abs(desired_vr - curr_vel[1]) > tolerance:
-        left_p = desired_vl - curr_vel[0]
-        right_p = desired_vr - curr_vel[1]
-        drive_one_wheel(left_p, True)
-        drive_one_wheel(right_p, False)
+        while abs(desired_vl - curr_vel[0]) > tolerance or abs(desired_vr - curr_vel[1]) > tolerance:
+            left_p = desired_vl - curr_vel[0]
+            right_p = desired_vr - curr_vel[1]
+            drive_one_wheel(left_p, True)
+            drive_one_wheel(right_p, False)
+    else:
+        drive_one_wheel(0, True)
+        drive_one_wheel(0, False)
 
 def get_distance():
     tick_per_rev = 128.0
