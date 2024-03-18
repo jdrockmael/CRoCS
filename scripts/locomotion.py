@@ -54,13 +54,15 @@ def drive(twist : Float32MultiArray):
     desired_vl = linear - ((angular * l)/2)
     desired_vr = linear + ((angular * l)/2)
 
-    left_eff = 1.42 * pow(desired_vl, 0.683)
-    right_eff = 1.42 * pow(desired_vr, 0.683)
-
     tolerance = 0.06
-    delta_t = 0.01
+    delta_t = 0.06
     p = 0.3
     i = 1
+
+    left_eff = 1.42 * pow(desired_vl, 0.683)
+    right_eff = 1.42 * pow(desired_vr, 0.683)
+    drive_one_wheel(left_eff, True)
+    drive_one_wheel(right_eff, False)
 
     while abs(desired_vl - curr_vel[0]) > tolerance or abs(desired_vr - curr_vel[1]) > tolerance:
         sleep(delta_t)
