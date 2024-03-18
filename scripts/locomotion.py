@@ -61,10 +61,11 @@ def drive(twist : Float32MultiArray):
     left_eff = curr_eff[0]
     right_eff = curr_eff[1]
 
+    delta_t = 0.01
+    p = 0.3
+    i = 1
+
     while abs(desired_vl - curr_vel[0]) > tolerance or abs(desired_vr - curr_vel[1]) > tolerance:
-        delta_t = 0.01
-        p = 0.3
-        i = 0.6
         sleep(delta_t)
         left_eff = left_eff + (desired_vl - curr_vel[0]) * p + (0.5 * (desired_vl - curr_vel[0]) * delta_t) * i
         right_eff = right_eff + (desired_vr - curr_vel[1]) * p + (0.5 * (desired_vl - curr_vel[1]) * delta_t) * i
