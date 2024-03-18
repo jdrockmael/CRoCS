@@ -35,7 +35,7 @@ def drive_one_wheel(pwd, is_left):
         pwd = 1
     elif pwd < -1:
         pwd = -1
-    elif pwd < 0.06 and pwd > -0.06:
+    elif pwd < 0.2 and pwd > -0.2:
         pwd = 0
 
     if pwd >= 0 and is_left:
@@ -61,7 +61,7 @@ def drive(twist : Float32MultiArray):
     left_eff = curr_eff[0]
     right_eff = curr_eff[1]
 
-    delta_t = 0.01
+    delta_t = 0.05
     p = 0.3
     i = 1
 
