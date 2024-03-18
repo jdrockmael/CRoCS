@@ -12,7 +12,6 @@ encoder_left = None
 encoder_right = None
 
 curr_vel = (0.0, 0.0)
-curr_eff = (0.0, 0.0)
 
 vel_pub = rospy.Publisher('wheel_vel', Float32MultiArray, queue_size= 1)
 
@@ -35,7 +34,7 @@ def drive_one_wheel(pwd, is_left):
         pwd = 1
     elif pwd < -1:
         pwd = -1
-    elif pwd < 0.2 and pwd > -0.2:
+    elif pwd < 0.18 and pwd > -0.18:
         pwd = 0
 
     if pwd >= 0 and is_left:
@@ -49,19 +48,17 @@ def drive_one_wheel(pwd, is_left):
     
 def drive(twist : Float32MultiArray):
     global curr_vel
-    global curr_eff
     linear, angular = twist.data
     
     l = 0.101 # meters
-    tolerance = 0.01
-
     desired_vl = linear - ((angular * l)/2)
     desired_vr = linear + ((angular * l)/2)
 
-    left_eff = curr_eff[0]
-    right_eff = curr_eff[1]
+    left_eff = 0.0105 + 3.31 * desired_vl + -4.61 * pow(desired_vl, 2)
+    right_eff = 0.0105 + 3.31 * desired_vr + -4.61 * pow(desired_vr, 2)
 
-    delta_t = 0.05
+    tolerance = 0.06
+    delta_t = 0.01
     p = 0.3
     i = 1
 
@@ -72,7 +69,6 @@ def drive(twist : Float32MultiArray):
         rospy.logerr((left_eff, right_eff))
         drive_one_wheel(left_eff, True)
         drive_one_wheel(right_eff, False)
-        curr_eff = (left_eff, right_eff)
 
 def get_distance():
     tick_per_rev = 128.0
