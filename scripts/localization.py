@@ -21,15 +21,20 @@ class Main():
 
     def __init__(self):
         self.cube = rospy.get_param('localization/robot_name')
+        self.init_x = rospy.get_param('localization/x_pos')
+        self.init_y = rospy.get_param('localization/y_pos')
+
         self.start()
-        self.wheel_radius = 0.01905
-        self.err_threshold = 0.3
         
         self.pose_pub = rospy.Publisher(str("/" + self.cube + "/pose"), PoseWithCovarianceStamped, queue_size=1)
 
         # Get control input
         rospy.Subscriber(str("/" + self.cube + "/joint_states"), JointState, self.control_callback, queue_size=1)
-        
+
+        # Get other cube pose
+        rospy.Subscriber(str("/cube2/pose"), PoseWithCovarianceStamped, self.com_callback, queue_size=1)
+        self.cube2 = np.array([0, 0])
+
         # Get apriltag readings and run kalman update step
         rospy.Subscriber("/" + self.cube + "/apriltag", Float32MultiArray, self.tag_callback, queue_size=1)
 
@@ -61,13 +66,28 @@ class Main():
     def start(self):
         self.control_inputs = np.array([0, 0])
 
+        # self.wheel_base = 0.1
+        self.wheel_radius = 0.01905
+        self.err_threshold = 0.2
+
+        self.landmark = {}
+        self.landmark[0.0] = np.array([4.0, 0.0])       # for square
+        # self.landmark[0.0] = np.array([2.0, 1.0])       # for sim
+
+        self.landmark[1.0] = np.array([2.5, 4.0])
+        self.landmark[2.0] = np.array([-1.5, 2.5])
+        self.landmark[3.0] = np.array([0.0, -1.5])
+        self.landmark[10.0] = np.array([1.0, 0.0])      # back april tag
+        self.landmark[11.0] = np.array([1.0, 0.0])      # side april tag
+
         # Initialize kalman filter to None
         self.kalman = None # RobotEKF(wheelbase=0.10082)
         self.last_update_time = rospy.get_time()
 
+        self.predict_time = rospy.get_time()
         # Update Kalman fitler timer - High frequent udpate
         self.olu_rate = 5   # Hz
-        self.olu_timer = rospy.Timer(rospy.Duration(1.0/float(self.olu_rate)), self.open_loop_update)
+        # self.olu_timer = rospy.Timer(rospy.Duration(1.0/float(self.olu_rate)), self.open_loop_update)
 
     def shutdown(self):
         self.olu_timer.shutdown()
@@ -82,9 +102,18 @@ class Main():
             self.kalman = RobotEKF(wheelbase=0.10082)
 
         angular_velocity = np.array([data.velocity[0], data.velocity[1]])
-
         # Convert angular velocity to linear velocity then set control_inputs accordingly
         self.control_inputs = angular_velocity * self.wheel_radius
+    
+    def com_callback(self, data):
+        """ Receive other cube pose
+        :data: PoseWithCovarianceStamped() message of other cube pose
+        """
+
+        cube2_pose = data.pose.pose.position
+        self.cube2 = np.array([cube2_pose.x, cube2_pose.y])
+        self.landmark[10.0] = self.cube2
+        self.landmark[11.0] = self.cube2
 
     def open_loop_update(self, event):
         """ Intermediate high-frequent Kalman state prediction update based on control inputs
@@ -116,30 +145,52 @@ class Main():
         if self.kalman is None:
             return False
         
-        prev_pose = self.kalman.pose
-        tag_id, distance, yaw = data.data[0], data.data[1], data.data[2]
+        prev_pose = self.kalman.pose    
 
-        landmark = {}
-        landmark[0.0] = np.array([4.0, 0.0])
-        landmark[1.0] = np.array([2.5, 4.0])
-        landmark[2.0] = np.array([-1.5, 2.5])
-        landmark[3.0] = np.array([0.0, -1.5])
+        temp = rospy.get_time() - self.predict_time
 
-        z = np.array([[distance], [yaw]])
-        dt = rospy.get_time() - self.last_update_time
+        if temp > 0.2:
+            # prev_pose = self.kalman.pose
+            dt = rospy.get_time() - self.last_update_time
+            
+            # Prediction step
+            self.kalman.predict(self.control_inputs, dt)
+            # rospy.loginfo("MY FAULT")
+            self.predict_time = rospy.get_time()
+            self.last_update_time = rospy.get_time()
 
-        u = np.array([0, 0])        #self.control_inputs
+            # Calculates error between EKF estimates and ground-truth
+            err = self.calc_err(True, prev_pose)
+
+            # Publishes kalman path
+            self.pub_kalman()
+
+        if data.data:
+                
+
+            # prev_pose = self.kalman.pose
+            tag_id, distance, yaw = data.data[0], data.data[1], data.data[2]
+
+            z = np.array([[distance], [yaw]])
+            dt = rospy.get_time() - self.last_update_time
+            pose2 = self.landmark[tag_id]
+
+
+            # Reset prediction + update step
+            u = self.control_inputs  #np.array([0, 0])        #self.control_inputs        
+            self.kalman.predict(u, dt)
+
+            # rospy.loginfo(self.kalman.pose[2,0])
+
+            self.kalman.update(z, pose2, dt)
+            self.last_update_time = rospy.get_time()
+
+            # Calculates error between EKF estimates and ground-truth
+            err = self.calc_err(False, prev_pose)
+            # Publishes kalman path
+            self.pub_kalman()
+
         
-        # Reset prediction + update step
-        self.kalman.predict(u, dt)
-        self.kalman.update(z, landmark[tag_id], dt)
-        self.last_update_time = rospy.get_time()
-
-        # Calculates error between EKF estimates and ground-truth
-        err = self.calc_err(False, prev_pose)
-
-        # Publishes kalman path
-        self.pub_kalman()
 
         return True
 
@@ -165,37 +216,53 @@ class Main():
             for i, link in enumerate(data.name):
                 if link == str(self.cube + "::" + self.cube + "_dummy"):
                     self.link_id = i
-        else:
-            self.true_path.header.frame_id = "odom"
-            self.true_path.header.seq += 1
-            self.true_path.header.stamp = rospy.Time().now()
-
-            pose = PoseStamped()
-            pose.pose = data.pose[self.link_id]
-            pose.header = self.true_path.header
-
-            self.true_path.poses.append(pose)
-            self.true_path_pub.publish(self.true_path)
-
-    def pub_kalman(self):
-        """ Publish EKF path
-        """
-        self.kalman_path.header.frame_id = "odom"
-        self.kalman_path.header.seq += 1
-        self.kalman_path.header.stamp = rospy.Time().now()
+        
+        self.true_path.header.frame_id = "odom"
+        self.true_path.header.seq += 1
+        self.true_path.header.stamp = rospy.Time().now()
 
         pose = PoseStamped()
-        pose.header = self.kalman_path.header
-        quat = quaternion_from_euler(0.0, 0.0, self.kalman.pose[2])
-        pose.pose.position.x = self.kalman.pose[0, 0]
-        pose.pose.position.y = self.kalman.pose[1, 0]
-        pose.pose.position.z = 0.0
-        pose.pose.orientation.x = quat[0]
-        pose.pose.orientation.y = quat[1]
-        pose.pose.orientation.z = quat[2]
-        pose.pose.orientation.w = quat[3]
 
-        self.kalman_path.poses.append(pose)
+        try:
+            pose.pose = data.pose[self.link_id]
+        except IndexError:
+            for i, link in enumerate(data.name):
+                if link == str(self.cube + "::" + self.cube + "_dummy"):
+                    self.link_id = i
+            pose.pose = data.pose[self.link_id]
+        pose.header = self.true_path.header
+
+        self.true_path.poses.append(pose)
+        self.true_path_pub.publish(self.true_path)
+
+    def pub_kalman(self):
+        """ Publish EKF path and pose
+        """
+        quat = quaternion_from_euler(0.0, 0.0, self.kalman.pose[2])
+
+        # Publish EKF pose
+        pose_stamped = PoseWithCovarianceStamped()
+        pose_stamped.header.frame_id = "odom"
+        pose_stamped.header.seq += 1
+        pose_stamped.header.stamp = rospy.Time().now()
+        pose_stamped.pose.pose.position.x = self.kalman.pose[0, 0]
+        pose_stamped.pose.pose.position.y = self.kalman.pose[1, 0]
+        pose_stamped.pose.pose.position.z = 0.0
+        pose_stamped.pose.pose.orientation.x = quat[0]
+        pose_stamped.pose.pose.orientation.y = quat[1]
+        pose_stamped.pose.pose.orientation.z = quat[2]
+        pose_stamped.pose.pose.orientation.w = quat[3]
+        pose_stamped.pose.covariance[0] = self.kalman.P[0,0]
+        pose_stamped.pose.covariance[7] = self.kalman.P[1,1]
+        pose_stamped.pose.covariance[35] = self.kalman.P[2,2]
+        self.pose_pub.publish(pose_stamped)
+
+        # Publish EKF path
+        path_pose = PoseStamped()
+        path_pose.header = pose_stamped.header
+        path_pose.pose = pose_stamped.pose.pose
+        self.kalman_path.header = pose_stamped.header
+        self.kalman_path.poses.append(path_pose)
         self.kalman_path_pub.publish(self.kalman_path)
     
     def calc_err(self, stack, prev_pose): 
@@ -223,7 +290,7 @@ class Main():
         
         # If error too high, reset it accordingly
         if err.data > self.err_threshold:
-            rospy.loginfo("WHOOPSIE")
+            rospy.loginfo("WHOOPSIE %s", self.cube)
             # Reset it to prev pose
             # self.kalman.pose = prev_pose 
             # self.kalman.subs[self.kalman.x_x] =  prev_pose[0,0]
@@ -231,8 +298,8 @@ class Main():
             # self.kalman.subs[self.kalman.x_theta] = prev_pose[2,0]
 
             # Reset it to latest odom reading, taking into account transformation with world frame
-            x = self.odom_path.poses[-1].pose.position.x + 1.0
-            y = self.odom_path.poses[-1].pose.position.y
+            x = self.odom_path.poses[-1].pose.position.x + self.init_x
+            y = self.odom_path.poses[-1].pose.position.y + self.init_y
             tx = self.odom_path.poses[-1].pose.orientation.x
             ty = self.odom_path.poses[-1].pose.orientation.y
             tz = self.odom_path.poses[-1].pose.orientation.z

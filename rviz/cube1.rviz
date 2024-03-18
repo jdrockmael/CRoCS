@@ -12,9 +12,11 @@ Panels:
         - /TF1/Frames1
         - /TF1/Tree1
         - /Image1
-        - /Path1
-        - /Path2
-        - /Path3
+        - /PoseWithCovariance1
+        - /PoseWithCovariance1/Covariance1/Orientation1
+        - /PoseWithCovariance2
+        - /PoseWithCovariance2/Covariance1
+        - /PoseWithCovariance2/Covariance1/Orientation1
       Splitter Ratio: 0.5
     Tree Height: 479
   - Class: rviz/Selection
@@ -75,12 +77,17 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
           Value: true
-        cube1/left_tag_05:
+        cube1/front_tag_10:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        cube1/right_tag_05:
+        cube1/left_tag_11:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        cube1/right_tag_11:
           Alpha: 1
           Show Axes: false
           Show Trail: false
@@ -120,34 +127,12 @@ Visualization Manager:
       Value: true
       Visual Enabled: true
     - Class: rviz/TF
-      Enabled: true
+      Enabled: false
       Filter (blacklist): ""
       Filter (whitelist): ""
       Frame Timeout: 15
       Frames:
         All Enabled: false
-        cube1:
-          Value: true
-        cube1_tf/cube1:
-          Value: false
-        cube1_tf/cube1/left_tag_05:
-          Value: true
-        cube1_tf/cube1/right_tag_05:
-          Value: true
-        cube1_tf/cube1_camera_link:
-          Value: false
-        cube1_tf/cube1_camera_link_optical:
-          Value: false
-        cube1_tf/cube1_caster:
-          Value: false
-        cube1_tf/cube1_dummy:
-          Value: false
-        cube1_tf/cube1_left_wheel:
-          Value: false
-        cube1_tf/cube1_right_wheel:
-          Value: false
-        odom:
-          Value: false
       Marker Alpha: 1
       Marker Scale: 0.5
       Name: TF
@@ -155,25 +140,9 @@ Visualization Manager:
       Show Axes: true
       Show Names: true
       Tree:
-        odom:
-          cube1:
-            cube1_tf/cube1_dummy:
-              cube1_tf/cube1:
-                cube1_tf/cube1/left_tag_05:
-                  {}
-                cube1_tf/cube1/right_tag_05:
-                  {}
-                cube1_tf/cube1_camera_link:
-                  cube1_tf/cube1_camera_link_optical:
-                    {}
-                cube1_tf/cube1_caster:
-                  {}
-                cube1_tf/cube1_left_wheel:
-                  {}
-                cube1_tf/cube1_right_wheel:
-                  {}
+        {}
       Update Interval: 0
-      Value: true
+      Value: false
     - Class: rviz/Image
       Enabled: true
       Image Topic: /cube1/camera/image_raw
@@ -258,6 +227,68 @@ Visualization Manager:
       Topic: /cube1/odom_path
       Unreliable: false
       Value: true
+    - Alpha: 1
+      Axes Length: 1
+      Axes Radius: 0.10000000149011612
+      Class: rviz/PoseWithCovariance
+      Color: 255; 25; 0
+      Covariance:
+        Orientation:
+          Alpha: 0.5
+          Color: 255; 255; 127
+          Color Style: Unique
+          Frame: Local
+          Offset: 1
+          Scale: 1
+          Value: true
+        Position:
+          Alpha: 0.30000001192092896
+          Color: 204; 51; 204
+          Scale: 1
+          Value: true
+        Value: true
+      Enabled: true
+      Head Length: 0.10000000149011612
+      Head Radius: 0.05000000074505806
+      Name: PoseWithCovariance
+      Queue Size: 10
+      Shaft Length: 0.25
+      Shaft Radius: 0.019999999552965164
+      Shape: Arrow
+      Topic: /cube1/pose
+      Unreliable: false
+      Value: true
+    - Alpha: 1
+      Axes Length: 1
+      Axes Radius: 0.10000000149011612
+      Class: rviz/PoseWithCovariance
+      Color: 255; 25; 0
+      Covariance:
+        Orientation:
+          Alpha: 0.5
+          Color: 255; 255; 127
+          Color Style: Unique
+          Frame: Local
+          Offset: 1
+          Scale: 1
+          Value: true
+        Position:
+          Alpha: 0.30000001192092896
+          Color: 204; 51; 204
+          Scale: 1
+          Value: true
+        Value: true
+      Enabled: true
+      Head Length: 0.10000000149011612
+      Head Radius: 0.05000000074505806
+      Name: PoseWithCovariance
+      Queue Size: 10
+      Shaft Length: 0.25
+      Shaft Radius: 0.019999999552965164
+      Shape: Arrow
+      Topic: /cube2/pose
+      Unreliable: false
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
@@ -286,7 +317,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 7.784244537353516
+      Distance: 3.125971794128418
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -294,17 +325,17 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: -0.4720301032066345
-        Y: 0.09562630951404572
-        Z: 0.37150269746780396
+        X: 0.8714177012443542
+        Y: -0.43378937244415283
+        Z: -0.24222995340824127
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.4053969979286194
+      Pitch: 0.7553967237472534
       Target Frame: <Fixed Frame>
-      Yaw: 0.9385826587677002
+      Yaw: 4.328587055206299
     Saved: ~
 Window Geometry:
   Displays:

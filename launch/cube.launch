@@ -2,17 +2,18 @@
   <arg name="robot_name" default="cube"/>
   <arg name="x_pos" default="0.0"/>
   <arg name="y_pos" default="0.0"/>
-  <arg name="rotate" default="0"/>
+  <arg name="theta" default="0.0"/>
   <arg name="model" default="$(find CRoCS)/urdf/cube.urdf.xacro"/>
   <arg name="rvizconfig" default="$(find CRoCS)/rviz/$(arg robot_name).rviz" />
   <arg name="rviz" default="false"/>
   <arg name="control" default="false"/>
+  <arg name="localization" default="false"/>
   <arg name="sim" default="false"/>
 
   <param name="tf_prefix" value="$(arg robot_name)_tf" />
 
   <!-- Set cube urdf as a parameter -->
-  <param name="robot_description" command="$(find xacro)/xacro $(arg model) robot_name:='$(arg robot_name)' rotate:='$(arg rotate)'" />
+  <param name="robot_description" command="$(find xacro)/xacro $(arg model) robot_name:='$(arg robot_name)' rotate:='$(arg theta)'" />
 
   <!-- Spawn cube with provided position and name -->
   <node name="urdf_spawner" pkg="gazebo_ros" type="spawn_model"
@@ -47,21 +48,24 @@
     <param name="default_topic" value="diff_drive_controller/cmd_vel"/>
   </node>
 
-  <node if="$(arg control)" pkg="CRoCS" name="cam" type="cam.py">
+  <node if="$(arg localization)" pkg="CRoCS" name="cam" type="cam.py" output="screen">
       <param name="robot_name" value="$(arg robot_name)" />
       <param name="sim" value="$(arg sim)" />
   </node>
   
-  <node if="$(arg control)" pkg="CRoCS" name="localization" type="localization.py" output="screen">
+  <node if="$(arg localization)" pkg="CRoCS" name="localization" type="localization.py" output="screen">
       <param name="robot_name" value="$(arg robot_name)" />
+      <param name="x_pos" value="$(arg x_pos)" />
+      <param name="y_pos" value="$(arg y_pos)" />
   </node>
 
   <node if="$(arg control)" pkg="CRoCS" name="square" type="square.py" output="screen">
       <param name="robot_name" value="$(arg robot_name)" />
-  </node>
+      <param name="x_pos" value="$(arg x_pos)" />
+  </node> 
 
   <arg name="node_start_delay" default="5.0" />  
-  <node if="$(arg control)" pkg="rqt_plot" type="rqt_plot" launch-prefix="bash -c 'sleep $(arg node_start_delay); $0 $@' " output="screen" name="rqt_plot" />
+  <node if="false" pkg="rqt_plot" type="rqt_plot" launch-prefix="bash -c 'sleep $(arg node_start_delay); $0 $@' " output="screen" name="rqt_plot" />
 
   
 </launch>

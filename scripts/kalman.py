@@ -9,7 +9,7 @@ import rospy
 # from IPython.display import display
 sympy.init_printing(use_latex='mathjax')
 
-VAR_ENC = 1e-1
+VAR_ENC = 1e-2
 VAR_RANGE = 0 
 VAR_BEARING = 0
 VAR_POSE1 = 1e-2
@@ -87,7 +87,9 @@ class RobotEKF():
         self.subs[self.w_Wr] = 0
 
         # Update pose
+        # rospy.loginfo("PREDICT OLD THETA %s", self.pose[2,0])
         self.pose = np.array(self.f.evalf(subs=self.subs)).astype(float)  
+        # rospy.loginfo("PREDICT THETA %s", self.pose[2,0])
         self.subs[self.x_x] = self.pose[0,0]
         self.subs[self.x_y] = self.pose[1,0]
         self.subs[self.x_theta] = self.pose[2,0]
@@ -124,10 +126,18 @@ class RobotEKF():
         self.subs[self.V_vthetak] = v[2,2]
         self.subs[self.V_vx2] = v[3,3]
         self.subs[self.V_vy2] = v[4,4]
+        # rospy.loginfo("TEST1 %s",self.pose[2,0])
+
 
         H = np.array(self.H_j.evalf(subs=self.subs)).astype(float) 
+        # rospy.loginfo("TEST3 %s",self.pose[2,0])
+
         V = np.array(self.V_j.evalf(subs=self.subs)).astype(float) 
+        # rospy.loginfo("TEST2 %s",self.pose[2,0])
+
         K = self.P @ H.T @ np.linalg.inv(H @ self.P @ H.T + V @ self.R @ V.T)
+
+
         self.pose += K @ self.residual(z, pose2)
 
         # Set poses
@@ -155,9 +165,20 @@ class RobotEKF():
         self.subs[self.V_vthetak] = 0
         self.subs[self.V_vx2] = 0
         self.subs[self.V_vy2] = 0
+        # [theta + vthetak - sympy.atan2(y2+vyk-y-vyk,x2+vx2-x-vxk)]]
 
         innovation = np.array(self.h.evalf(subs=self.subs)).astype(float) 
+        # self.subs[self.x_x] = self.pose[0,0]
+        # self.subs[self.x_y] = self.pose[1,0]
+        # self.subs[self.x_theta] = self.pose[2,0]
         zx = z - innovation
+
+        # rospy.loginfo("theta %s",self.pose[2,0])
+
+        # if zx[1] > 0.5:
+            # rospy.loginfo("z %s",z[1])
+            # rospy.loginfo("innovation %s",innovation[1])
+            # rospy.loginfo("FUCKKKKKKKKKKKKKKKKKKKKKKKK %s",zx[1])
 
         # Normalize bearing to [-pi, pi]
         zx[-1] = zx[-1] % (2 * np.pi)

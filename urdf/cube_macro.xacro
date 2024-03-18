@@ -9,7 +9,7 @@
   <xacro:property name="wheel_length" value="0.00635"/>
   <xacro:property name="wheel_mass" value="0.1"/>
   <xacro:property name="wheel_offset_up" value="0.015243"/>
-  <xacro:property name="wheel_offset_forward" value="0.033966"/>
+  <xacro:property name="wheel_offset_forward" value="0.039624"/>
   <xacro:property name="wheel_offset_side" value="0.05041"/>
 
   <xacro:property name="caster_radius" value="0.006"/>
