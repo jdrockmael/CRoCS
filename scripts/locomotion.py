@@ -35,6 +35,8 @@ def drive_one_wheel(pwd, is_left):
         pwd = 1
     elif pwd < -1:
         pwd = -1
+    elif pwd < 0.06 and pwd > -0.06:
+        pwd = 0
 
     if pwd >= 0 and is_left:
         motor_left.forward(pwd)
