@@ -60,8 +60,12 @@ def drive(twist : Float32MultiArray):
     right_eff = curr_eff[1]
 
     while abs(desired_vl - curr_vel[0]) > tolerance or abs(desired_vr - curr_vel[1]) > tolerance:
-        left_eff = left_eff + (desired_vl - curr_vel[0]) * 0.3
-        right_eff = right_eff + (desired_vr - curr_vel[1]) * 0.3
+        delta_t = 0.1
+        p = 0.3
+        i = 1
+        sleep(delta_t)
+        left_eff = left_eff + (desired_vl - curr_vel[0]) * p + (0.5 * (desired_vl - curr_vel[0]) * delta_t) * i
+        right_eff = right_eff + (desired_vr - curr_vel[1]) * p + (0.5 * (desired_vl - curr_vel[1]) * delta_t) * i
         rospy.logerr((left_eff, right_eff))
         drive_one_wheel(left_eff, True)
         drive_one_wheel(right_eff, False)
