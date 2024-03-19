@@ -66,14 +66,11 @@ class Main():
     def start(self):
         self.control_inputs = np.array([0, 0])
 
-        # self.wheel_base = 0.1
+        self.wheel_base = 0.10082
         self.wheel_radius = 0.01905
-        self.err_threshold = 0.2
 
         self.landmark = {}
         self.landmark[0.0] = np.array([4.0, 0.0])       # for square
-        # self.landmark[0.0] = np.array([2.0, 1.0])       # for sim
-
         self.landmark[1.0] = np.array([2.5, 4.0])
         self.landmark[2.0] = np.array([-1.5, 2.5])
         self.landmark[3.0] = np.array([0.0, -1.5])
@@ -81,16 +78,11 @@ class Main():
         self.landmark[11.0] = np.array([1.0, 0.0])      # side april tag
 
         # Initialize kalman filter to None
-        self.kalman = None # RobotEKF(wheelbase=0.10082)
+        self.kalman = None
         self.last_update_time = rospy.get_time()
-
         self.predict_time = rospy.get_time()
-        # Update Kalman fitler timer - High frequent udpate
-        self.olu_rate = 5   # Hz
-        # self.olu_timer = rospy.Timer(rospy.Duration(1.0/float(self.olu_rate)), self.open_loop_update)
-
-    def shutdown(self):
-        self.olu_timer.shutdown()
+        self.predict_rate = 5       # EKF Prediction rate (Hz)
+        self.err_threshold = 0.2
 
     def control_callback(self, data):
         """ Receive control inputs and convert it to linear velocity (m/s)
@@ -99,9 +91,10 @@ class Main():
 
         # Initialize EKF first time when first receive control input
         if self.kalman is None:
-            self.kalman = RobotEKF(wheelbase=0.10082)
+            self.kalman = RobotEKF(wheelbase=self.wheel_base)
 
         angular_velocity = np.array([data.velocity[0], data.velocity[1]])
+
         # Convert angular velocity to linear velocity then set control_inputs accordingly
         self.control_inputs = angular_velocity * self.wheel_radius
     
@@ -115,29 +108,6 @@ class Main():
         self.landmark[10.0] = self.cube2
         self.landmark[11.0] = self.cube2
 
-    def open_loop_update(self, event):
-        """ Intermediate high-frequent Kalman state prediction update based on control inputs
-        :control inputs: np array ([left_wheel_velocity, right_wheel_velocity])
-        """
-        
-        if self.kalman is None:
-            return False
-        
-        prev_pose = self.kalman.pose
-        dt = rospy.get_time() - self.last_update_time
-        
-        # Prediction step
-        self.kalman.predict(self.control_inputs, dt)
-        self.last_update_time = rospy.get_time()
-
-        # Calculates error between EKF estimates and ground-truth
-        err = self.calc_err(True, prev_pose)
-
-        # Publishes kalman path
-        self.pub_kalman()
-
-        return True
-
     def tag_callback(self, data):
         """ Update step of EKF when AprilTag detected
         :data: Float32MultiArray from topic /cube/apriltag [ID, distance(m), bearing(rad)]
@@ -146,51 +116,45 @@ class Main():
             return False
         
         prev_pose = self.kalman.pose    
+        dt_pred = rospy.get_time() - self.predict_time
+        dt = 0
 
-        temp = rospy.get_time() - self.predict_time
-
-        if temp > 0.2:
-            # prev_pose = self.kalman.pose
+        # Run prediction step at (self.predict_rate) Hz
+        if dt_pred > (1 / self.predict_rate) :
             dt = rospy.get_time() - self.last_update_time
             
             # Prediction step
             self.kalman.predict(self.control_inputs, dt)
-            # rospy.loginfo("MY FAULT")
             self.predict_time = rospy.get_time()
             self.last_update_time = rospy.get_time()
 
             # Calculates error between EKF estimates and ground-truth
-            err = self.calc_err(True, prev_pose)
+            self.calc_err(True, prev_pose)
 
             # Publishes kalman path
             self.pub_kalman()
 
+        # Run Update Step
         if data.data:
-                
-
-            # prev_pose = self.kalman.pose
             tag_id, distance, yaw = data.data[0], data.data[1], data.data[2]
 
+            # If didn't run prediction step, run it
+            if dt_pred < (1 / self.predict_rate):
+                dt = rospy.get_time() - self.last_update_time
+            u = self.control_inputs  #np.array([0, 0])        #self.control_inputs     
             z = np.array([[distance], [yaw]])
-            dt = rospy.get_time() - self.last_update_time
-            pose2 = self.landmark[tag_id]
-
+            pose2 = self.landmark[tag_id]   
 
             # Reset prediction + update step
-            u = self.control_inputs  #np.array([0, 0])        #self.control_inputs        
             self.kalman.predict(u, dt)
-
-            # rospy.loginfo(self.kalman.pose[2,0])
-
             self.kalman.update(z, pose2, dt)
             self.last_update_time = rospy.get_time()
 
             # Calculates error between EKF estimates and ground-truth
-            err = self.calc_err(False, prev_pose)
+            self.calc_err(False, prev_pose)
+
             # Publishes kalman path
             self.pub_kalman()
-
-        
 
         return True
 
@@ -198,12 +162,15 @@ class Main():
         """ Publish odom path
         :data: Odometry message from /cube/diff_drive_controller/odom topic
         """
+        # Set header
         self.odom_path.header = data.header
 
+        # Set pose
         pose = PoseStamped()
         pose.header = data.header
         pose.pose = data.pose.pose
 
+        # Publish 
         self.odom_path.poses.append(pose)
         self.odom_path_pub.publish(self.odom_path)
 
@@ -211,18 +178,22 @@ class Main():
         """ Publish ground-truth gazebo path 
         :data: LinkStates message from /gazebo/link_states
         """
+
         # Find index number of cube link
         if self.link_id == 0:
             for i, link in enumerate(data.name):
                 if link == str(self.cube + "::" + self.cube + "_dummy"):
                     self.link_id = i
         
+        # Set header
         self.true_path.header.frame_id = "odom"
         self.true_path.header.seq += 1
         self.true_path.header.stamp = rospy.Time().now()
 
         pose = PoseStamped()
+        pose.header = self.true_path.header
 
+        # Set pose
         try:
             pose.pose = data.pose[self.link_id]
         except IndexError:
@@ -230,8 +201,8 @@ class Main():
                 if link == str(self.cube + "::" + self.cube + "_dummy"):
                     self.link_id = i
             pose.pose = data.pose[self.link_id]
-        pose.header = self.true_path.header
 
+        # Publish
         self.true_path.poses.append(pose)
         self.true_path_pub.publish(self.true_path)
 
@@ -288,15 +259,9 @@ class Main():
         err = Float64(data=float(err))
         self.err_pub.publish(err)
         
-        # If error too high, reset it accordingly
+        # If error is higher than threshold, reset it accordingly
         if err.data > self.err_threshold:
-            rospy.loginfo("WHOOPSIE %s", self.cube)
-            # Reset it to prev pose
-            # self.kalman.pose = prev_pose 
-            # self.kalman.subs[self.kalman.x_x] =  prev_pose[0,0]
-            # self.kalman.subs[self.kalman.x_y] = prev_pose[1,0]
-            # self.kalman.subs[self.kalman.x_theta] = prev_pose[2,0]
-
+            # rospy.loginfo("WHOOPSIE %s", self.cube)
             # Reset it to latest odom reading, taking into account transformation with world frame
             x = self.odom_path.poses[-1].pose.position.x + self.init_x
             y = self.odom_path.poses[-1].pose.position.y + self.init_y
@@ -306,9 +271,9 @@ class Main():
             tw = self.odom_path.poses[-1].pose.orientation.w
             bearing = euler_from_quaternion([tx, ty, tz, tw])[2]
             self.kalman.pose = np.array([[x],[y],[bearing]])
-            self.kalman.subs[self.kalman.x_x] = x # prev_pose[0,0]
-            self.kalman.subs[self.kalman.x_y] = y #prev_pose[1,0]
-            self.kalman.subs[self.kalman.x_theta] = bearing #prev_pose[2,0]
+            self.kalman.subs[self.kalman.x_x] = x
+            self.kalman.subs[self.kalman.x_y] = y
+            self.kalman.subs[self.kalman.x_theta] = bearing
 
         return err
     
