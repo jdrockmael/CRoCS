@@ -59,7 +59,7 @@ def drive(twist : Float32MultiArray):
     desired_vl = linear - ((angular * l)/2)
     desired_vr = linear + ((angular * l)/2)
 
-    tolerance = 0.01
+    tolerance = 0.05
     delta_t = 0.01
 
     p = 0.3
