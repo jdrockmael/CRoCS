@@ -12,6 +12,7 @@ encoder_left = None
 encoder_right = None
 
 curr_vel = (0.0, 0.0)
+curr_eff = (0.0, 0.0)
 
 vel_pub = rospy.Publisher('wheel_vel', Float32MultiArray, queue_size= 1)
 
@@ -28,6 +29,9 @@ def init():
 
     encoder_left = RotaryEncoder(27, 22, max_steps = 256000)
     encoder_right = RotaryEncoder(5, 6, max_steps = 256000)
+
+def vel_to_eff(desired_vel):
+    return 1.42 * pow(desired_vel, 0.683)
 
 def drive_one_wheel(pwd, is_left):
     if pwd > 1:
@@ -48,29 +52,42 @@ def drive_one_wheel(pwd, is_left):
     
 def drive(twist : Float32MultiArray):
     global curr_vel
+    global curr_eff
     linear, angular = twist.data
     
     l = 0.101 # meters
     desired_vl = linear - ((angular * l)/2)
     desired_vr = linear + ((angular * l)/2)
 
-    tolerance = 0.06
-    delta_t = 0.06
+    tolerance = 0.01
+    delta_t = 0.01
+
     p = 0.3
     i = 1
+    d = 1
 
-    left_eff = 1.42 * pow(desired_vl, 0.683)
-    right_eff = 1.42 * pow(desired_vr, 0.683)
-    drive_one_wheel(left_eff, True)
-    drive_one_wheel(right_eff, False)
+    left_eff = curr_eff[0]
+    right_eff = curr_eff[1]
 
     while abs(desired_vl - curr_vel[0]) > tolerance or abs(desired_vr - curr_vel[1]) > tolerance:
-        sleep(delta_t)
-        left_eff = left_eff + (desired_vl - curr_vel[0]) * p + (0.5 * (desired_vl - curr_vel[0]) * delta_t) * i
-        right_eff = right_eff + (desired_vr - curr_vel[1]) * p + (0.5 * (desired_vl - curr_vel[1]) * delta_t) * i
-        rospy.logerr((left_eff, right_eff))
+        l_proportion = (desired_vl - curr_vel[0]) * p
+        l_integral = ((desired_vl - curr_vel[0]) * delta_t) * i
+        l_derivative = ((desired_vl - curr_vel[0]) / delta_t) * d
+
+        r_proportion = (desired_vr - curr_vel[1]) * p
+        r_integral = ((desired_vr - curr_vel[1]) * delta_t) * i
+        r_derivative = ((desired_vr - curr_vel[1]) / delta_t) * d
+
+        left_eff = left_eff + l_proportion + l_integral + l_derivative
+        right_eff = right_eff + r_proportion + r_integral + r_derivative
+
+        curr_eff = (left_eff, right_eff)
+        rospy.logerr(curr_eff)
+
         drive_one_wheel(left_eff, True)
         drive_one_wheel(right_eff, False)
+
+        sleep(delta_t)
 
 def get_distance():
     tick_per_rev = 128.0
