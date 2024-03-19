@@ -30,9 +30,6 @@ def init():
     encoder_left = RotaryEncoder(27, 22, max_steps = 256000)
     encoder_right = RotaryEncoder(5, 6, max_steps = 256000)
 
-def vel_to_eff(desired_vel):
-    return 1.42 * pow(desired_vel, 0.683)
-
 def drive_one_wheel(pwd, is_left):
     if pwd > 1:
         pwd = 1
@@ -64,24 +61,32 @@ def drive(twist : Float32MultiArray):
 
     p = 0.3
     i = 1
-    d = 1
+    d = 0
 
     left_eff = curr_eff[0]
     right_eff = curr_eff[1]
 
-    while abs(desired_vl - curr_vel[0]) > tolerance or abs(desired_vr - curr_vel[1]) > tolerance:
-        l_proportion = (desired_vl - curr_vel[0]) * p
-        l_integral = ((desired_vl - curr_vel[0]) * delta_t) * i
-        l_derivative = ((desired_vl - curr_vel[0]) / delta_t) * d
+    prev_error = (desired_vl - curr_vel[0], desired_vr - curr_vel[1])
+    area = (0.0, 0.0)
 
-        r_proportion = (desired_vr - curr_vel[1]) * p
-        r_integral = ((desired_vr - curr_vel[1]) * delta_t) * i
-        r_derivative = ((desired_vr - curr_vel[1]) / delta_t) * d
+    while abs(prev_error[0]) > tolerance or abs(prev_error[1]) > tolerance:
+        curr_error = (desired_vl - curr_vel[0], desired_vr - curr_vel[1])
+        area[0] = area[0] + ( 0.5 * (curr_error[0] + prev_error[0]) * delta_t)
+        area[1] = area[1] + ( 0.5 * (curr_error[1] + prev_error[1]) * delta_t)
+
+        l_proportion = curr_error[0] * p
+        l_integral = area[0] * i
+        l_derivative = ((curr_error[0] - prev_error[0]) / delta_t) * d
+
+        r_proportion = curr_error[1] * p
+        r_integral = area[1] * i
+        r_derivative = ((curr_error[1] - prev_error[1]) / delta_t) * d
 
         left_eff = left_eff + l_proportion + l_integral + l_derivative
         right_eff = right_eff + r_proportion + r_integral + r_derivative
 
         curr_eff = (left_eff, right_eff)
+        prev_error = curr_error
         rospy.logerr(curr_eff)
 
         drive_one_wheel(left_eff, True)
