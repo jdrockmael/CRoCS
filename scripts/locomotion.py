@@ -60,7 +60,7 @@ def drive(twist : Float32MultiArray):
     desired_vr = linear + ((angular * l)/2)
 
     tolerance = 0.01
-    delta_t = 0.01
+    delta_t = 0.05
 
     p = 0.3
     i = 0.5
@@ -115,7 +115,7 @@ def calc_wheel_vel(prev_wheel_dis, curr_wheel_dis, delta_t):
     return (left_vel, right_vel)
 
 if __name__ == '__main__':
-    delta_t = 0.3
+    delta_t = 0.05
     rospy.init_node('locomotion')
     init()
     rospy.Subscriber("robot_twist", Float32MultiArray, drive)
