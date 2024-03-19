@@ -30,6 +30,9 @@ def init():
     encoder_left = RotaryEncoder(27, 22, max_steps = 256000)
     encoder_right = RotaryEncoder(5, 6, max_steps = 256000)
 
+    motor_left.stop()
+    motor_right.stop()
+
 def drive_one_wheel(pwd, is_left):
     if pwd > 1:
         pwd = 1
