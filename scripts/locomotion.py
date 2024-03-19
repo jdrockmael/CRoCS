@@ -67,7 +67,7 @@ def drive(twist : Float32MultiArray):
     right_eff = curr_eff[1]
 
     prev_error = (desired_vl - curr_vel[0], desired_vr - curr_vel[1])
-    area = (0.0, 0.0)
+    area = [0.0, 0.0]
 
     while abs(prev_error[0]) > tolerance or abs(prev_error[1]) > tolerance:
         curr_error = (desired_vl - curr_vel[0], desired_vr - curr_vel[1])
