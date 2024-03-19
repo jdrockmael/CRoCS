@@ -60,7 +60,7 @@ def drive(twist : Float32MultiArray):
     delta_t = 0.01
 
     p = 0.3
-    i = 1
+    i = 0.5
     d = 0
 
     left_eff = curr_eff[0]
@@ -87,7 +87,7 @@ def drive(twist : Float32MultiArray):
 
         curr_eff = (left_eff, right_eff)
         prev_error = curr_error
-        rospy.logerr(curr_eff)
+        rospy.logerr(curr_error)
 
         drive_one_wheel(left_eff, True)
         drive_one_wheel(right_eff, False)
