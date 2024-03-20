@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 import rospy
-from std_msgs.msg import Float32MultiArray
+from std_msgs.msg import Float32MultiArray, Float32
 from time import sleep
 from math import atan2, sqrt
 
@@ -33,41 +33,75 @@ def update_pose(pose : Float32MultiArray):
     curr_pose = pose.data
 
 def drive_to(pose):
-    distance = sqrt(pow(pose[0]-curr_pose[0], 2) + pow(pose[1]-curr_pose[1], 2))
+    prev_distance = sqrt(pow(pose[0]-curr_pose[0], 2) + pow(pose[1]-curr_pose[1], 2))
     heading = atan2(pose[1], pose[0])
+
+    p = 0.3 #potentially made different P I and D variables for linear and angular
+    i = 0
+    d = 0.5
+
+    tolerance = 0.1
+    delta_t = 0.01
+
+    linear_area = 0.0
+    angular_area = 0.0
     
-    while(distance > 0.1):
-        distance = sqrt(pow(pose[0]-curr_pose[0], 2) + pow(pose[1]-curr_pose[1], 2))
+    while(prev_distance > tolerance or prev_distance < -tolerance):
+        curr_distance = sqrt(pow(pose[0]-curr_pose[0], 2) + pow(pose[1]-curr_pose[1], 2))
         
-        linear = distance * 5.0
-        angular_l = curr_pose[2] - heading * 1.0
-        angular_r = -curr_pose[2] + heading * 1.0
+        linear_area += 0.5 * (curr_distance + prev_distance) * delta_t
+        
+        linear_eff_p = curr_distance * p
+        linear_eff_i = linear_area * i
+        linear_eff_d = ((curr_distance - prev_distance)/delta_t) * d
 
-        l_eff = linear + angular_l
-        r_eff = linear + angular_r
+        linear_eff = linear_eff_p + linear_eff_i + linear_eff_d
 
-        eff_pub.publish(Float32MultiArray(data=[0, 0]))
+        angular_area += 0.5 * (curr_pose[2] + heading) * delta_t
 
-        sleep(0.001)
+        angular_eff_p = curr_pose[2] - heading * p
+        angular_eff_i = angular_area * i
+        angular_eff_d = ((curr_pose[2] - heading)/delta_t) * d
 
-    eff_pub.publish(Float32MultiArray(data=[0, 0]))
+        angular_eff = angular_eff_p + angular_eff_i + angular_eff_d
+
+        effort = [linear_eff, angular_eff]
+
+        eff_pub.publish(Float32MultiArray(effort))
+
+        prev_distance = curr_distance
+        sleep(delta_t)
+
+    eff_pub.publish(Float32MultiArray(effort))
 
 def turn_to(heading):
-    desired_heading = heading
-    error = curr_pose[2] - desired_heading
+    prev_error = heading - curr_pose[2]
+    tolerance = 0.1
+    delta_t = 0.01
 
-    while(error > 0.1):
-        angular_l = error * 1.0
-        angular_r = -error * 1.0
+    p = 0.3
+    i = 0
+    d = 0.5
 
-        l_eff = angular_l
-        r_eff = angular_r
+    area = 0.0
 
-        eff_pub.publish(Float32MultiArray(data=[0, 0]))
+    while(prev_error > tolerance or prev_error < -tolerance):
+        curr_error = heading - curr_pose[2]
 
-        sleep(0.001)
+        area += 0.5 * (curr_error + prev_error) * delta_t
+        
+        angular_err_p = curr_error *p
+        angular_err_i = area * i
+        angular_err_d = ((curr_error-prev_error)/delta_t) * d
+
+        effort = angular_err_p + + angular_err_i + angular_err_d
+
+        eff_pub.publish(Float32(effort))
+
+        prev_error = curr_error
+        sleep(delta_t)
     
-    eff_pub.publish(Float32MultiArray(data=[0, 0]))
+    eff_pub.publish(Float32(effort))
 
 def drive_to_point(desired : Float32MultiArray):
     desired_pose = desired.data
