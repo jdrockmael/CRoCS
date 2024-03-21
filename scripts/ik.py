@@ -36,9 +36,13 @@ def drive_to(pose):
     prev_distance = sqrt(pow(pose[0]-curr_pose[0], 2) + pow(pose[1]-curr_pose[1], 2))
     heading = atan2(pose[1], pose[0])
 
-    p = 0.3 #potentially made different P I and D variables for linear and angular
-    i = 0
-    d = 0.5
+    lin_p = 0.3 
+    lin_i = 0
+    lin_d = 0.5
+
+    ang_p = 0.3 
+    ang_i = 0
+    ang_d = 0.5
 
     tolerance = 0.1
     delta_t = 0.01
@@ -51,17 +55,17 @@ def drive_to(pose):
         
         linear_area += 0.5 * (curr_distance + prev_distance) * delta_t
         
-        linear_eff_p = curr_distance * p
-        linear_eff_i = linear_area * i
-        linear_eff_d = ((curr_distance - prev_distance)/delta_t) * d
+        linear_eff_p = curr_distance * lin_p
+        linear_eff_i = linear_area * lin_i
+        linear_eff_d = ((curr_distance - prev_distance)/delta_t) * lin_d
 
         linear_eff = linear_eff_p + linear_eff_i + linear_eff_d
 
         angular_area += 0.5 * (curr_pose[2] + heading) * delta_t
 
-        angular_eff_p = curr_pose[2] - heading * p
-        angular_eff_i = angular_area * i
-        angular_eff_d = ((curr_pose[2] - heading)/delta_t) * d
+        angular_eff_p = curr_pose[2] - heading * ang_p
+        angular_eff_i = angular_area * ang_i
+        angular_eff_d = ((curr_pose[2] - heading)/delta_t) * ang_d
 
         angular_eff = angular_eff_p + angular_eff_i + angular_eff_d
 
