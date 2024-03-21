@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 import rospy
-from std_msgs.msg import Float32MultiArray, Float32
+from std_msgs.msg import Float32MultiArray
 from time import sleep
 from math import atan2, sqrt
 
@@ -67,12 +67,12 @@ def drive_to(pose):
 
         effort = [linear_eff, angular_eff]
 
-        eff_pub.publish(Float32MultiArray(effort))
+        eff_pub.publish(Float32MultiArray(data=effort))
 
         prev_distance = curr_distance
         sleep(delta_t)
 
-    eff_pub.publish(Float32MultiArray(effort))
+    eff_pub.publish(Float32MultiArray(data=effort))
 
 def turn_to(heading):
     prev_error = heading - curr_pose[2]
@@ -96,12 +96,12 @@ def turn_to(heading):
 
         effort = angular_err_p + + angular_err_i + angular_err_d
 
-        eff_pub.publish(Float32(effort))
+        eff_pub.publish(Float32MultiArray(data=[0.0, effort]))
 
         prev_error = curr_error
         sleep(delta_t)
     
-    eff_pub.publish(Float32(effort))
+    eff_pub.publish(Float32MultiArray(data=[0.0,effort]))
 
 def drive_to_point(desired : Float32MultiArray):
     desired_pose = desired.data
