@@ -33,60 +33,60 @@ def update_pose(pose : Float32MultiArray):
     global curr_pose
     curr_pose = pose.data
 
-# def drive_to(pose):
-#     prev_distance = sqrt(pow(pose[0]-curr_pose[0], 2) + pow(pose[1]-curr_pose[1], 2))
-#     heading = atan2(pose[1], pose[0])
+def drive_to(pose):
+    prev_distance = sqrt(pow(pose[0]-curr_pose[0], 2) + pow(pose[1]-curr_pose[1], 2))
+    heading = atan2(pose[1], pose[0])
 
-#     lin_p = 0.3 
-#     lin_i = 0
-#     lin_d = 0.5
+    lin_p = 0.3 
+    lin_i = 0
+    lin_d = 0.5
 
-#     ang_p = 0.3 
-#     ang_i = 0
-#     ang_d = 0.5
+    ang_p = 0.3 
+    ang_i = 0
+    ang_d = 0.5
 
-#     tolerance = 0.1
-#     delta_t = 0.01
+    tolerance = 0.1
+    delta_t = 0.01
 
-#     linear_area = 0.0
-#     angular_area = 0.0
+    linear_area = 0.0
+    angular_area = 0.0
     
-#     while(prev_distance > tolerance or prev_distance < -tolerance):
-#         curr_distance = sqrt(pow(pose[0]-curr_pose[0], 2) + pow(pose[1]-curr_pose[1], 2))
+    while(prev_distance > tolerance or prev_distance < -tolerance):
+        curr_distance = sqrt(pow(pose[0]-curr_pose[0], 2) + pow(pose[1]-curr_pose[1], 2))
         
-#         linear_area += 0.5 * (curr_distance + prev_distance) * delta_t
+        linear_area += 0.5 * (curr_distance + prev_distance) * delta_t
         
-#         linear_eff_p = curr_distance * lin_p
-#         linear_eff_i = linear_area * lin_i
-#         linear_eff_d = ((curr_distance - prev_distance)/delta_t) * lin_d
+        linear_eff_p = curr_distance * lin_p
+        linear_eff_i = linear_area * lin_i
+        linear_eff_d = ((curr_distance - prev_distance)/delta_t) * lin_d
 
-#         linear_eff = linear_eff_p + linear_eff_i + linear_eff_d
+        linear_eff = linear_eff_p + linear_eff_i + linear_eff_d
 
-#         angular_area += 0.5 * (curr_pose[2] + heading) * delta_t
+        angular_area += 0.5 * (curr_pose[2] + heading) * delta_t
 
-#         angular_eff_p = curr_pose[2] - heading * ang_p
-#         angular_eff_i = angular_area * ang_i
-#         angular_eff_d = ((curr_pose[2] - heading)/delta_t) * ang_d
+        angular_eff_p = curr_pose[2] - heading * ang_p
+        angular_eff_i = angular_area * ang_i
+        angular_eff_d = ((curr_pose[2] - heading)/delta_t) * ang_d
 
-#         angular_eff = angular_eff_p + angular_eff_i + angular_eff_d
+        angular_eff = angular_eff_p + angular_eff_i + angular_eff_d
 
-#         effort = [linear_eff, angular_eff]
+        effort = [linear_eff, angular_eff]
 
-#         eff_pub.publish(Float32MultiArray(data=effort))
+        eff_pub.publish(Float32MultiArray(data=effort))
 
-#         prev_distance = curr_distance
-#         sleep(delta_t)
+        prev_distance = curr_distance
+        sleep(delta_t)
 
-#     eff_pub.publish(Float32MultiArray(data=effort))
+    eff_pub.publish(Float32MultiArray(data=[0.0, 0.0]))
 
 def turn_to(heading):
     prev_error = heading - curr_pose[2]
     tolerance = 0.1
     delta_t = 0.01
 
-    p = 0.3
+    p = 1
     i = 0
-    d = 0.5
+    d = 0
 
     area = 0.0
 
