@@ -107,6 +107,8 @@ def turn_to(heading):
         sleep(delta_t)
     
     eff_pub.publish(Float32MultiArray(data=[0.0, 0.0]))
+    eff_pub.publish(Float32MultiArray(data=[0.0, 0.0]))
+    eff_pub.publish(Float32MultiArray(data=[0.0, 0.0]))
 
 def calc_transform(pose):
     x = curr_pose[0]
