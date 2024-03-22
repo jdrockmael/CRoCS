@@ -90,7 +90,7 @@ def turn_to(heading):
 
     area = 0.0
 
-    while(prev_error > tolerance or prev_error < -tolerance):
+    while(abs(prev_error) > tolerance):
         curr_error = heading - curr_pose[2]
 
         area += 0.5 * (curr_error + prev_error) * delta_t
@@ -99,14 +99,14 @@ def turn_to(heading):
         angular_err_i = area * i
         angular_err_d = ((curr_error-prev_error)/delta_t) * d
 
-        effort = angular_err_p + + angular_err_i + angular_err_d
+        omega = angular_err_p + angular_err_i + angular_err_d
 
-        eff_pub.publish(Float32MultiArray(data=[0.0, effort]))
+        eff_pub.publish(Float32MultiArray(data=[0.0, omega]))
 
         prev_error = curr_error
         sleep(delta_t)
     
-    eff_pub.publish(Float32MultiArray(data=[0.0,effort]))
+    eff_pub.publish(Float32MultiArray(data=[0.0, 0.0]))
 
 def calc_transform(pose):
     x = curr_pose[0]
