@@ -20,7 +20,10 @@ def calc_fk(wheel_vel : Float32MultiArray, delta_t):
     new_y = y + delta_t * vel * sin(theta)
     new_theta = theta + delta_t * omega
 
-    soh = new_theta/abs(new_theta)
+    temp = new_theta
+    if temp == 0.0:
+        temp += 1
+    soh = temp/abs(temp)
     new_theta = new_theta % (soh * 2 * pi)
     if new_theta > pi or new_theta < -pi:
         new_theta = new_theta - (soh * 2 * pi)
