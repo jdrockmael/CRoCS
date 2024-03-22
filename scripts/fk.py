@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 import rospy
-from math import sin, cos
+from math import sin, cos, pi
 from std_msgs.msg import Float32MultiArray
 
 pose = [0.0, 0.0, 0.0]
@@ -19,6 +19,11 @@ def calc_fk(wheel_vel : Float32MultiArray, delta_t):
     new_x = x + delta_t * vel * cos(theta)
     new_y = y + delta_t * vel * sin(theta)
     new_theta = theta + delta_t * omega
+
+    soh = new_theta/abs(new_theta)
+    new_theta = new_theta % (soh * 2 * pi)
+    if new_theta > pi or new_theta < -pi:
+        new_theta = new_theta - (soh * 2 * pi)
 
     pose = [new_x, new_y, new_theta]
     pose_pub.publish(Float32MultiArray(data=pose))

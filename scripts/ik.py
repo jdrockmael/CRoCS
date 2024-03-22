@@ -112,18 +112,16 @@ def calc_transform(pose):
     x = curr_pose[0]
     y = curr_pose[1]
     theta = curr_pose[2]
-    transform = np.array([[cos(theta), -sin(theta), x],
-                        [sin(theta), cos(theta), y],
-                        [0.0, 0.0, 1.0]])
 
-    new_pose = np.array([[pose[0]], [pose[1]], [1.0]])
+    new_x = cos(theta) * pose[0] + -sin(theta) * pose[1] + x
+    new_y = sin(theta) * pose[0] + cos(theta) * pose[1] + y
 
-    return np.dot(transform, new_pose)
+    return (new_x, new_y)
 
 def drive_to_point(desired : Float32MultiArray):
     desired_pose = desired.data
-    transformed_pose = calc_transform(desired.data)
-    desired_heading = atan2(transformed_pose[0], transformed_pose[1])
+    transformed_pose = calc_transform(desired_pose)
+    desired_heading = curr_pose[0] + atan2(transformed_pose[1], transformed_pose[0])
 
     turn_to(desired_heading)
     drive_to(desired_pose)
