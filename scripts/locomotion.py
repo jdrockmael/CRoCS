@@ -13,6 +13,7 @@ encoder_right = None
 
 curr_vel = (0.0, 0.0)
 curr_eff = (0.0, 0.0)
+is_new_goal = False
 
 vel_pub = rospy.Publisher('wheel_vel', Float32MultiArray, queue_size= 1)
 
@@ -50,10 +51,11 @@ def drive_one_wheel(pwd, is_left):
     else:
         motor_right.forward(-pwd)
     
-def drive(twist : Float32MultiArray):
+def speed_controller(twist):
     global curr_vel
     global curr_eff
-    linear, angular = twist.data
+    global is_new_goal
+    linear, angular = twist
     
     l = 0.101 # meters
     desired_vl = linear - ((angular * l)/2)
@@ -72,7 +74,8 @@ def drive(twist : Float32MultiArray):
     prev_error = (desired_vl - curr_vel[0], desired_vr - curr_vel[1])
     area = [0.0, 0.0]
 
-    while abs(prev_error[0]) > tolerance or abs(prev_error[1]) > tolerance:
+    is_new_goal = False
+    while (abs(prev_error[0]) > tolerance or abs(prev_error[1]) > tolerance) and not is_new_goal:
         curr_error = (desired_vl - curr_vel[0], desired_vr - curr_vel[1])
         area[0] = area[0] + ( 0.5 * (curr_error[0] + prev_error[0]) * delta_t)
         area[1] = area[1] + ( 0.5 * (curr_error[1] + prev_error[1]) * delta_t)
@@ -95,6 +98,12 @@ def drive(twist : Float32MultiArray):
         drive_one_wheel(right_eff, False)
 
         sleep(delta_t)
+
+def drive(desired_twist : Float32MultiArray):
+    global is_new_goal
+    is_new_goal = True
+    
+    speed_controller(desired_twist.data)
 
 def get_distance():
     tick_per_rev = 128.0
