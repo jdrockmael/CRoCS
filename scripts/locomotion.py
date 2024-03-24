@@ -116,18 +116,25 @@ if __name__ == '__main__':
     init()
     rospy.Subscriber("robot_twist", Float32MultiArray, update_desired)
 
-    prev_error = (0.0, 0.0)
+    prev_goal = desired_vel
+    curr_vel = [0.0, 0.0]
+    prev_error = (desired_vel[0] - curr_vel[0], desired_vel[1] - curr_vel[1])
     area = [0.0, 0.0]
     curr_eff = (0.0, 0.0)
-    prev_goal = desired_vel
 
     prev_dist = get_distance()
     while not rospy.is_shutdown(): 
+        if prev_goal != desired_vel:
+            prev_error = (desired_vel[0] - curr_vel[0], desired_vel[1] - curr_vel[1])
+            area = [0.0, 0.0]
+            prev_goal = desired_vel
+
         sleep(delta_t)
         curr_dist = get_distance()
 
         wheel_vel = calc_wheel_vel(prev_dist, curr_dist, delta_t)
         prev_dist = curr_dist
+        curr_vel = wheel_vel
 
         vel_pub.publish(Float32MultiArray(data=wheel_vel))
 
