@@ -121,6 +121,7 @@ if __name__ == '__main__':
     prev_error = (desired_vel[0] - curr_vel[0], desired_vel[1] - curr_vel[1])
     area = [0.0, 0.0]
     curr_eff = (0.0, 0.0)
+    tolerance = 0.01
 
     prev_dist = get_distance()
     while not rospy.is_shutdown(): 
@@ -128,6 +129,7 @@ if __name__ == '__main__':
             prev_error = (desired_vel[0] - curr_vel[0], desired_vel[1] - curr_vel[1])
             area = [0.0, 0.0]
             prev_goal = desired_vel
+            rospy.logerr("got new goal reseting", prev_error)
 
         sleep(delta_t)
         curr_dist = get_distance()
@@ -138,5 +140,6 @@ if __name__ == '__main__':
 
         vel_pub.publish(Float32MultiArray(data=wheel_vel))
 
-        prev_error, area, curr_eff = speed_controller(wheel_vel, delta_t, prev_error, area, curr_eff)
+        if abs(prev_error) > tolerance:
+            prev_error, area, curr_eff = speed_controller(curr_vel, delta_t, prev_error, area, curr_eff)
         
