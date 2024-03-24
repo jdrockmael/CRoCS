@@ -5,11 +5,14 @@ from std_msgs.msg import Float32MultiArray
 from gpiozero import Device, PhaseEnableMotor, RotaryEncoder
 from gpiozero.pins.pigpio import PiGPIOFactory
 from math import pi
+from threading import Lock
 
 motor_left = None
 motor_right = None
 encoder_left = None
 encoder_right = None
+
+lock = Lock()
 
 desired_vel = None
 curr_vel = [0.0, 0.0]
@@ -35,6 +38,23 @@ def init():
 
     motor_left.stop()
     motor_right.stop()
+
+def get_distance():
+    tick_per_rev = 128.0
+    r_of_wheel = 0.021225 # in meters
+    left = (encoder_left.steps / tick_per_rev) * (2.0 * pi * r_of_wheel)
+    right = (-encoder_right.steps / tick_per_rev) * (2.0 * pi * r_of_wheel)
+
+    return (left, right)
+
+def calc_wheel_vel(prev_wheel_dis, curr_wheel_dis, delta_t):
+    delta_l = curr_wheel_dis[0] - prev_wheel_dis[0]
+    delta_r = curr_wheel_dis[1] - prev_wheel_dis[1]
+
+    left_vel = delta_l / delta_t
+    right_vel = delta_r / delta_t
+
+    return (left_vel, right_vel)
 
 def drive_one_wheel(pwd, is_left):
     if pwd > 1:
@@ -70,8 +90,10 @@ def speed_controller(delta_t):
     right_eff = curr_eff[1]
 
     curr_error = (desired_vl - curr_vel[0], desired_vr - curr_vel[1])
-    area[0] = area[0] + ( 0.5 * (curr_error[0] + prev_error[0]) * delta_t)
-    area[1] = area[1] + ( 0.5 * (curr_error[1] + prev_error[1]) * delta_t)
+
+    with lock:
+        area[0] = area[0] + ( 0.5 * (curr_error[0] + prev_error[0]) * delta_t)
+        area[1] = area[1] + ( 0.5 * (curr_error[1] + prev_error[1]) * delta_t)
 
     l_proportion = curr_error[0] * p
     l_integral = area[0] * i
@@ -84,8 +106,9 @@ def speed_controller(delta_t):
     left_eff = left_eff + l_proportion + l_integral + l_derivative
     right_eff = right_eff + r_proportion + r_integral + r_derivative
 
-    curr_eff = (left_eff, right_eff)
-    prev_error = curr_error
+    with lock:
+        curr_eff = (left_eff, right_eff)
+        prev_error = curr_error
 
     drive_one_wheel(left_eff, True)
     drive_one_wheel(right_eff, False)
@@ -100,26 +123,11 @@ def update_desired(desired : Float32MultiArray):
     l = 0.101 # meters
     desired_vl = linear - ((angular * l)/2)
     desired_vr = linear + ((angular * l)/2)
-    desired_vel = (desired_vl, desired_vr)
-    prev_error = (desired_vel[0] - curr_vel[0], desired_vel[1] - curr_vel[1])
-    area = [0.0, 0.0]
 
-def get_distance():
-    tick_per_rev = 128.0
-    r_of_wheel = 0.021225 # in meters
-    left = (encoder_left.steps / tick_per_rev) * (2.0 * pi * r_of_wheel)
-    right = (-encoder_right.steps / tick_per_rev) * (2.0 * pi * r_of_wheel)
-
-    return (left, right)
-
-def calc_wheel_vel(prev_wheel_dis, curr_wheel_dis, delta_t):
-    delta_l = curr_wheel_dis[0] - prev_wheel_dis[0]
-    delta_r = curr_wheel_dis[1] - prev_wheel_dis[1]
-
-    left_vel = delta_l / delta_t
-    right_vel = delta_r / delta_t
-
-    return (left_vel, right_vel)
+    with lock:
+        desired_vel = (desired_vl, desired_vr)
+        prev_error = (desired_vel[0] - curr_vel[0], desired_vel[1] - curr_vel[1])
+        area = [0.0, 0.0]
 
 if __name__ == '__main__':
     delta_t = 0.01
