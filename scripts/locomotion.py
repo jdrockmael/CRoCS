@@ -129,7 +129,8 @@ if __name__ == '__main__':
             prev_error = (desired_vel[0] - curr_vel[0], desired_vel[1] - curr_vel[1])
             area = [0.0, 0.0]
             prev_goal = desired_vel
-            rospy.logerr("got new goal reseting", prev_error)
+            rospy.logerr("got new goal reseting")
+            rospy.logerr(prev_error)
 
         sleep(delta_t)
         curr_dist = get_distance()
