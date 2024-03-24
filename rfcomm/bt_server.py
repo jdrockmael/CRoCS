@@ -30,6 +30,8 @@ def setup(port=4):
     nearby_devices = bluetooth.discover_devices()
     cnt = 0
 
+    pos_list = {}
+
     for curr_adr in nearby_devices:
         if curr_adr in croc_macs:
             cnt = cnt + 1
@@ -60,10 +62,13 @@ def setup(port=4):
 # data is an array of b'' with 0 being the croc target
 # and data[1] is the message being sent
 def handle_msg(croc, data):
+    global pos_list
     name = data[0].decode('ascii')
     if name == 'server':
         print(data[1], "from", croc)
+        pos_list[croc] = data[1]
     elif name in list_of_clients:
+        pos_list[croc] = data[1]
         list_of_clients[name].send(data[1])
     else:
         print(data[0], "is not a connected croc\n")
