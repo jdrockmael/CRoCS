@@ -11,9 +11,9 @@ motor_right = None
 encoder_left = None
 encoder_right = None
 
-desired_vel = (0.0, 0.0)
+desired_vel = None
 curr_vel = [0.0, 0.0]
-prev_error = (desired_vel[0] - curr_vel[0], desired_vel[1] - curr_vel[1])
+prev_error = (0.0, 0.0)
 area = [0.0, 0.0]
 curr_eff = (0.0, 0.0)
 
@@ -140,6 +140,8 @@ if __name__ == '__main__':
 
         vel_pub.publish(Float32MultiArray(data=wheel_vel))
 
-        if abs(prev_error[0]) > tolerance or abs(prev_error[1]) > tolerance:
+        if (abs(prev_error[0]) > tolerance or abs(prev_error[1]) > tolerance) and desired_vel != None:
             speed_controller(delta_t)
+        else:
+            desired_vel = None
         
