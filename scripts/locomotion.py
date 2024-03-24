@@ -140,6 +140,6 @@ if __name__ == '__main__':
 
         vel_pub.publish(Float32MultiArray(data=wheel_vel))
 
-        if abs(prev_error) > tolerance:
+        if abs(prev_error[0]) > tolerance or abs(prev_error[1]) > tolerance:
             prev_error, area, curr_eff = speed_controller(curr_vel, delta_t, prev_error, area, curr_eff)
         
