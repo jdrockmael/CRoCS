@@ -12,6 +12,10 @@ encoder_left = None
 encoder_right = None
 
 desired_vel = (0.0, 0.0)
+curr_vel = [0.0, 0.0]
+prev_error = (desired_vel[0] - curr_vel[0], desired_vel[1] - curr_vel[1])
+area = [0.0, 0.0]
+curr_eff = (0.0, 0.0)
 
 vel_pub = rospy.Publisher('wheel_vel', Float32MultiArray, queue_size= 1)
 
@@ -49,8 +53,12 @@ def drive_one_wheel(pwd, is_left):
     else:
         motor_right.forward(-pwd)
     
-def speed_controller(curr_vel, delta_t, prev_error, area, curr_eff):
+def speed_controller(delta_t):
     global desired_vel
+    global curr_vel
+    global prev_error
+    global area
+    global curr_eff
 
     p = 0.3
     i = 0.5
@@ -82,16 +90,19 @@ def speed_controller(curr_vel, delta_t, prev_error, area, curr_eff):
     drive_one_wheel(left_eff, True)
     drive_one_wheel(right_eff, False)
 
-    return (prev_error, area, curr_eff)
-
 def update_desired(desired : Float32MultiArray):
     global desired_vel
+    global prev_error
+    global area
+    global curr_vel
     linear, angular = desired.data
     
     l = 0.101 # meters
     desired_vl = linear - ((angular * l)/2)
     desired_vr = linear + ((angular * l)/2)
     desired_vel = (desired_vl, desired_vr)
+    prev_error = (desired_vel[0] - curr_vel[0], desired_vel[1] - curr_vel[1])
+    area = [0.0, 0.0]
 
 def get_distance():
     tick_per_rev = 128.0
@@ -116,22 +127,10 @@ if __name__ == '__main__':
     init()
     rospy.Subscriber("robot_twist", Float32MultiArray, update_desired)
 
-    prev_goal = desired_vel
-    curr_vel = [0.0, 0.0]
-    prev_error = (desired_vel[0] - curr_vel[0], desired_vel[1] - curr_vel[1])
-    area = [0.0, 0.0]
-    curr_eff = (0.0, 0.0)
     tolerance = 0.01
 
     prev_dist = get_distance()
     while not rospy.is_shutdown(): 
-        if prev_goal != desired_vel:
-            prev_error = (desired_vel[0] - curr_vel[0], desired_vel[1] - curr_vel[1])
-            area = [0.0, 0.0]
-            prev_goal = desired_vel
-            rospy.logerr("got new goal reseting")
-            rospy.logerr(prev_error)
-
         sleep(delta_t)
         curr_dist = get_distance()
 
@@ -142,5 +141,5 @@ if __name__ == '__main__':
         vel_pub.publish(Float32MultiArray(data=wheel_vel))
 
         if abs(prev_error[0]) > tolerance or abs(prev_error[1]) > tolerance:
-            prev_error, area, curr_eff = speed_controller(curr_vel, delta_t, prev_error, area, curr_eff)
+            speed_controller(delta_t)
         
