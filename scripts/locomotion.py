@@ -5,7 +5,7 @@ from std_msgs.msg import Float32MultiArray
 from gpiozero import Device, PhaseEnableMotor, RotaryEncoder
 from gpiozero.pins.pigpio import PiGPIOFactory
 from math import pi
-from threading import Lock
+from threading import Lock, Thread
 
 motor_left = None
 motor_right = None
@@ -113,6 +113,16 @@ def speed_controller(delta_t):
     drive_one_wheel(left_eff, True)
     drive_one_wheel(right_eff, False)
 
+def speed_controller_thread():
+    delta_t = 0.01
+    tolerance = 0.01
+    while not rospy.is_shutdown():
+        sleep(delta_t)
+        if (abs(prev_error[0]) > tolerance or abs(prev_error[1]) > tolerance) and desired_vel != None:
+            speed_controller(delta_t)
+        else:
+            desired_vel = None
+
 def update_desired(desired : Float32MultiArray):
     global desired_vel
     global prev_error
@@ -135,7 +145,8 @@ if __name__ == '__main__':
     init()
     rospy.Subscriber("robot_twist", Float32MultiArray, update_desired)
 
-    tolerance = 0.01
+    speed_thread = Thread(target=speed_controller_thread)
+    speed_thread.start()
 
     prev_dist = get_distance()
     while not rospy.is_shutdown(): 
@@ -147,9 +158,4 @@ if __name__ == '__main__':
         curr_vel = wheel_vel
 
         vel_pub.publish(Float32MultiArray(data=wheel_vel))
-
-        if (abs(prev_error[0]) > tolerance or abs(prev_error[1]) > tolerance) and desired_vel != None:
-            speed_controller(delta_t)
-        else:
-            desired_vel = None
         
