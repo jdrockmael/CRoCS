@@ -19,6 +19,9 @@ lock = threading.Lock()
 # dictionary relating croc names to client objects used to send messages
 list_of_clients = {}
 
+#dictionary of croc positions
+pos_list = {}
+
 # the number of crocs that are connected
 connect_croc_cnt = None
 
@@ -29,8 +32,6 @@ def setup(port=4):
     croc_macs = [adr.value for adr in croc_info]
     nearby_devices = bluetooth.discover_devices()
     cnt = 0
-
-    pos_list = {}
 
     for curr_adr in nearby_devices:
         if curr_adr in croc_macs:
@@ -66,7 +67,8 @@ def handle_msg(croc, data):
     name = data[0].decode('ascii')
     if name == 'server':
         print(data[1], "from", croc)
-        pos_list[croc] = data[1]
+        if 'requesting' not in data[1]:
+            pos_list[croc] = data[1]
     elif name in list_of_clients:
         pos_list[croc] = data[1]
         list_of_clients[name].send(data[1])
