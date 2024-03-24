@@ -11,10 +11,7 @@ motor_right = None
 encoder_left = None
 encoder_right = None
 
-curr_vel = (0.0, 0.0)
-curr_eff = (0.0, 0.0)
-is_new_goal = False
-is_done = True
+desired_vel = (0.0, 0.0)
 
 vel_pub = rospy.Publisher('wheel_vel', Float32MultiArray, queue_size= 1)
 
@@ -52,65 +49,49 @@ def drive_one_wheel(pwd, is_left):
     else:
         motor_right.forward(-pwd)
     
-def speed_controller(twist):
-    global curr_vel
-    global curr_eff
-    global is_new_goal
-    global is_done
-    linear, angular = twist
-    
-    l = 0.101 # meters
-    desired_vl = linear - ((angular * l)/2)
-    desired_vr = linear + ((angular * l)/2)
-
-    tolerance = 0.05
-    delta_t = 0.01
+def speed_controller(curr_vel, delta_t, prev_error, area, curr_eff):
+    global desired_vel
 
     p = 0.3
     i = 0.5
     d = 0
 
+    desired_vl, desired_vr = desired_vel
+
     left_eff = curr_eff[0]
     right_eff = curr_eff[1]
 
-    prev_error = (desired_vl - curr_vel[0], desired_vr - curr_vel[1])
-    area = [0.0, 0.0]
+    curr_error = (desired_vl - curr_vel[0], desired_vr - curr_vel[1])
+    area[0] = area[0] + ( 0.5 * (curr_error[0] + prev_error[0]) * delta_t)
+    area[1] = area[1] + ( 0.5 * (curr_error[1] + prev_error[1]) * delta_t)
 
-    is_new_goal = False
-    is_done = False
-    while (abs(prev_error[0]) > tolerance or abs(prev_error[1]) > tolerance) and not is_new_goal:
-        curr_error = (desired_vl - curr_vel[0], desired_vr - curr_vel[1])
-        area[0] = area[0] + ( 0.5 * (curr_error[0] + prev_error[0]) * delta_t)
-        area[1] = area[1] + ( 0.5 * (curr_error[1] + prev_error[1]) * delta_t)
+    l_proportion = curr_error[0] * p
+    l_integral = area[0] * i
+    l_derivative = ((curr_error[0] - prev_error[0]) / delta_t) * d
 
-        l_proportion = curr_error[0] * p
-        l_integral = area[0] * i
-        l_derivative = ((curr_error[0] - prev_error[0]) / delta_t) * d
+    r_proportion = curr_error[1] * p
+    r_integral = area[1] * i
+    r_derivative = ((curr_error[1] - prev_error[1]) / delta_t) * d
 
-        r_proportion = curr_error[1] * p
-        r_integral = area[1] * i
-        r_derivative = ((curr_error[1] - prev_error[1]) / delta_t) * d
+    left_eff = left_eff + l_proportion + l_integral + l_derivative
+    right_eff = right_eff + r_proportion + r_integral + r_derivative
 
-        left_eff = left_eff + l_proportion + l_integral + l_derivative
-        right_eff = right_eff + r_proportion + r_integral + r_derivative
+    curr_eff = (left_eff, right_eff)
+    prev_error = curr_error
 
-        curr_eff = (left_eff, right_eff)
-        prev_error = curr_error
+    drive_one_wheel(left_eff, True)
+    drive_one_wheel(right_eff, False)
 
-        drive_one_wheel(left_eff, True)
-        drive_one_wheel(right_eff, False)
+    return (prev_error, area, curr_eff)
 
-        sleep(delta_t)
+def update_desired(desired : Float32MultiArray):
+    global desired_vel
+    linear, angular = desired.data
     
-    is_done = True
-
-def drive(desired_twist : Float32MultiArray):
-    global is_new_goal
-    is_new_goal = True
-    
-    while not is_done:
-        pass
-    speed_controller(desired_twist.data)
+    l = 0.101 # meters
+    desired_vl = linear - ((angular * l)/2)
+    desired_vr = linear + ((angular * l)/2)
+    desired_vel = (desired_vl, desired_vr)
 
 def get_distance():
     tick_per_rev = 128.0
@@ -133,16 +114,22 @@ if __name__ == '__main__':
     delta_t = 0.01
     rospy.init_node('locomotion')
     init()
-    rospy.Subscriber("robot_twist", Float32MultiArray, drive)
+    rospy.Subscriber("robot_twist", Float32MultiArray, update_desired)
+
+    prev_error = (0.0, 0.0)
+    area = [0.0, 0.0]
+    curr_eff = (0.0, 0.0)
+    prev_goal = desired_vel
 
     prev_dist = get_distance()
-    while not rospy.is_shutdown():
+    while not rospy.is_shutdown(): 
         sleep(delta_t)
         curr_dist = get_distance()
 
         wheel_vel = calc_wheel_vel(prev_dist, curr_dist, delta_t)
         prev_dist = curr_dist
-        curr_vel = wheel_vel
 
         vel_pub.publish(Float32MultiArray(data=wheel_vel))
+
+        prev_error, area, curr_eff = speed_controller(wheel_vel, delta_t, prev_error, area, curr_eff)
         
