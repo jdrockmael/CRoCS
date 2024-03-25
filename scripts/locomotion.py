@@ -1,4 +1,3 @@
-
 #!/usr/bin/python3
 import rospy
 from time import sleep
