@@ -1,3 +1,4 @@
+
 #!/usr/bin/python3
 import rospy
 from time import sleep
@@ -12,7 +13,7 @@ motor_right = None
 encoder_left = None
 encoder_right = None
 
-desired_twist = [0.0, 0.0]
+desired_vel = (0.0, 0.0)
 curr_vel = [0.0, 0.0]
 
 vel_pub = rospy.Publisher('wheel_vel', Float32MultiArray, queue_size= 1)
@@ -69,52 +70,39 @@ def drive_one_wheel(pwd, is_left):
         motor_right.forward(-pwd)
     
 def update_desired(desired : Float32MultiArray):
-    global desired_twist
-    desired_twist = desired.data
-    what = "updating gloabal twist", desired_twist
-    rospy.logerr(desired_twist)
-
-def speed_controller():
-    global curr_vel
-    global desired_twist
-
-    tolerance = 0.05
-    delta_t = 0.01
-
-    p = 0.3
-    i = 0.5
-    d = 0
-
-    curr_eff = (0.0, 0.0)
-
-    linear, angular = desired_twist
+    global desired_vel
+    linear, angular = desired.data
     
     l = 0.101 # meters
     desired_vl = linear - ((angular * l)/2)
     desired_vr = linear + ((angular * l)/2)
 
     desired_vel = (desired_vl, desired_vr)
+    what = "setting global to", desired_vel
+    rospy.logerr(what)
 
-    prev_desired = desired_twist
+def speed_controller():
+    tolerance = 0.05
+    delta_t = 0.01
+
+    p = 0.3
+    i = 0.5
+    d = 0
+    
+    curr_eff = (0.0, 0.0)
+    prev_desired = desired_vel
+
     prev_error = (desired_vel[0] - curr_vel[0], desired_vel[1] - curr_vel[1])
     area = (0.0, 0.0)
 
     while not rospy.is_shutdown():
-        if prev_desired != desired_twist:
-            
-            linear, angular = desired_twist
-            
-            l = 0.101 # meters
-            desired_vl = linear - ((angular * l)/2)
-            desired_vr = linear + ((angular * l)/2)
-
-            desired_vel = (desired_vl, desired_vr)
-            
+        if prev_desired != desired_vel:
             prev_error = (desired_vel[0] - curr_vel[0], desired_vel[1] - curr_vel[1])
             area = (0.0, 0.0)
-            prev_desired = desired_twist
+            prev_desired = desired_vel
 
-            rospy.logerr(prev_desired)
+            huh = "now going to", prev_desired
+            rospy.logerr(huh)
 
         if abs(prev_error[0]) > tolerance or abs(prev_error[1]) > tolerance:
             curr_error = (desired_vel[0] - curr_vel[0], desired_vel[1] - curr_vel[1])
