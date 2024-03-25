@@ -80,6 +80,21 @@ def update_desired(desired : Float32MultiArray):
     what = "setting global to", desired_vel
     rospy.logerr(what)
 
+def monitor_vel():
+    global curr_vel
+
+    prev_dist = get_distance()
+    while not rospy.is_shutdown(): 
+        sleep(delta_t)
+        curr_dist = get_distance()
+
+        wheel_vel = calc_wheel_vel(prev_dist, curr_dist, delta_t)
+        prev_dist = curr_dist
+        curr_vel = wheel_vel
+
+        vel_pub.publish(Float32MultiArray(data=wheel_vel))
+        
+
 def speed_controller():
     tolerance = 0.05
     delta_t = 0.01
@@ -134,17 +149,11 @@ if __name__ == '__main__':
     init()
     rospy.Subscriber("robot_twist", Float32MultiArray, update_desired)
 
+    vel_thread = Thread(target=monitor_vel)
+    vel_thread.start()
+
     speed_thread = Thread(target=speed_controller)
     speed_thread.start()
 
-    prev_dist = get_distance()
-    while not rospy.is_shutdown(): 
-        sleep(delta_t)
-        curr_dist = get_distance()
-
-        wheel_vel = calc_wheel_vel(prev_dist, curr_dist, delta_t)
-        prev_dist = curr_dist
-        curr_vel = wheel_vel
-
-        vel_pub.publish(Float32MultiArray(data=wheel_vel))
-        
+    vel_thread.join()
+    speed_thread.join()
