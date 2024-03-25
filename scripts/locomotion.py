@@ -101,29 +101,30 @@ def speed_controller():
             area = (0.0, 0.0)
             prev_desired = desired_vel
 
-        curr_error = (desired_vel[0] - curr_vel[0], desired_vel[1] - curr_vel[1])
-        area_l = area[0] + ( 0.5 * (curr_error[0] + prev_error[0]) * delta_t)
-        area_r = area[1] + ( 0.5 * (curr_error[1] + prev_error[1]) * delta_t)
-        area = (area_l, area_r)
+        if abs(prev_error[0]) > tolerance or abs(prev_error[1]) > tolerance:
+            curr_error = (desired_vel[0] - curr_vel[0], desired_vel[1] - curr_vel[1])
+            area_l = area[0] + ( 0.5 * (curr_error[0] + prev_error[0]) * delta_t)
+            area_r = area[1] + ( 0.5 * (curr_error[1] + prev_error[1]) * delta_t)
+            area = (area_l, area_r)
 
-        l_proportion = curr_error[0] * p
-        l_integral = area[0] * i
-        l_derivative = ((curr_error[0] - prev_error[0]) / delta_t) * d
+            l_proportion = curr_error[0] * p
+            l_integral = area[0] * i
+            l_derivative = ((curr_error[0] - prev_error[0]) / delta_t) * d
 
-        r_proportion = curr_error[1] * p
-        r_integral = area[1] * i
-        r_derivative = ((curr_error[1] - prev_error[1]) / delta_t) * d
+            r_proportion = curr_error[1] * p
+            r_integral = area[1] * i
+            r_derivative = ((curr_error[1] - prev_error[1]) / delta_t) * d
 
-        left_eff = curr_eff[0] + l_proportion + l_integral + l_derivative
-        right_eff = curr_eff[1] + r_proportion + r_integral + r_derivative
+            left_eff = curr_eff[0] + l_proportion + l_integral + l_derivative
+            right_eff = curr_eff[1] + r_proportion + r_integral + r_derivative
 
-        curr_eff = (left_eff, right_eff)
-        prev_error = curr_error
+            curr_eff = (left_eff, right_eff)
+            prev_error = curr_error
 
-        drive_one_wheel(left_eff, True)
-        drive_one_wheel(right_eff, False)
+            drive_one_wheel(left_eff, True)
+            drive_one_wheel(right_eff, False)
 
-        sleep(delta_t)
+            sleep(delta_t)
 
 if __name__ == '__main__':
     delta_t = 0.01
