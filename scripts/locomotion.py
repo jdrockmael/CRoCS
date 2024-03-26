@@ -15,7 +15,8 @@ encoder_right = None
 desired_vel = (0.0, 0.0)
 curr_vel = [0.0, 0.0]
 
-lock = Lock()
+desired_lock = Lock()
+vel_lock = Lock()
 
 vel_pub = rospy.Publisher('wheel_vel', Float32MultiArray, queue_size= 1)
 
@@ -78,8 +79,9 @@ def update_desired(desired : Float32MultiArray):
     desired_vl = linear - ((angular * l)/2)
     desired_vr = linear + ((angular * l)/2)
 
-    with lock:
+    with desired_lock:
         desired_vel = (desired_vl, desired_vr)
+
     what = "setting global to", desired_vel
     rospy.logerr(what)
 
@@ -93,7 +95,9 @@ def monitor_vel():
 
         wheel_vel = calc_wheel_vel(prev_dist, curr_dist, delta_t)
         prev_dist = curr_dist
-        curr_vel = wheel_vel
+
+        with vel_lock:
+            curr_vel = wheel_vel
 
         vel_pub.publish(Float32MultiArray(data=wheel_vel))
         
@@ -106,23 +110,35 @@ def speed_controller():
     i = 0.5
     d = 0
     
-    curr_eff = (0.0, 0.0)
-    prev_desired = desired_vel
+    desired_l, desired_r = 0
+    curr_l, curr_r = 0
 
-    prev_error = (desired_vel[0] - curr_vel[0], desired_vel[1] - curr_vel[1])
+    with vel_lock:
+        curr_l, curr_r = curr_vel
+    with desired_lock:
+        desired_l, desired_r = desired_vel
+
+    curr_eff = (0.0, 0.0)
+    prev_error = (desired_l - curr_l, desired_r - curr_r)
     area = (0.0, 0.0)
+    prev_desired = (desired_l, desired_r)
 
     while not rospy.is_shutdown():
-        if prev_desired != desired_vel:
-            prev_error = (desired_vel[0] - curr_vel[0], desired_vel[1] - curr_vel[1])
+        with vel_lock:
+            curr_l, curr_r = curr_vel
+        with desired_lock:
+            desired_l, desired_r = desired_vel
+
+        if prev_desired != (desired_l, desired_r):
+            prev_error = (desired_l -  curr_l, desired_r - curr_r)
             area = (0.0, 0.0)
-            prev_desired = desired_vel
+            prev_desired = (desired_l, desired_r)
 
             huh = "now going to", prev_desired
             rospy.logerr(huh)
 
         if abs(prev_error[0]) > tolerance or abs(prev_error[1]) > tolerance:
-            curr_error = (desired_vel[0] - curr_vel[0], desired_vel[1] - curr_vel[1])
+            curr_error = (desired_l - curr_l, desired_r - curr_r)
             area_l = area[0] + ( 0.5 * (curr_error[0] + prev_error[0]) * delta_t)
             area_r = area[1] + ( 0.5 * (curr_error[1] + prev_error[1]) * delta_t)
             area = (area_l, area_r)
