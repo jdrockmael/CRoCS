@@ -105,7 +105,7 @@ def monitor_vel():
 def speed_controller():
     global desired_vel
     tolerance = 0.05
-    delta_t = 0.05
+    delta_t = 0.01
 
     p = 0.3
     i = 0.5
@@ -114,9 +114,15 @@ def speed_controller():
     area = (0.0, 0.0)
     prev_desired = (None, None)
 
+    prev_dist = get_distance()
     while not rospy.is_shutdown():
+        curr_dist = get_distance()
+        wheel_vel = calc_wheel_vel(prev_dist, curr_dist, delta_t)
+        prev_dist = curr_dist
+        vel_pub.publish(Float32MultiArray(data=wheel_vel))
+
         if desired_vel != (None, None):
-            curr_l, curr_r = curr_vel
+            curr_l, curr_r = wheel_vel
             desired_l, desired_r = desired_vel
             curr_error = (desired_l - curr_l, desired_r - curr_r)
 
@@ -138,14 +144,14 @@ def speed_controller():
                 with desired_lock:
                     desired_vel = (None, None)
 
-            sleep(delta_t)
+        sleep(delta_t)
 
 if __name__ == '__main__':
     rospy.init_node('locomotion')
     init()
     rospy.Subscriber("robot_twist", Float32MultiArray, update_desired)
 
-    vel_thread = Thread(target=monitor_vel)
-    vel_thread.start()
+    # vel_thread = Thread(target=monitor_vel)
+    # vel_thread.start()
 
     speed_controller()
