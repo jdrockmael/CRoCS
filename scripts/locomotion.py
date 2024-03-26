@@ -2,13 +2,9 @@
 import rospy
 from time import sleep
 from std_msgs.msg import Float32MultiArray
-from threading import Lock
 
 desired_vel = (0.0, 0.0)
 curr_vel = [0.0, 0.0]
-
-desired_lock = Lock()
-vel_lock = Lock()
     
 eff_pub = rospy.Publisher("wheel_eff", Float32MultiArray, queue_size=1)
 
@@ -20,20 +16,18 @@ def update_desired(desired : Float32MultiArray):
     desired_vl = linear - ((angular * l)/2)
     desired_vr = linear + ((angular * l)/2)
 
-    with desired_lock:
-        desired_vel = (desired_vl, desired_vr)
+    desired_vel = (desired_vl, desired_vr)
 
     what = "setting global to", desired_vel
     rospy.logerr(what)
 
 def update_vel(wheel_vel : Float32MultiArray):
     global curr_vel
-    with vel_lock:
-        curr_vel = wheel_vel.data
+    curr_vel = wheel_vel.data
 
 def speed_controller():
     tolerance = 0.05
-    delta_t = 0.01
+    delta_t = 0.05
 
     p = 0.3
     i = 0.5
@@ -42,10 +36,8 @@ def speed_controller():
     desired_l, desired_r = (0, 0)
     curr_l, curr_r = (0, 0)
 
-    with vel_lock:
-        curr_l, curr_r = curr_vel
-    with desired_lock:
-        desired_l, desired_r = desired_vel
+    curr_l, curr_r = curr_vel
+    desired_l, desired_r = desired_vel
 
     curr_eff = (0.0, 0.0)
     prev_error = (desired_l - curr_l, desired_r - curr_r)
@@ -53,10 +45,8 @@ def speed_controller():
     prev_desired = (desired_l, desired_r)
 
     while not rospy.is_shutdown():
-        with vel_lock:
-            curr_l, curr_r = curr_vel
-        with desired_lock:
-            desired_l, desired_r = desired_vel
+        curr_l, curr_r = curr_vel
+        desired_l, desired_r = desired_vel
 
         if prev_desired != (desired_l, desired_r):
             prev_error = (desired_l -  curr_l, desired_r - curr_r)
