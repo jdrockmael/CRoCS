@@ -110,8 +110,8 @@ def speed_controller():
     i = 0.5
     d = 0
     
-    desired_l, desired_r = 0
-    curr_l, curr_r = 0
+    desired_l, desired_r = (0, 0)
+    curr_l, curr_r = (0, 0)
 
     with vel_lock:
         curr_l, curr_r = curr_vel
