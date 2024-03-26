@@ -165,7 +165,9 @@ include_directories(
 catkin_install_python(PROGRAMS
    scripts/comm.py
    scripts/cam.py
-   scripts/locking.py
+   scripts/locomotion.py
+   scripts/ik.py
+   scripts/fk.py
    DESTINATION .
 )
 
