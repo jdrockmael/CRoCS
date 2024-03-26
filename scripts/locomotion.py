@@ -4,7 +4,7 @@ from time import sleep
 from std_msgs.msg import Float32MultiArray
 from gpiozero import Device, PhaseEnableMotor, RotaryEncoder
 from gpiozero.pins.pigpio import PiGPIOFactory
-from math import pi
+from math import pi, sin, cos
 from threading import Thread, Lock
 
 motor_left = None
@@ -18,7 +18,7 @@ curr_vel = [0.0, 0.0]
 desired_lock = Lock()
 vel_lock = Lock()
 
-vel_pub = rospy.Publisher('wheel_vel', Float32MultiArray, queue_size= 1)
+pose_pub = rospy.Publisher('curr_pose', Float32MultiArray, queue_size= 1)
 
 def init():
     global motor_left 
@@ -70,7 +70,30 @@ def drive_one_wheel(pwd, is_left):
         motor_right.backward(pwd)
     else:
         motor_right.forward(-pwd)
-    
+
+def calc_fk(wheel_vel, prev_pose, delta_t):
+    l = 0.101 # meters
+    vl, vr = wheel_vel
+
+    omega = (vr - vl) / l
+    vel = (vr + vl) / 2
+
+    x, y, theta = prev_pose[0], prev_pose[1], prev_pose[2]
+
+    new_x = x + delta_t * vel * cos(theta)
+    new_y = y + delta_t * vel * sin(theta)
+    new_theta = theta + delta_t * omega
+
+    temp = new_theta
+    if temp == 0.0:
+        temp += 1
+    soh = temp/abs(temp)
+    new_theta = new_theta % (soh * 2 * pi)
+    if new_theta > pi or new_theta < -pi:
+        new_theta = new_theta - (soh * 2 * pi)
+
+    return [new_x, new_y, new_theta]
+
 def update_desired(desired : Float32MultiArray):
     global desired_vel
     linear, angular = desired.data
@@ -85,22 +108,26 @@ def update_desired(desired : Float32MultiArray):
     what = "setting global to", desired_vel
     rospy.logerr(what)
 
-def monitor_vel():
+def monitor_pose():
     global curr_vel
     delta_t = 0.01
 
     prev_dist = get_distance()
+    prev_pose = [0.0, 0.0, 0.0]
     while not rospy.is_shutdown(): 
         sleep(delta_t)
         curr_dist = get_distance()
 
-        wheel_vel = calc_wheel_vel(prev_dist, curr_dist, delta_t)
-        prev_dist = curr_dist
+        if prev_dist != curr_dist:
+            wheel_vel = calc_wheel_vel(prev_dist, curr_dist, delta_t)
+            prev_dist = curr_dist
 
-        with vel_lock:
-            curr_vel = wheel_vel
+            with vel_lock:
+                curr_vel = wheel_vel
 
-        vel_pub.publish(Float32MultiArray(data=wheel_vel))
+            pose = calc_fk(wheel_vel, prev_pose, delta_t)
+            prev_pose = pose
+            pose_pub.publish(Float32MultiArray(data=pose))          
         
 def speed_controller():
     global desired_vel
@@ -145,7 +172,9 @@ if __name__ == '__main__':
     init()
     rospy.Subscriber("robot_twist", Float32MultiArray, update_desired)
 
-    vel_thread = Thread(target=monitor_vel)
+    vel_thread = Thread(target=monitor_pose)
     vel_thread.start()
 
     speed_controller()
+    vel_thread.join()
+    
