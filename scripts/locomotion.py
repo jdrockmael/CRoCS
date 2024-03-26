@@ -4,8 +4,8 @@ from time import sleep
 from std_msgs.msg import Float32MultiArray
 from gpiozero import Device, PhaseEnableMotor, RotaryEncoder
 from gpiozero.pins.pigpio import PiGPIOFactory
-from math import pi
-from threading import Thread
+from math import pi, sin, cos
+from threading import Thread, Lock
 
 motor_left = None
 motor_right = None
@@ -15,7 +15,10 @@ encoder_right = None
 desired_vel = (0.0, 0.0)
 curr_vel = [0.0, 0.0]
 
-vel_pub = rospy.Publisher('wheel_vel', Float32MultiArray, queue_size= 1)
+desired_lock = Lock()
+vel_lock = Lock()
+
+pose_pub = rospy.Publisher('curr_pose', Float32MultiArray, queue_size= 1)
 
 def init():
     global motor_left 
@@ -67,7 +70,30 @@ def drive_one_wheel(pwd, is_left):
         motor_right.backward(pwd)
     else:
         motor_right.forward(-pwd)
-    
+
+def calc_fk(wheel_vel, prev_pose, delta_t):
+    l = 0.101 # meters
+    vl, vr = wheel_vel
+
+    omega = (vr - vl) / l
+    vel = (vr + vl) / 2
+
+    x, y, theta = prev_pose[0], prev_pose[1], prev_pose[2]
+
+    new_x = x + delta_t * vel * cos(theta)
+    new_y = y + delta_t * vel * sin(theta)
+    new_theta = theta + delta_t * omega
+
+    temp = new_theta
+    if temp == 0.0:
+        temp += 1
+    soh = temp/abs(temp)
+    new_theta = new_theta % (soh * 2 * pi)
+    if new_theta > pi or new_theta < -pi:
+        new_theta = new_theta - (soh * 2 * pi)
+
+    return [new_x, new_y, new_theta]
+
 def update_desired(desired : Float32MultiArray):
     global desired_vel
     linear, angular = desired.data
@@ -76,84 +102,79 @@ def update_desired(desired : Float32MultiArray):
     desired_vl = linear - ((angular * l)/2)
     desired_vr = linear + ((angular * l)/2)
 
-    desired_vel = (desired_vl, desired_vr)
+    with desired_lock:
+        desired_vel = (desired_vl, desired_vr)
+
     what = "setting global to", desired_vel
     rospy.logerr(what)
 
-def monitor_vel():
+def monitor_pose():
     global curr_vel
+    delta_t = 0.01
 
     prev_dist = get_distance()
+    prev_pose = [0.0, 0.0, 0.0]
     while not rospy.is_shutdown(): 
         sleep(delta_t)
         curr_dist = get_distance()
 
-        wheel_vel = calc_wheel_vel(prev_dist, curr_dist, delta_t)
-        prev_dist = curr_dist
-        curr_vel = wheel_vel
+        if prev_dist != curr_dist:
+            wheel_vel = calc_wheel_vel(prev_dist, curr_dist, delta_t)
+            prev_dist = curr_dist
 
-        vel_pub.publish(Float32MultiArray(data=wheel_vel))
+            with vel_lock:
+                curr_vel = wheel_vel
+
+            pose = calc_fk(wheel_vel, prev_pose, delta_t)
+            prev_pose = pose
+            pose_pub.publish(Float32MultiArray(data=pose))          
         
-
 def speed_controller():
+    global desired_vel
     tolerance = 0.05
-    delta_t = 0.01
+    delta_t = 0.05
 
     p = 0.3
     i = 0.5
-    d = 0
-    
-    curr_eff = (0.0, 0.0)
-    prev_desired = desired_vel
 
-    prev_error = (desired_vel[0] - curr_vel[0], desired_vel[1] - curr_vel[1])
+    curr_eff = (0.0, 0.0)
     area = (0.0, 0.0)
+    prev_desired = (None, None)
 
     while not rospy.is_shutdown():
-        if prev_desired != desired_vel:
-            prev_error = (desired_vel[0] - curr_vel[0], desired_vel[1] - curr_vel[1])
-            area = (0.0, 0.0)
-            prev_desired = desired_vel
+        if desired_vel != (None, None):
+            curr_l, curr_r = curr_vel
+            desired_l, desired_r = desired_vel
+            curr_error = (desired_l - curr_l, desired_r - curr_r)
 
-            huh = "now going to", prev_desired
-            rospy.logerr(huh)
+            if prev_desired != (desired_l, desired_r):
+                area = (0.0, 0.0)
+                prev_desired = (desired_l, desired_r)
 
-        if abs(prev_error[0]) > tolerance or abs(prev_error[1]) > tolerance:
-            curr_error = (desired_vel[0] - curr_vel[0], desired_vel[1] - curr_vel[1])
-            area_l = area[0] + ( 0.5 * (curr_error[0] + prev_error[0]) * delta_t)
-            area_r = area[1] + ( 0.5 * (curr_error[1] + prev_error[1]) * delta_t)
-            area = (area_l, area_r)
+            if abs(curr_error[0]) > tolerance or abs(curr_error[1]) > tolerance:
+                area = (area[0] + curr_error[0] * delta_t, area[1] + curr_error[1] * delta_t)
 
-            l_proportion = curr_error[0] * p
-            l_integral = area[0] * i
-            l_derivative = ((curr_error[0] - prev_error[0]) / delta_t) * d
+                left_eff = curr_eff[0] + curr_error[0] * p + area[0] * i
+                right_eff = curr_eff[1] + curr_error[1] * p + area[1] * i
 
-            r_proportion = curr_error[1] * p
-            r_integral = area[1] * i
-            r_derivative = ((curr_error[1] - prev_error[1]) / delta_t) * d
+                curr_eff = (left_eff, right_eff)
 
-            left_eff = curr_eff[0] + l_proportion + l_integral + l_derivative
-            right_eff = curr_eff[1] + r_proportion + r_integral + r_derivative
-
-            curr_eff = (left_eff, right_eff)
-            prev_error = curr_error
-
-            drive_one_wheel(left_eff, True)
-            drive_one_wheel(right_eff, False)
+                drive_one_wheel(left_eff, True)
+                drive_one_wheel(right_eff, False)
+            else:
+                with desired_lock:
+                    desired_vel = (None, None)
 
             sleep(delta_t)
 
 if __name__ == '__main__':
-    delta_t = 0.01
     rospy.init_node('locomotion')
     init()
     rospy.Subscriber("robot_twist", Float32MultiArray, update_desired)
 
-    vel_thread = Thread(target=monitor_vel)
+    vel_thread = Thread(target=monitor_pose)
     vel_thread.start()
 
-    speed_thread = Thread(target=speed_controller)
-    speed_thread.start()
-
+    speed_controller()
     vel_thread.join()
-    speed_thread.join()
+    
