@@ -8,7 +8,6 @@
 import numpy as np
 import rospy
 import time
-from tf.transformations import euler_from_quaternion, quaternion_from_euler
 from geometry_msgs.msg import PoseStamped, PoseWithCovarianceStamped
 from nav_msgs.msg import Path, Odometry
 from std_msgs.msg import String, Int16MultiArray, Float32MultiArray, Bool, Float64
@@ -192,7 +191,6 @@ class Main():
 
         pose = PoseStamped()
         pose.header = self.true_path.header
-
         # Set pose
         try:
             pose.pose = data.pose[self.link_id]

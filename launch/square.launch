@@ -6,8 +6,6 @@
 
   <env name="GAZEBO_MODEL_PATH" value="$GAZEBO_MODEL_PATH:$(find CRoCS)/models"/>
 
-  <!-- <node pkg="CRoCS" type="ik.py" name="ik"/> -->
-
   <!-- BEGIN CUBE 1 -->
   <group ns="cube1">
     <include file="$(find CRoCS)/launch/cube.launch">
@@ -19,7 +17,20 @@
       <arg name="control" value="true"/>
       <arg name="localization" value="true"/>
       <arg name="sim" value="true"/>
+      <arg name="drive" value="true"/>
     </include>
   </group>
+
+  <include file="$(find CRoCS)/launch/cube.launch">
+      <arg name="robot_name" value="cube1"/>
+      <arg name="x_pos" value="0.0"/>
+      <arg name="y_pos" value="0.0"/>
+      <arg name="theta" value="0.0"/>
+      <arg name="rviz" value="false"/>
+      <arg name="control" value="true"/>
+      <arg name="localization" value="false"/>
+      <arg name="sim" value="true"/>
+      <arg name="drive" value="false"/>
+    </include>
 
 </launch>

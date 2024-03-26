@@ -1,0 +1,50 @@
+<launch>
+    <!-- Params for diff driving with odom -->
+    <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="world_name" value="$(find CRoCS)/worlds/cube.sdf"/>
+    </include>
+
+    <env name="GAZEBO_MODEL_PATH" value="$GAZEBO_MODEL_PATH:$(find CRoCS)/models"/>
+
+    <rosparam command="load" file="$(find CRoCS)/config/input.yaml" ns="cbs_input" />
+    <!-- <rosparam command="load" file="$(find CRoCS)/config/output.yaml" ns="cbs_output" /> -->
+
+    <!-- Joint velocity is in angular velocity, w = v/r -->
+    <node name="path_planning" pkg="CRoCS" type="path_planning.py" output="screen"/>
+
+    <arg name="node_start_delay" default="4.0" />  
+    <node name="visualize" pkg="CRoCS" type="visualize.py" launch-prefix="bash -c 'sleep $(arg node_start_delay); $0 $@' " output="screen"/>
+
+    <!-- BEGIN CUBE 1 -->
+    <group ns="cube1">
+        <include file="$(find CRoCS)/launch/cube.launch">
+        <arg name="robot_name" value="cube1"/>
+        <arg name="x_pos" value="$(eval 8.0 * 12 / 39.37)"/>
+        <arg name="y_pos" value="$(eval 10.0 * 12 / 39.37)"/>
+        <arg name="theta" value="0.0"/>
+        <arg name="rviz" value="false"/>
+        <arg name="control" value="true"/>
+        <arg name="localization" value="false"/>
+        <arg name="sim" value="true"/>
+        <arg name="drive" value="true"/>
+        </include>
+    </group>
+
+    <group ns="cube2">
+        <include file="$(find CRoCS)/launch/cube.launch">
+        <arg name="robot_name" value="cube2"/>
+        <arg name="x_pos" value="$(eval 5.0 * 12 / 39.37)"/>
+        <arg name="y_pos" value="$(eval 4.0 * 12 / 39.37)"/>
+        <arg name="theta" value="0.0"/>
+        <arg name="rviz" value="false"/>
+        <arg name="control" value="true"/>
+        <arg name="localization" value="false"/>
+        <arg name="sim" value="true"/>
+        <arg name="drive" value="true"/>
+        </include>
+    </group>
+
+    <!-- <node pkg="CRoCS" name="square" type="square.py" output="screen"/> -->
+    
+
+</launch>

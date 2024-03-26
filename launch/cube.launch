@@ -9,11 +9,47 @@
   <arg name="control" default="false"/>
   <arg name="localization" default="false"/>
   <arg name="sim" default="false"/>
+  <arg name="drive" default="false"/>
 
   <param name="tf_prefix" value="$(arg robot_name)_tf" />
 
   <!-- Set cube urdf as a parameter -->
-  <param name="robot_description" command="$(find xacro)/xacro $(arg model) robot_name:='$(arg robot_name)' rotate:='$(arg theta)'" />
+  <!-- <param name="robot_description" command="$(find xacro)/xacro $(arg model) robot_name:='$(arg robot_name)' rotate:='$(arg theta)'" /> -->
+
+  <group if="$(eval robot_name == 'cube1')">
+    <param name="robot_description" command="$(find xacro)/xacro $(arg model) robot_name:='$(arg robot_name)' rotate:='$(arg theta)' 
+    side:='00' back:='01' frontleft:='02' frontright:='03'" />
+  </group>
+
+  <group if="$(eval robot_name == 'cube2')">
+    <param name="robot_description" command="$(find xacro)/xacro $(arg model) robot_name:='$(arg robot_name)' rotate:='$(arg theta)' 
+    side:='04' back:='05' frontleft:='06' frontright:='07'" />
+  </group>
+
+  <group if="$(eval robot_name == 'cube3')">
+    <param name="robot_description" command="$(find xacro)/xacro $(arg model) robot_name:='$(arg robot_name)' rotate:='$(arg theta)' 
+    side:='08' back:='09' frontleft:='10' frontright:='11'" />
+  </group>
+
+  <group if="$(eval robot_name == 'cube4')">
+    <param name="robot_description" command="$(find xacro)/xacro $(arg model) robot_name:='$(arg robot_name)' rotate:='$(arg theta)' 
+    side:='12' back:='13' frontleft:='14' frontright:='15'" />
+  </group>
+
+  <group if="$(eval robot_name == 'cube5')">
+    <param name="robot_description" command="$(find xacro)/xacro $(arg model) robot_name:='$(arg robot_name)' rotate:='$(arg theta)' 
+    side:='16' back:='17' frontleft:='18' frontright:='19'" />
+  </group>
+
+  <group if="$(eval robot_name == 'cube6')">
+    <param name="robot_description" command="$(find xacro)/xacro $(arg model) robot_name:='$(arg robot_name)' rotate:='$(arg theta)' 
+    side:='20' back:='21' frontleft:='22' frontright:='23'" />
+  </group>
+
+  <group if="$(eval robot_name == 'cube7')">
+    <param name="robot_description" command="$(find xacro)/xacro $(arg model) robot_name:='$(arg robot_name)' rotate:='$(arg theta)' 
+    side:='24' back:='25' frontleft:='26' frontright:='27'" />
+  </group>
 
   <!-- Spawn cube with provided position and name -->
   <node name="urdf_spawner" pkg="gazebo_ros" type="spawn_model"
@@ -59,7 +95,7 @@
       <param name="y_pos" value="$(arg y_pos)" />
   </node>
 
-  <node if="$(arg control)" pkg="CRoCS" name="square" type="square.py" output="screen">
+  <node if="$(arg drive)" pkg="CRoCS" name="square" type="square.py" output="screen">
       <param name="robot_name" value="$(arg robot_name)" />
       <param name="x_pos" value="$(arg x_pos)" />
   </node> 

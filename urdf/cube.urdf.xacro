@@ -7,6 +7,10 @@
 
   <xacro:arg name="robot_name" default="cube1"/>
   <xacro:arg name="rotate" default="0.0"/>
+  <xacro:arg name="side" default="00"/>
+  <xacro:arg name="back" default="01"/>
+  <xacro:arg name="frontleft" default="02"/>
+  <xacro:arg name="frontright" default="03"/>
   <xacro:property name="temp" value="$(arg rotate)"/>
   <xacro:property name="rotate" value="${temp * pi / 180}"/>
 
@@ -14,16 +18,24 @@
   <xacro:cube name="$(arg robot_name)"/>
 
   <!-- Add April Tags -->
-  <xacro:apriltag_marker namespace="$(arg robot_name)" name="left_tag_11" ID="11" size="0.15243"> 
+  <xacro:apriltag_marker namespace="$(arg robot_name)" name="left_tag_$(arg side)" ID="$(arg side)" size="0.15243"> 
     <origin xyz="0 ${0.15243/2 + 0.001} ${0.15243/2 + 0.004}" rpy="${pi/2} 0 ${pi} " />
   </xacro:apriltag_marker>
 
-  <xacro:apriltag_marker namespace="$(arg robot_name)" name="right_tag_11" ID="11" size="0.15243">
+  <xacro:apriltag_marker namespace="$(arg robot_name)" name="right_tag_$(arg side)" ID="$(arg side)" size="0.15243">
     <origin xyz="0 ${-(0.15243/2 + 0.001)} ${0.15243/2 + 0.004}" rpy="${-pi/2} ${pi}  ${pi} " />
   </xacro:apriltag_marker>
 
-  <xacro:apriltag_marker namespace="$(arg robot_name)" name="front_tag_10" ID="10" size="0.0254">
-    <origin xyz="${-(0.15243/2 + 0.001)} 0 ${0.15243/2 + 0.004}" rpy="0 ${pi/2}  ${pi} " />
+  <xacro:apriltag_marker namespace="$(arg robot_name)" name="back_tag_$(arg back)" ID="$(arg back)" size="0.0254">
+    <origin xyz="${-(0.15243/2 + 0.001)} 0 ${0.15243/2 + 0.004}" rpy="${pi/2} 0 ${-pi/2}" />
+  </xacro:apriltag_marker>
+
+  <xacro:apriltag_marker namespace="$(arg robot_name)" name="front_left_tag_$(arg frontleft)" ID="$(arg frontleft)" size="0.0254">
+    <origin xyz="${(0.15243/2 + 0.001)} ${0.15243/3} ${0.15243/2 + 0.004}" rpy="${pi/2} 0 ${pi/2}" />
+  </xacro:apriltag_marker>
+
+  <xacro:apriltag_marker namespace="$(arg robot_name)" name="front_right_tag_$(arg frontright)" ID="$(arg frontright)" size="0.0254">
+    <origin xyz="${(0.15243/2 + 0.001)} ${-0.15243/3}  ${0.15243/2 + 0.004}" rpy="${pi/2} 0 ${pi/2}" />
   </xacro:apriltag_marker>
 
   <!-- Add wheels -->
