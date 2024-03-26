@@ -132,9 +132,11 @@ def speed_controller():
 
                 curr_eff = (left_eff, right_eff)
 
-                eff_pub.publish(Float32MultiArray(data=[left_eff, right_eff]))
+                drive_one_wheel(left_eff, True)
+                drive_one_wheel(right_eff, False)
             else:
-                desired_vel = (None, None)
+                with desired_lock:
+                    desired_vel = (None, None)
 
             sleep(delta_t)
 
