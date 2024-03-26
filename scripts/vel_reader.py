@@ -65,7 +65,7 @@ def drive_one_wheel(pwd, is_left):
         motor_right.forward(-pwd)
 
 def monitor_vel():
-    delta_t = 0.01
+    delta_t = 0.05
 
     prev_dist = get_distance()
     while not rospy.is_shutdown(): 
