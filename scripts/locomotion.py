@@ -5,7 +5,7 @@ from std_msgs.msg import Float32MultiArray
 from gpiozero import Device, PhaseEnableMotor, RotaryEncoder
 from gpiozero.pins.pigpio import PiGPIOFactory
 from math import pi
-from threading import Thread
+from threading import Thread, Lock
 
 motor_left = None
 motor_right = None
@@ -14,6 +14,8 @@ encoder_right = None
 
 desired_vel = (0.0, 0.0)
 curr_vel = [0.0, 0.0]
+
+lock = Lock()
 
 vel_pub = rospy.Publisher('wheel_vel', Float32MultiArray, queue_size= 1)
 
@@ -76,7 +78,8 @@ def update_desired(desired : Float32MultiArray):
     desired_vl = linear - ((angular * l)/2)
     desired_vr = linear + ((angular * l)/2)
 
-    desired_vel = (desired_vl, desired_vr)
+    with lock:
+        desired_vel = (desired_vl, desired_vr)
     what = "setting global to", desired_vel
     rospy.logerr(what)
 
