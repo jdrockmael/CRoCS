@@ -87,6 +87,7 @@ def update_desired(desired : Float32MultiArray):
 
 def monitor_vel():
     global curr_vel
+    delta_t = 0.01
 
     prev_dist = get_distance()
     while not rospy.is_shutdown(): 
@@ -160,10 +161,9 @@ def speed_controller():
             drive_one_wheel(left_eff, True)
             drive_one_wheel(right_eff, False)
 
-            sleep(delta_t)
+        sleep(delta_t)
 
 if __name__ == '__main__':
-    delta_t = 0.01
     rospy.init_node('locomotion')
     init()
     rospy.Subscriber("robot_twist", Float32MultiArray, update_desired)
@@ -171,8 +171,4 @@ if __name__ == '__main__':
     vel_thread = Thread(target=monitor_vel)
     vel_thread.start()
 
-    speed_thread = Thread(target=speed_controller)
-    speed_thread.start()
-
-    vel_thread.join()
-    speed_thread.join()
+    speed_controller()
