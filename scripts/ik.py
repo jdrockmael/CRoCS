@@ -91,19 +91,19 @@ def drive_to(pose):
 
 def turn_to(heading): 
     prev_error = heading - curr_pose[2]
-    tolerance = 0.1
+    tolerance = 0.02
     delta_t = 0.01
 
-    p = 1
-    i = 0
+    p = 0.5
+    i = 0.5
     d = 0
 
     area = 0.0
 
     while(abs(prev_error) > tolerance):
-        curr_error = heading - curr_pose[2]
+        curr_error = min((heading - curr_pose[2]), (heading - curr_pose[2]) + 360)
 
-        area += 0.5 * (curr_error + prev_error) * delta_t
+        area += curr_error * delta_t
         
         angular_err_p = curr_error *p
         angular_err_i = area * i
