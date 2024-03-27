@@ -90,11 +90,11 @@ def drive_to(pose):
     eff_pub.publish(Float32MultiArray(data=[0.0, 0.0]))
 
 def turn_to(heading): 
-    prev_error = heading - curr_pose[2]
+    prev_error = min((heading - curr_pose[2]), (heading - curr_pose[2]) + 360)
     tolerance = 0.02
     delta_t = 0.01
 
-    p = 0.5
+    p = 0.3
     i = 0.5
     d = 0
 
