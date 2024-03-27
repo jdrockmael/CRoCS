@@ -12,8 +12,8 @@ motor_right = None
 encoder_left = None
 encoder_right = None
 
-desired_vel = (0.0, 0.0)
-curr_vel = [0.0, 0.0]
+desired_vel = None
+curr_vel = (0.0, 0.0)
 
 desired_lock = Lock()
 vel_lock = Lock()
@@ -112,13 +112,20 @@ def monitor_pose():
     global curr_vel
     delta_t = 0.01
 
+    is_moving = True
     prev_dist = get_distance()
     prev_pose = [0.0, 0.0, 0.0]
     while not rospy.is_shutdown(): 
         sleep(delta_t)
         curr_dist = get_distance()
 
-        if prev_dist != curr_dist:
+        if prev_dist != curr_dist or is_moving:
+
+            if prev_dist != curr_dist:
+                is_moving = True
+            else:
+                is_moving = False
+
             wheel_vel = calc_wheel_vel(prev_dist, curr_dist, delta_t)
             prev_dist = curr_dist
 
@@ -127,12 +134,12 @@ def monitor_pose():
 
             pose = calc_fk(wheel_vel, prev_pose, delta_t)
             prev_pose = pose
-            pose_pub.publish(Float32MultiArray(data=pose))          
+            pose_pub.publish(Float32MultiArray(data=pose))        
         
 def speed_controller():
     global desired_vel
     tolerance = 0.05
-    delta_t = 0.05
+    delta_t = 0.01
 
     p = 0.3
     i = 0.5
@@ -142,7 +149,7 @@ def speed_controller():
     prev_desired = (None, None)
 
     while not rospy.is_shutdown():
-        if desired_vel != (None, None):
+        if desired_vel != None:
             curr_l, curr_r = curr_vel
             desired_l, desired_r = desired_vel
             curr_error = (desired_l - curr_l, desired_r - curr_r)
@@ -163,7 +170,7 @@ def speed_controller():
                 drive_one_wheel(right_eff, False)
             else:
                 with desired_lock:
-                    desired_vel = (None, None)
+                    desired_vel = None
 
             sleep(delta_t)
 
