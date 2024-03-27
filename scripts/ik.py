@@ -28,21 +28,32 @@ eff_pub = rospy.Publisher("robot_twist", Float32MultiArray, queue_size=1)
 #     else:
 #         motor.stop()
 
+def calc_transform(pose):
+    x = curr_pose[0]
+    y = curr_pose[1]
+    theta = curr_pose[2]
+
+    new_x = cos(theta) * pose[0] + -sin(theta) * pose[1] + x
+    new_y = sin(theta) * pose[0] + cos(theta) * pose[1] + y
+
+    return (new_x, new_y)
+
 def update_pose(pose : Float32MultiArray):
     global curr_pose
     curr_pose = pose.data
 
 def drive_to(pose):
     prev_distance = sqrt(pow(pose[0]-curr_pose[0], 2) + pow(pose[1]-curr_pose[1], 2))
-    heading = atan2(pose[1], pose[0])
+    transformed_pose = calc_transform(pose)
+    heading = curr_pose[0] + atan2(transformed_pose[1], transformed_pose[0])
 
-    lin_p = 0.3 
+    lin_p = 1
     lin_i = 0
-    lin_d = 0.5
+    lin_d = 0
 
-    ang_p = 0.3 
+    ang_p = 0 
     ang_i = 0
-    ang_d = 0.5
+    ang_d = 0
 
     tolerance = 0.1
     delta_t = 0.01
@@ -78,15 +89,7 @@ def drive_to(pose):
 
     eff_pub.publish(Float32MultiArray(data=[0.0, 0.0]))
 
-def turn_to(heading):
-    temp = heading
-    if temp == 0.0:
-        temp += 1
-    soh = temp/abs(temp)
-    heading = heading % (soh * 2 * pi)
-    if heading > pi or heading < -pi:
-        heading = heading - (soh * 2 * pi)
-    
+def turn_to(heading): 
     prev_error = heading - curr_pose[2]
     tolerance = 0.1
     delta_t = 0.01
@@ -116,16 +119,6 @@ def turn_to(heading):
     eff_pub.publish(Float32MultiArray(data=[0.0, 0.0]))
     eff_pub.publish(Float32MultiArray(data=[0.0, 0.0]))
     eff_pub.publish(Float32MultiArray(data=[0.0, 0.0]))
-
-def calc_transform(pose):
-    x = curr_pose[0]
-    y = curr_pose[1]
-    theta = curr_pose[2]
-
-    new_x = cos(theta) * pose[0] + -sin(theta) * pose[1] + x
-    new_y = sin(theta) * pose[0] + cos(theta) * pose[1] + y
-
-    return (new_x, new_y)
 
 def drive_to_point(desired : Float32MultiArray):
     desired_pose = desired.data

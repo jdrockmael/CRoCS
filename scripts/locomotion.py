@@ -89,8 +89,8 @@ def calc_fk(wheel_vel, prev_pose, delta_t):
         temp += 1
     soh = temp/abs(temp)
     new_theta = new_theta % (soh * 2 * pi)
-    if new_theta > pi or new_theta < -pi:
-        new_theta = new_theta - (soh * 2 * pi)
+    if new_theta < 0:
+        new_theta = 360 + new_theta
 
     return [new_x, new_y, new_theta]
 
