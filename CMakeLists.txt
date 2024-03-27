@@ -167,7 +167,6 @@ catkin_install_python(PROGRAMS
    scripts/cam.py
    scripts/locomotion.py
    scripts/ik.py
-   scripts/fk.py
    DESTINATION .
 )
 

@@ -59,7 +59,7 @@ def drive_one_wheel(pwd, is_left):
         pwd = 1
     elif pwd < -1:
         pwd = -1
-    elif pwd < 0.18 and pwd > -0.18:
+    elif pwd < 0.2 and pwd > -0.2:
         pwd = 0
 
     if pwd >= 0 and is_left:
@@ -105,9 +105,6 @@ def update_desired(desired : Float32MultiArray):
     with desired_lock:
         desired_vel = (desired_vl, desired_vr)
 
-    what = "setting global to", desired_vel
-    rospy.logerr(what)
-
 def monitor_pose():
     global curr_vel
     delta_t = 0.01
@@ -141,12 +138,12 @@ def speed_controller():
     tolerance = 0.05
     delta_t = 0.01
 
-    p = 0.3
-    i = 0.5
+    p = 0.35
+    i = 0.2
 
     curr_eff = (0.0, 0.0)
     area = (0.0, 0.0)
-    prev_desired = (None, None)
+    prev_desired = None
 
     while not rospy.is_shutdown():
         if desired_vel != None:
