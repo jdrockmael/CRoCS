@@ -2,8 +2,7 @@
 import rospy
 from std_msgs.msg import Float32MultiArray
 from time import sleep
-from math import atan2, sqrt, sin, cos
-import numpy as np
+from math import atan2, sqrt, sin, cos, pi
 
 curr_pose = [0.0, 0.0, 0.0]
 eff_pub = rospy.Publisher("robot_twist", Float32MultiArray, queue_size=1)
@@ -80,6 +79,14 @@ def drive_to(pose):
     eff_pub.publish(Float32MultiArray(data=[0.0, 0.0]))
 
 def turn_to(heading):
+    temp = heading
+    if temp == 0.0:
+        temp += 1
+    soh = temp/abs(temp)
+    heading = heading % (soh * 2 * pi)
+    if heading > pi or heading < -pi:
+        heading = heading - (soh * 2 * pi)
+    
     prev_error = heading - curr_pose[2]
     tolerance = 0.1
     delta_t = 0.01
