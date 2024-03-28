@@ -102,9 +102,9 @@ def turn_to(heading):
     tolerance = 0.02
     delta_t = 0.05
 
-    p = 0.3
+    p = 1.5
     i = 0
-    d = 0.3
+    d = 0
 
     area = 0.0
 
