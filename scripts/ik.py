@@ -41,7 +41,7 @@ def calc_transform(pose):
 def calc_angle_diff(desired, actual):
     diff = desired - actual
     temp_d = diff if diff != 0 else diff + 1
-    temp_d = temp_d if actual <= 180 else -temp_d
+    temp_d = temp_d if actual <= 180 and diff <= 0 else -temp_d
     return (temp_d / abs(temp_d)) * min(abs(diff), 360 - abs(diff))
 
 def update_pose(pose : Float32MultiArray):
