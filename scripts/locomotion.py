@@ -6,14 +6,11 @@ from gpiozero import Device, PhaseEnableMotor, RotaryEncoder
 from gpiozero.pins.pigpio import PiGPIOFactory
 from math import pi, sin, cos
 from threading import Thread, Lock
-from library.motor_dr import Motor
 
 motor_left = None
 motor_right = None
 encoder_left = None
 encoder_right = None
-
-#motor = Motor()
 
 desired_vel = None
 curr_vel = (0.0, 0.0)

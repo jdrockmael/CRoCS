@@ -38,6 +38,12 @@ def calc_transform(pose):
 
     return (new_x, new_y)
 
+def calc_angle_diff(desired, actual):
+    diff = desired - actual
+    temp_d = diff if diff != 0 else diff + 1
+    temp_d = temp_d if actual <= 180 else -temp_d
+    return (temp_d / abs(temp_d)) * min(abs(diff), 360 - abs(diff))
+
 def update_pose(pose : Float32MultiArray):
     global curr_pose
     curr_pose = pose.data
@@ -90,9 +96,9 @@ def drive_to(pose):
     eff_pub.publish(Float32MultiArray(data=[0.0, 0.0]))
 
 def turn_to(heading): 
-    prev_error = min((heading - curr_pose[2]), (heading - curr_pose[2]) + 360)
+    prev_error = calc_angle_diff(heading, curr_pose[2])
     tolerance = 0.02
-    delta_t = 0.01
+    delta_t = 0.05
 
     p = 0.3
     i = 0.5
@@ -101,7 +107,7 @@ def turn_to(heading):
     area = 0.0
 
     while(abs(prev_error) > tolerance):
-        curr_error = min((heading - curr_pose[2]), (heading - curr_pose[2]) + 360)
+        curr_error = calc_angle_diff(heading, curr_pose[2])
 
         area += curr_error * delta_t
         
