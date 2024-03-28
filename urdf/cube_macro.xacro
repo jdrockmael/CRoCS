@@ -190,7 +190,7 @@
 
           <sensor name="${name}_cam" type="camera">
               <pose> 0 0 0 0 0 0 </pose>
-              <visualize>true</visualize>
+              <visualize>false</visualize>
               <update_rate>10</update_rate>
               <camera>
                   <horizontal_fov>1.0821</horizontal_fov>
