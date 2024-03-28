@@ -103,8 +103,8 @@ def turn_to(heading):
     delta_t = 0.05
 
     p = 0.3
-    i = 0.5
-    d = 0
+    i = 0
+    d = 0.3
 
     area = 0.0
 
