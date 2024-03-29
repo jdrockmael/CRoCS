@@ -50,7 +50,7 @@ def update_pose(pose : Float32MultiArray):
     global curr_pose
     curr_pose = pose.data
 
-def drive_to(pose, heading):
+def drive_to(pose):
     prev_distance = sqrt(pow(pose[0]-curr_pose[0], 2) + pow(pose[1]-curr_pose[1], 2))
     transformed_pose = calc_transform(pose)
     heading = curr_pose[2] + atan2(transformed_pose[1], transformed_pose[0])
