@@ -92,11 +92,23 @@ def turn_to(heading):
     tolerance = 0.02
     delta_t = 0.05
 
-    p = 1.5
+    p = 3
+    i = 0.1
+    d = 0
+
+    area = 0.0
 
     while(abs(prev_error) > tolerance):
         curr_error = calc_angle_diff(heading, curr_pose[2])
-        omega = curr_error *p
+
+        area += curr_error * delta_t
+        
+        angular_err_p = curr_error *p
+        angular_err_i = area * i
+        angular_err_d = ((curr_error-prev_error)/delta_t) * d
+
+        omega = angular_err_p + angular_err_i + angular_err_d
+
         eff_pub.publish(Float32MultiArray(data=[0.0, omega]))
 
         prev_error = curr_error
