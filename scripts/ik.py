@@ -50,10 +50,10 @@ def update_pose(pose : Float32MultiArray):
     global curr_pose
     curr_pose = pose.data
 
-def drive_to(pose):
+def drive_to(pose, heading):
     prev_distance = sqrt(pow(pose[0]-curr_pose[0], 2) + pow(pose[1]-curr_pose[1], 2))
     transformed_pose = calc_transform(pose)
-    heading = curr_pose[0] + atan2(transformed_pose[1], transformed_pose[0])
+    heading = curr_pose[2] + atan2(transformed_pose[1], transformed_pose[0])
 
     lin_p = 1
     lin_i = 0
@@ -103,13 +103,11 @@ def turn_to(heading):
         sleep(delta_t)
     
     eff_pub.publish(Float32MultiArray(data=[0.0, 0.0]))
-    eff_pub.publish(Float32MultiArray(data=[0.0, 0.0]))
-    eff_pub.publish(Float32MultiArray(data=[0.0, 0.0]))
 
 def drive_to_point(desired : Float32MultiArray):
     desired_pose = desired.data
     transformed_pose = calc_transform(desired_pose)
-    desired_heading = curr_pose[0] + atan2(transformed_pose[1], transformed_pose[0])
+    desired_heading = curr_pose[2] + atan2(transformed_pose[1], transformed_pose[0])
 
     turn_to(desired_heading)
     drive_to(desired_pose)
