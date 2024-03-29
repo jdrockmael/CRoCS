@@ -59,20 +59,18 @@ def drive_to(pose):
     lin_i = 0
     lin_d = 0
 
-    ang_p = 0 
-    ang_i = 0
-    ang_d = 0
+    ang_p = 1.5
 
     tolerance = 0.1
     delta_t = 0.05
 
     linear_area = 0.0
-    angular_area = 0.0
     
     while(prev_distance > tolerance or prev_distance < -tolerance):
         curr_distance = sqrt(pow(pose[0]-curr_pose[0], 2) + pow(pose[1]-curr_pose[1], 2))
+        curr_err_heading = calc_angle_diff(heading, curr_pose[2])
         
-        linear_area += 0.5 * (curr_distance + prev_distance) * delta_t
+        linear_area += curr_distance * delta_t
         
         linear_eff_p = curr_distance * lin_p
         linear_eff_i = linear_area * lin_i
@@ -80,17 +78,9 @@ def drive_to(pose):
 
         linear_eff = linear_eff_p + linear_eff_i + linear_eff_d
 
-        angular_area += 0.5 * (curr_pose[2] + heading) * delta_t
+        angular_eff = curr_err_heading * ang_p
 
-        angular_eff_p = curr_pose[2] - heading * ang_p
-        angular_eff_i = angular_area * ang_i
-        angular_eff_d = ((curr_pose[2] - heading)/delta_t) * ang_d
-
-        angular_eff = angular_eff_p + angular_eff_i + angular_eff_d
-
-        effort = [linear_eff, angular_eff]
-
-        eff_pub.publish(Float32MultiArray(data=effort))
+        eff_pub.publish(Float32MultiArray(data=[linear_eff, angular_eff]))
 
         prev_distance = curr_distance
         sleep(delta_t)
@@ -103,22 +93,10 @@ def turn_to(heading):
     delta_t = 0.05
 
     p = 1.5
-    i = 0
-    d = 0
-
-    area = 0.0
 
     while(abs(prev_error) > tolerance):
         curr_error = calc_angle_diff(heading, curr_pose[2])
-
-        area += curr_error * delta_t
-        
-        angular_err_p = curr_error *p
-        angular_err_i = area * i
-        angular_err_d = ((curr_error-prev_error)/delta_t) * d
-
-        omega = angular_err_p + angular_err_i + angular_err_d
-
+        omega = curr_error *p
         eff_pub.publish(Float32MultiArray(data=[0.0, omega]))
 
         prev_error = curr_error
