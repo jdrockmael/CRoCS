@@ -174,12 +174,6 @@ class RobotEKF():
         zx = z - innovation
 
         # rospy.loginfo("theta %s",self.pose[2,0])
-
-        # if zx[1] > 0.5:
-            # rospy.loginfo("z %s",z[1])
-            # rospy.loginfo("innovation %s",innovation[1])
-            # rospy.loginfo("FUCKKKKKKKKKKKKKKKKKKKKKKKK %s",zx[1])
-
         # Normalize bearing to [-pi, pi]
         zx[-1] = zx[-1] % (2 * np.pi)
         if zx[-1] > np.pi:             

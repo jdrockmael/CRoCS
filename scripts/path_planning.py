@@ -1,21 +1,15 @@
 #!/usr/bin/python3
-"""
-
-Python implementation of Conflict-based search
-
-author: Ashwin Bose (@atb033)
-
-"""
-import sys
-sys.path.insert(0, '../')
-import argparse
-import yaml
 from math import fabs
 from itertools import combinations
 from copy import deepcopy
 import rospy
 
 from aStar import AStar
+
+import rospy
+import time
+import math
+from std_msgs.msg import Int64, Int64MultiArray
 
 class Location(object):
     def __init__(self, x=-1, y=-1):
@@ -280,7 +274,7 @@ class CBS(object):
             self.env.constraint_dict = P.constraint_dict
             conflict_dict = self.env.get_first_conflict(P.solution)
             if not conflict_dict:
-                print("solution found")
+                rospy.loginfo("solution found")
 
                 return self.generate_plan(P.solution)
 
@@ -309,46 +303,68 @@ class CBS(object):
             plan[agent] = path_dict_list
         return plan
 
+class Main():
+    def __init__(self):
+        self.path_state_pub = rospy.Publisher("/path_state", Int64MultiArray, queue_size=1)
+        self.path_step_pub = rospy.Publisher("/path_step", Int64, queue_size=1)
+        rospy.Subscriber("/path_state", Int64MultiArray, self.path_state_sub, queue_size=1)
 
-def main():
-    # ROS
-    dimension = rospy.get_param("/cbs_input/map/dimensions")
-    agents = rospy.get_param("/cbs_input/agents")
+        self.calc_paths()
+        self.path_state = [0] * 7
+        self.time_step = 0
+                
+        time.sleep(2)
+        self.paths = [None] * 7
+        for i in range(len(self.paths)):
+            self.paths[i] = rospy.get_param("/cbs_output/schedule/cube" + str(i+1))
 
-    # Sim
-    # parser = argparse.ArgumentParser()
-    # parser.add_argument("param", help="input file containing map and obstacles")
-    # parser.add_argument("output", help="output file with the schedule")
-    # # args = parser.parse_args()
-    # with open(args.param, 'r') as param_file:
-    #     try:
-    #         param = yaml.load(param_file, Loader=yaml.FullLoader)
-    #     except yaml.YAMLError as exc:
+        self.longest_path = max(self.paths, key=len)
+        time.sleep(4)
+        self.path_step_pub.publish(0)
 
-    #         print(exc)
-    # dimension = param["map"]["dimensions"]
-    # agents = param['agents']
+        rospy.spin()
 
+    def calc_paths(self):
+        # ROS
+        dimension = rospy.get_param("/cbs_input/map/dimensions")
+        agents = rospy.get_param("/cbs_input/agents")
 
-    env = Environment(dimension, agents) #, obstacles)
+        # Sim
+        env = Environment(dimension, agents) #, obstacles)
 
-    # Searching
-    cbs = CBS(env)
-    solution = cbs.search()
-    if not solution:
-        print(" Solution not found" )
-        return
+        # Searching
+        cbs = CBS(env)
+        solution = cbs.search()
+        if not solution:
+            rospy.loginfo(" Solution not found" )
+            return
 
-    # Write to output file
-    output = dict()
-    output["schedule"] = solution
-    output["cost"] = env.compute_solution_cost(solution)
-    rospy.set_param("/cbs_output", output)
+        # Write to output file
+        output = dict()
+        output["schedule"] = solution
+        output["cost"] = env.compute_solution_cost(solution)
+        rospy.set_param("/cbs_output", output)
 
+    def path_state_sub(self, data):
+        """ Subscriber for the current state of all robots then signal to the next time step 
+        :data: Int64Arr, len = # of cubes in the system, 0 for beginning of time step, 1 for finished turning, and 2 for finished step
+        """
+        self.path_state = list(data.data)
 
-    # with open(args.output, 'w') as output_yaml:
-    #     yaml.safe_dump(output, output_yaml)
+        # If all bots are finished with the current time step
+        if self.path_state.count(2) == len(self.paths):
+            if self.time_step+1 != len(self.longest_path):
+                self.time_step += 1
+                rospy.loginfo("TIME STEP %s", self.time_step)
 
-
-if __name__ == "__main__":
-    main()
+                # Reset path states to 0 and move to the next time step
+                new_state = Int64MultiArray()
+                new_state.data = [0] * 7
+                self.path_state_pub.publish(new_state)
+                self.path_step_pub.publish(self.time_step)
+            else: 
+                rospy.loginfo("FINISH PATH")
+    
+if __name__ == '__main__':
+    rospy.init_node('path_planning', anonymous=False)
+    Main()

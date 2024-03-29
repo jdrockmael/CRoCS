@@ -95,7 +95,7 @@
       <param name="y_pos" value="$(arg y_pos)" />
   </node>
 
-  <node if="$(arg drive)" pkg="CRoCS" name="square" type="square.py" output="screen">
+  <node if="$(arg drive)" pkg="CRoCS" name="drive" type="drive.py" output="screen">
       <param name="robot_name" value="$(arg robot_name)" />
       <param name="x_pos" value="$(arg x_pos)" />
   </node> 

@@ -1,10 +1,4 @@
 #!/usr/bin/python3
-###############################################################################
-# Postfiltering of pose estimate using extended Kalman filter.
-# Due to highly accurate but low-frequent April tag pose estimation, predict
-# the Kalman state open-loop with high frequency based on the last control inputs
-# and "reset" it at every April tag update (meas_noise << proc_noise).
-###############################################################################
 import numpy as np
 import rospy
 import time
