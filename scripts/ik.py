@@ -40,10 +40,10 @@ def calc_transform(pose):
 
 def calc_angle_diff(desired, actual):
     diff = desired - actual
-    if diff >= 180:
-        diff = diff - 360 
-    elif diff <= -180:
-        diff = 360 + diff
+    if diff >= pi:
+        diff = diff - 2*pi
+    elif diff <= -pi:
+        diff = 2*pi + diff
     return diff
 
 def update_pose(pose : Float32MultiArray):
