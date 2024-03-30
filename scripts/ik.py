@@ -59,12 +59,14 @@ def drive_to(pose):
     lin_i = 0
     lin_d = 0
 
-    ang_p = 1.5
+    ang_p = 1
+    ang_i = 0.5
 
-    tolerance = 0.1
+    tolerance = 0.05
     delta_t = 0.05
 
     linear_area = 0.0
+    angular_area = 0.0
     
     while(prev_distance > tolerance or prev_distance < -tolerance):
         curr_distance = sqrt(pow(pose[0]-curr_pose[0], 2) + pow(pose[1]-curr_pose[1], 2))
@@ -78,7 +80,12 @@ def drive_to(pose):
 
         linear_eff = linear_eff_p + linear_eff_i + linear_eff_d
 
-        angular_eff = curr_err_heading * ang_p
+        angular_area += curr_err_heading * delta_t
+
+        angular_eff_p = curr_err_heading * ang_p
+        angular_eff_i = angular_area * ang_i
+
+        angular_eff = angular_eff_p + angular_eff_i
 
         eff_pub.publish(Float32MultiArray(data=[linear_eff, angular_eff]))
 
