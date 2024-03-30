@@ -51,25 +51,27 @@ def update_pose(pose : Float32MultiArray):
     curr_pose = pose.data
 
 def drive_to(pose):
-    prev_distance = sqrt(pow(pose[0]-curr_pose[0], 2) + pow(pose[1]-curr_pose[1], 2))
+    #prev_distance = sqrt(pow(pose[0]-curr_pose[0], 2) + pow(pose[1]-curr_pose[1], 2))
     transformed_pose = calc_transform(pose)
+    prev_distance = transformed_pose[0]
     heading = curr_pose[2] + atan2(transformed_pose[1], transformed_pose[0])
 
     lin_p = 1
-    lin_i = 0
+    lin_i = 0.5
     lin_d = 0
 
     ang_p = 1
     ang_i = 0.5
 
-    tolerance = 0.05
+    tolerance = 0.01 
     delta_t = 0.05
 
     linear_area = 0.0
     angular_area = 0.0
     
     while(prev_distance > tolerance or prev_distance < -tolerance):
-        curr_distance = sqrt(pow(pose[0]-curr_pose[0], 2) + pow(pose[1]-curr_pose[1], 2))
+        #curr_distance = sqrt(pow(pose[0]-curr_pose[0], 2) + pow(pose[1]-curr_pose[1], 2))
+        curr_distance = calc_transform(pose)[0]
         curr_err_heading = calc_angle_diff(heading, curr_pose[2])
         
         linear_area += curr_distance * delta_t
