@@ -92,15 +92,15 @@ def turn_to(heading):
     tolerance = 0.02
     delta_t = 0.05
 
-    p = 3
-    i = 0.1
+    p = 1
+    i = 0.5
     d = 0
 
     area = 0.0
 
     while(abs(prev_error) > tolerance):
         curr_error = calc_angle_diff(heading, curr_pose[2])
-
+        rospy.logerr(curr_error)
         area += curr_error * delta_t
         
         angular_err_p = curr_error *p
