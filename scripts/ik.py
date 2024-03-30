@@ -53,7 +53,7 @@ def update_pose(pose : Float32MultiArray):
 def drive_to(pose):
     #prev_distance = sqrt(pow(pose[0]-curr_pose[0], 2) + pow(pose[1]-curr_pose[1], 2))
     transformed_pose = calc_transform(pose)
-    prev_distance = transformed_pose[0]
+    prev_distance = transformed_pose[0] - curr_pose[0]
     heading = curr_pose[2] + atan2(transformed_pose[1], transformed_pose[0])
 
     lin_p = 1
@@ -71,7 +71,7 @@ def drive_to(pose):
     
     while(prev_distance > tolerance or prev_distance < -tolerance):
         #curr_distance = sqrt(pow(pose[0]-curr_pose[0], 2) + pow(pose[1]-curr_pose[1], 2))
-        curr_distance = calc_transform(pose)[0]
+        curr_distance = calc_transform(pose)[0] - curr_pose[0]
         rospy.logerr(curr_distance)
         curr_err_heading = calc_angle_diff(heading, curr_pose[2])
         
