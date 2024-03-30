@@ -41,7 +41,7 @@ def calc_transform(pose):
 def calc_angle_diff(desired, actual):
     diff = desired - actual
     if diff >= 180:
-        diff = 360 - diff
+        diff = diff - 360 
     elif diff <= -180:
         diff = 360 + diff
     return diff
