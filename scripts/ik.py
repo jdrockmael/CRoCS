@@ -89,7 +89,7 @@ def drive_to(pose):
 
 def turn_to(heading): 
     prev_error = calc_angle_diff(heading, curr_pose[2])
-    tolerance = 0.02
+    tolerance = 0.1
     delta_t = 0.05
 
     p = 3
