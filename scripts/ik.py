@@ -70,7 +70,10 @@ def drive_to(pose):
     
     while(prev_distance > tolerance or prev_distance < -tolerance):
         curr_distance = sqrt(pow(pose[0]-curr_pose[0], 2) + pow(pose[1]-curr_pose[1], 2))
-        curr_err_heading = calc_angle_diff(desired_heading, curr_pose[2])
+        testing = atan2(pose[1]-curr_pose[1], pose[0]-curr_pose[0])
+        testing = 2*pi + testing if testing < 0 else testing
+        curr_err_heading = calc_angle_diff(desired_heading, testing)
+
 
         rospy.logerr(curr_distance)
         
