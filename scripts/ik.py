@@ -52,7 +52,7 @@ def update_pose(pose : Float32MultiArray):
 
 def drive_to(pose):
     prev_distance = sqrt(pow(pose[0]-curr_pose[0], 2) + pow(pose[1]-curr_pose[1], 2))
-    desired_heading = atan2(pose[1], pose[0])
+    desired_heading = atan2(pose[1] - curr_pose[1], pose[0] - curr_pose[0])
     desired_heading = 2*pi + desired_heading if desired_heading < 0 else desired_heading
 
     lin_p = 1
@@ -67,23 +67,24 @@ def drive_to(pose):
 
     linear_area = 0.0
     angular_area = 0.0
+
+    done = 1
     
     while(prev_distance > tolerance or prev_distance < -tolerance):
         curr_distance = sqrt(pow(pose[0]-curr_pose[0], 2) + pow(pose[1]-curr_pose[1], 2))
-        testing = atan2(pose[1]-curr_pose[1], pose[0]-curr_pose[0])
-        testing = 2*pi + testing if testing < 0 else testing
-        curr_err_heading = calc_angle_diff(desired_heading, testing)
-
+        curr_err_heading = calc_angle_diff(desired_heading, curr_pose[2])
 
         rospy.logerr(curr_distance)
         
-        linear_area += curr_distance * delta_t
+        linear_area += curr_distance * delta_t * done
         
         linear_eff_p = curr_distance * lin_p
         linear_eff_i = linear_area * lin_i
         linear_eff_d = ((curr_distance - prev_distance)/delta_t) * lin_d
 
         linear_eff = linear_eff_p + linear_eff_i + linear_eff_d
+
+        done = 0 if linear_eff > 0.2  or linear_eff < -0.2 else 1
 
         angular_area += curr_err_heading * delta_t
 
@@ -130,7 +131,7 @@ def turn_to(heading):
 
 def drive_to_point(desired : Float32MultiArray):
     desired_pose = desired.data
-    desired_heading = atan2(desired_pose[1], desired_pose[0])
+    desired_heading = atan2(desired_pose[1] - curr_pose[1], desired_pose[0] - curr_pose[0])
     desired_heading = 2*pi + desired_heading if desired_heading < 0 else desired_heading
 
     turn_to(desired_heading)
