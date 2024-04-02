@@ -28,16 +28,6 @@ eff_pub = rospy.Publisher("robot_twist", Float32MultiArray, queue_size=1)
 #     else:
 #         motor.stop()
 
-def calc_transform(pose):
-    x = curr_pose[0]
-    y = curr_pose[1]
-    theta = curr_pose[2]
-
-    new_x = cos(theta) * pose[0] + -sin(theta) * pose[1] + x
-    new_y = sin(theta) * pose[0] + cos(theta) * pose[1] + y
-
-    return (new_x, new_y)
-
 def calc_angle_diff(desired, actual):
     diff = desired - actual
     if diff >= pi:
@@ -46,12 +36,22 @@ def calc_angle_diff(desired, actual):
         diff = 2*pi + diff
     return diff
 
+def calc_distance(from_point, to_point):
+    curr_distance = sqrt(pow(to_point[0]-from_point[0], 2) + pow(to_point[1]-from_point[1], 2))
+    vector_heading = atan2(to_point[1] - from_point[1], to_point[0] - from_point[0])
+    diff_in_heading = calc_angle_diff(vector_heading, curr_pose[2])
+
+    if diff_in_heading > pi/2 or diff_in_heading < -pi/2:
+        return -curr_distance
+    else:
+        return curr_distance
+
 def update_pose(pose : Float32MultiArray):
     global curr_pose
     curr_pose = pose.data
 
 def drive_to(pose):
-    prev_distance = sqrt(pow(pose[0]-curr_pose[0], 2) + pow(pose[1]-curr_pose[1], 2))
+    prev_distance = calc_distance((curr_pose[0], curr_pose[1]), (pose[0], pose[1]))
     desired_heading = atan2(pose[1] - curr_pose[1], pose[0] - curr_pose[0])
     desired_heading = 2*pi + desired_heading if desired_heading < 0 else desired_heading
 
@@ -71,7 +71,7 @@ def drive_to(pose):
     done = 1
     
     while(prev_distance > tolerance or prev_distance < -tolerance):
-        curr_distance = sqrt(pow(pose[0]-curr_pose[0], 2) + pow(pose[1]-curr_pose[1], 2))
+        curr_distance = calc_distance((curr_pose[0], curr_pose[1]), (pose[0], pose[1]))
         curr_err_heading = calc_angle_diff(desired_heading, curr_pose[2])
 
         rospy.logerr(curr_distance)
