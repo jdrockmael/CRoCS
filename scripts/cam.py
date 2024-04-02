@@ -19,14 +19,6 @@ class AprilCam():
         self.at_detector = Detector()
 
         self.start = time.time()
-        meter = np.array([0.05, 0.08, 0.15, 0.2, 0.3])
-        measure1x1 = np.array([0.304, 0.461, 0.886, 1.173, 1.761]) # Readings for 1x1 in tag
-        self.m, self.b = np.polyfit(measure1x1, meter, 1)
-
-    # Convert 1x1 april tag pose to real world measurements in m
-    def pose2real(self, measurement):
-        # Fit a linear model
-        return self.m * measurement + self.b
 
     def get_measurements(self):
         # Take each frame
@@ -40,14 +32,19 @@ class AprilCam():
         if tags_side:
             for i, tag_side in enumerate(tags_side):
                 id = tag_side.tag_id
-                tag = tag_side
+                tag = None
+                if (id % 4 != 0):
+                    tag = self.at_detector.detect(grayscale, estimate_tag_pose=True, camera_params=self.cam_param, tag_size=0.02)[i] #V0.01632857142
+                else:
+                    tag = tag_side
+
                 x = tag.pose_t[0]
                 z = tag.pose_t[2]
 
                 # Convert reading to proper distance for 1x1 tags
-                if id != 0:
-                    x = self.pose2real(x)
-                    z = self.pose2real(z)
+                # if id != 0:
+                #     x = self.pose2real(x)
+                #     z = self.pose2real(z)
                 distance = z
                 hor_distance = x
                 hyp = math.sqrt(distance**2 + hor_distance**2)  # Range to april tag
