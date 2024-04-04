@@ -54,7 +54,7 @@ def find_and_connect(port=4):
 # takes the socket that has the server connected
 def rec_msg(socket):
     global locked, req_pos, des_pos
-    
+
     while not flag:
         data = socket.recv(1024)
         if b'requested' in data:
@@ -63,6 +63,8 @@ def rec_msg(socket):
             work = this[0].split(b',')
             x, y, theta = work[0], work[1], work[2]
             req_pos = [x, y, theta]
+            print(x + y + theta)
+
 
         if b'desired' in data:
             does = data.split(b'[')
@@ -70,14 +72,16 @@ def rec_msg(socket):
             work = this[0].split(b',')
             x, y, theta = work[0], work[1], work[2]
             des_pos = [x, y, theta]
+            print(x + y + theta)
+
         
         if b'locked' in data:
            locked = True
+           print(b'Locked')
 
         if data:
             print(data)
-            print(x + y + theta)
-
+           
 # sends given messages over bluetooth
 # takes the socket the server is connected to
 def send_msg(socket):
