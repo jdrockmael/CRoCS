@@ -15,6 +15,9 @@ lock = threading.Lock()
 # false if sending thread has not ended and true if it has
 flag = False
 
+locked = False
+des_pos = [0, 0, 0]
+req_pos = [0, 0, 0]
 # Finds which of the above listed macs are hosting the server and connect
 # returns the sockect object used to send messages
 # port is the port number that the server is bond to
@@ -50,12 +53,27 @@ def find_and_connect(port=4):
 # displays incoming messages
 # takes the socket that has the server connected
 def rec_msg(socket):
-     while not flag:
+    global locked, req_pos, des_pos
+    
+    while not flag:
         data = socket.recv(1024)
-        does = data.split(b'[')
-        this = does[1].split(b']')
-        work = this[0].split(b',')
-        x, y, theta = work[0], work[1], work[2]
+        if b'requested' in data:
+            does = data.split(b'[')
+            this = does[1].split(b']')
+            work = this[0].split(b',')
+            x, y, theta = work[0], work[1], work[2]
+            req_pos = [x, y, theta]
+
+        if b'desired' in data:
+            does = data.split(b'[')
+            this = does[1].split(b']')
+            work = this[0].split(b',')
+            x, y, theta = work[0], work[1], work[2]
+            des_pos = [x, y, theta]
+        
+        if b'locked' in data:
+           locked = True
+
         if data:
             print(data)
             print(x + y + theta)
