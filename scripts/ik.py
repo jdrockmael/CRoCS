@@ -2,7 +2,7 @@
 import rospy
 from std_msgs.msg import Float32MultiArray
 from time import sleep
-from math import atan2, sqrt, sin, cos, pi
+from math import atan2, sqrt, pi
 
 curr_pose = [0.0, 0.0, 0.0]
 eff_pub = rospy.Publisher("robot_twist", Float32MultiArray, queue_size=1)
@@ -62,7 +62,7 @@ def drive_to(pose):
     ang_p = 1
     ang_i = 0.5
 
-    tolerance = 0.01 
+    tolerance = 0.02
     delta_t = 0.05
 
     linear_area = 0.0
@@ -70,7 +70,7 @@ def drive_to(pose):
 
     done = 1
     
-    while(prev_distance > tolerance or prev_distance < -tolerance):
+    while(abs(prev_distance) > tolerance):
         curr_distance = calc_distance((curr_pose[0], curr_pose[1]), (pose[0], pose[1]))
         curr_err_heading = calc_angle_diff(desired_heading, curr_pose[2])
 

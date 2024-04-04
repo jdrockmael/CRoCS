@@ -2,11 +2,10 @@
 #/bin/python3.9
 import cv2
 from dt_apriltags import Detector
-import numpy as np
 import math
-import collections
 import rospy
-from std_msgs.msg import Float32MultiArray, Bool
+from std_msgs.msg import Float32MultiArray
+from time import sleep
 # from CRoCs.msg import April
 
 
@@ -70,7 +69,7 @@ def measure():
     cam = AprilCam()
 
     while not rospy.is_shutdown():
-        rospy.sleep(0.15)              # Sleep for 5ms
+        sleep(0.2)              # Sleep for 5ms
         tags = cam.get_measurements()
         if tags:
             for measurement in tags:
