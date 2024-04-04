@@ -52,8 +52,13 @@ def find_and_connect(port=4):
 def rec_msg(socket):
      while not flag:
         data = socket.recv(1024)
+        does = data.split(b'[')
+        this = does[1].split(b']')
+        work = this[0].split(b',')
+        x, y, theta = work[0], work[1], work[2]
         if data:
             print(data)
+            print(x + y + theta)
 
 # sends given messages over bluetooth
 # takes the socket the server is connected to

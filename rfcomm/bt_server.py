@@ -67,8 +67,10 @@ def handle_msg(croc, data):
     name = data[0].decode('ascii')
     if name == 'server':
         print(data[1], "from", croc)
-        if 'requesting' not in data[1]:
+        if b'requesting' not in data[1]:
             pos_list[croc] = data[1]
+        elif b'requesting' in data[1]:
+            list_of_clients[croc].send(b'requested_position:' + pos_list[croc])
     elif name in list_of_clients:
         pos_list[croc] = data[1]
         list_of_clients[name].send(data[1])
