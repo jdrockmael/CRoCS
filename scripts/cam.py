@@ -74,6 +74,7 @@ def measure():
         if tags:
             for measurement in tags:
                 range_pub.publish(measurement)
+                rospy.logerr(measurement)
 
 if __name__ == "__main__":
     try:

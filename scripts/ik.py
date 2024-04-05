@@ -74,7 +74,7 @@ def drive_to(pose):
         curr_distance = calc_distance((curr_pose[0], curr_pose[1]), (pose[0], pose[1]))
         curr_err_heading = calc_angle_diff(desired_heading, curr_pose[2])
 
-        rospy.logerr(curr_distance)
+        #rospy.logerr(curr_distance)
         
         linear_area += curr_distance * delta_t * done
         
