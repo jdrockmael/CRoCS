@@ -67,10 +67,8 @@ def handle_msg(croc, data):
     name = data[0].decode('ascii')
     if name == 'server':
         print(data[1], "from", croc)
-        if b'desired' not in data[1]:
+        if b'locked' not in data[1]:
             pos_list[croc] = data[1]
-        elif b'desired' in data[1]:
-            list_of_clients[croc].send(b'desired_position:' + pos_list[croc])
         elif b'locked' in data[1]:
             list_of_clients[croc].send(b'you_are_locked')
     elif name in list_of_clients:
