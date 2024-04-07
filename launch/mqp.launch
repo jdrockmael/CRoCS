@@ -1,6 +1,7 @@
 <launch>
     <!--node pkg="CRoCS" type="comm.py" name="comm"/-->
     <node pkg="CRoCS" type="cam.py" name="cam"/>
-    <node pkg="CRoCS" type="ik.py" name="ik"/>
+    <!--node pkg="CRoCS" type="ik.py" name="ik"/-->
+    <node pkg="CRoCS" type="lock.py" name="lock"/>
     <node pkg="CRoCS" type="locomotion.py" name="locomotion"/>
 </launch>
