@@ -9,7 +9,7 @@ lock_on = True
 
 def update_reading(cam : Float32MultiArray):
     global range_readings
-    range_readings = (cam[2], cam[1])
+    range_readings = (cam.data[2], cam.data[1])
 
 def control_loop():
     heading_err = range_readings[0]
