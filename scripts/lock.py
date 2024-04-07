@@ -4,7 +4,7 @@ from std_msgs.msg import Float32MultiArray
 from time import sleep
 
 speed_pub = rospy.Publisher("robot_twist", Float32MultiArray, queue_size=1)
-range_readings = (0.0, 0.0)
+range_readings = (0.0, 0.0) # heading and distance
 lock_on = True
 
 def update_reading(cam : Float32MultiArray):
@@ -12,7 +12,7 @@ def update_reading(cam : Float32MultiArray):
     range_readings = (cam[2], cam[1])
 
 def control_loop():
-    heading_err = range_readings[2]
+    heading_err = range_readings[0]
     distance_err = range_readings[1] - 0.05 # in meters
 
     if abs(distance_err) > 0.05 and abs(heading_err) > 0.01:
