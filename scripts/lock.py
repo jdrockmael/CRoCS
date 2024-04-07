@@ -12,6 +12,8 @@ def update_reading(cam : Float32MultiArray):
     cam_readings = (cam.data[2], cam.data[1])
 
 def control_loop():
+    prev_distance = cam_readings[1]
+
     lin_p = 1
     lin_i = 0.5
     lin_d = 0
