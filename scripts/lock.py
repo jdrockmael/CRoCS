@@ -14,14 +14,14 @@ def update_reading(cam : Float32MultiArray):
 def control_loop():
     prev_distance = cam_readings[1]
 
-    lin_p = 1
+    lin_p = 0.5
     lin_i = 0.5
     lin_d = 0
 
     ang_p = 1
     ang_i = 0.5
 
-    tolerance = 0.02
+    tolerance = 0.05
     delta_t = 0.05
 
     linear_area = 0.0
@@ -57,6 +57,6 @@ if __name__ == '__main__':
     rospy.init_node('lock')
     rospy.Subscriber("range", Float32MultiArray, update_reading)
 
-    while not rospy.is_shutdown():
-        control_loop()
+    control_loop()
+    rospy.spin()
     
