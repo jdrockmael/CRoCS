@@ -21,13 +21,13 @@ def control_loop():
     ang_p = 1
     ang_i = 0.5
 
-    tolerance = 0.05
+    tolerance = 0.02
     delta_t = 0.05
 
     linear_area = 0.0
     angular_area = 0.0
     
-    while(abs(cam_readings[1]) > tolerance and abs(cam_readings[0]) > tolerance and lock_on):
+    while((abs(cam_readings[1]) > tolerance or abs(cam_readings[0]) > tolerance) and lock_on):
         curr_distance = cam_readings[1]
         curr_err_heading = cam_readings[0]
         
