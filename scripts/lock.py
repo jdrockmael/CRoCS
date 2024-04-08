@@ -4,7 +4,7 @@ from std_msgs.msg import Float32MultiArray
 from time import sleep
 
 speed_pub = rospy.Publisher("robot_twist", Float32MultiArray, queue_size=1)
-cam_readings = (0.0, 0.0) # heading and distance
+cam_readings = None # heading and distance
 lock_on = True
 
 def update_reading(cam : Float32MultiArray):
@@ -42,7 +42,8 @@ def control_loop():
 if __name__ == '__main__':
     rospy.init_node('lock')
     rospy.Subscriber("range", Float32MultiArray, update_reading)
-
+    while cam_readings == None:
+        pass
     control_loop()
     rospy.spin()
     
