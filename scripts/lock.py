@@ -21,11 +21,13 @@ def control_loop():
     d = 0
 
     area = 0.0
-    rospy.logerr(cam_readings)
+
     while((abs(cam_readings[0]) > tolerance or abs(cam_readings[1]) > 0.5) and lock_on):
         curr_error = cam_readings[0]
         area += curr_error * delta_t
         
+        rospy.logerr(cam_readings)
+
         angular_err_p = curr_error *p
         angular_err_i = area * i
         angular_err_d = ((curr_error-prev_error)/delta_t) * d

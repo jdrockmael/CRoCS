@@ -47,7 +47,7 @@ class AprilCam():
                 distance = z
                 hor_distance = x
                 hyp = math.sqrt(distance**2 + hor_distance**2)  # Range to april tag
-                bearing = math.atan2(hor_distance, distance)
+                bearing = -math.atan2(hor_distance, distance)
 
                 # print(id)
                 # Return an array of [ID, range(m), bearing(radian)]
