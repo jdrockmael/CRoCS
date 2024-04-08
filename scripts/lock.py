@@ -12,45 +12,31 @@ def update_reading(cam : Float32MultiArray):
     cam_readings = (cam.data[2], cam.data[1])
 
 def control_loop():
-    prev_distance = cam_readings[1]
-
-    lin_p = 0.5
-    lin_i = 0.5
-    lin_d = 0
-
-    ang_p = 1
-    ang_i = 0.5
-
-    tolerance = 0.02
+    prev_error = cam_readings[0]
+    tolerance = 0.1
     delta_t = 0.05
 
-    linear_area = 0.0
-    angular_area = 0.0
-    
-    while((abs(cam_readings[1]) > tolerance or abs(cam_readings[0]) > tolerance) and lock_on):
-        curr_distance = cam_readings[1]
-        curr_err_heading = cam_readings[0]
+    p = 1
+    i = 0.5
+    d = 0
+
+    area = 0.0
+
+    while((abs(cam_readings[0]) > tolerance or abs(cam_readings[1]) > 0.5) and lock_on):
+        curr_error = cam_readings[0]
+        area += curr_error * delta_t
         
-        linear_area += curr_distance * delta_t
-        
-        linear_eff_p = curr_distance * lin_p
-        linear_eff_i = linear_area * lin_i
-        linear_eff_d = ((curr_distance - prev_distance)/delta_t) * lin_d
+        angular_err_p = curr_error *p
+        angular_err_i = area * i
+        angular_err_d = ((curr_error-prev_error)/delta_t) * d
 
-        linear_eff = linear_eff_p + linear_eff_i + linear_eff_d
+        omega = angular_err_p + angular_err_i + angular_err_d
 
-        angular_area += curr_err_heading * delta_t
+        speed_pub.publish(Float32MultiArray(data=[0.1, omega]))
 
-        angular_eff_p = curr_err_heading * ang_p
-        angular_eff_i = angular_area * ang_i
-
-        angular_eff = angular_eff_p + angular_eff_i
-
-        speed_pub.publish(Float32MultiArray(data=[linear_eff, angular_eff]))
-
-        prev_distance = curr_distance
+        prev_error = curr_error
         sleep(delta_t)
-
+    
     speed_pub.publish(Float32MultiArray(data=[0.0, 0.0]))
 
 if __name__ == '__main__':
