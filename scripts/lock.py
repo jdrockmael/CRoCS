@@ -21,7 +21,7 @@ def control_loop():
     d = 0
 
     area = 0.0
-
+    rospy.logerr(cam_readings)
     while((abs(cam_readings[0]) > tolerance or abs(cam_readings[1]) > 0.5) and lock_on):
         curr_error = cam_readings[0]
         area += curr_error * delta_t
@@ -32,7 +32,7 @@ def control_loop():
 
         omega = angular_err_p + angular_err_i + angular_err_d
 
-        speed_pub.publish(Float32MultiArray(data=[0.1, omega]))
+        speed_pub.publish(Float32MultiArray(data=[0.0, omega]))
 
         prev_error = curr_error
         sleep(delta_t)
