@@ -27,8 +27,12 @@ def control_loop():
 
     area = 0.0
 
-    while((abs(cam_readings[0]) > tolerance or abs(cam_readings[1]) > 0.5) and lock_on):
-        curr_error = cam_readings[0]
+    while(cam_readings != None and lock_on and (abs(cam_readings[0]) > tolerance or abs(cam_readings[1]) > 0.5)):
+        if cam_readings == None:
+            break
+        else:
+            curr_error = cam_readings[0]
+        
         area += curr_error * delta_t
         
         rospy.logerr(cam_readings)
