@@ -9,18 +9,22 @@ import rospy
 # from IPython.display import display
 sympy.init_printing(use_latex='mathjax')
 
-VAR_ENC = 1e-2
+VAR_ENC = 1e-4
 VAR_RANGE = 0 
 VAR_BEARING = 0
-VAR_POSE1 = 1e-2
-VAR_POSE2 = 1e-2
+VAR_POSE1 = 1e-4
+VAR_POSE2 = 1e-4
 
 class RobotEKF():
-    def __init__(self, wheelbase=0.10082):        
+    def __init__(self, wheelbase=0.10082, init_x=0.0, init_y=0.0, init_heading=0.0):        
         # EKF.__init__(self, 3, 2, 2)
         # Dimensions of pose, measurement, and control vectors
         self.dim_x = 3
         self.pose = np.zeros((self.dim_x, 1))   # state
+        self.pose[0,0] = init_x
+        self.pose[1,0] = init_y
+        self.pose[2,0] = init_heading
+        self.wheel_offset = 0.039624
         self.dim_z = 2
         self.dim_u = 2
         self.wheelbase = wheelbase
@@ -47,7 +51,9 @@ class RobotEKF():
         # h matrix convert pose to measurement
         self.h = Matrix(
             [[sympy.sqrt((y2+vy2-y-vyk)**2+(x2+vx2-x-vxk)**2)],
-             [theta + vthetak - sympy.atan2(y2+vyk-y-vyk,x2+vx2-x-vxk)]]
+            # [theta + vthetak - sympy.atan2(x2+vx2-x-vxk, y2+vyk-y-vyk)]]
+
+             [np.pi/2 - (theta + vthetak) - sympy.atan2(x2+vx2 - x-vxk, y2+vyk - y-vyk)]]
         )
 
         pose = Matrix([x, y, theta])
@@ -59,7 +65,7 @@ class RobotEKF():
         self.A_j = self.f.jacobian(pose)
         self.W_j= self.f.jacobian(process_noise)
 
-        self.subs = {x:0, y: 0, theta:0, Vl:0, Vr:0, dt:0, x2:0, y2:0, b:self.wheelbase, 
+        self.subs = {x:init_x, y: init_y, theta:init_heading, Vl:0, Vr:0, dt:0, x2:0, y2:0, b:self.wheelbase, 
                      wl: 0, wr:0, wx: 0, wy: 0, wtheta: 0,
                      vxk: 0, vx2: 0, vyk: 0, vy2: 0, vthetak: 0}
 
@@ -87,9 +93,15 @@ class RobotEKF():
         self.subs[self.w_Wr] = 0
 
         # Update pose
-        # rospy.loginfo("PREDICT OLD THETA %s", self.pose[2,0])
         self.pose = np.array(self.f.evalf(subs=self.subs)).astype(float)  
-        # rospy.loginfo("PREDICT THETA %s", self.pose[2,0])
+
+        # self.pose[2,0] = self.pose[2,0] % (2*np.pi)
+        # if self.pose[2,0] > np.pi:             
+        #     self.pose[2,0] -= 2*np.pi
+        
+
+        # rospy.loginfo("POSEEEEEEEEEEEEE PREDICT%s", self.pose.T)
+        
         self.subs[self.x_x] = self.pose[0,0]
         self.subs[self.x_y] = self.pose[1,0]
         self.subs[self.x_theta] = self.pose[2,0]
@@ -105,7 +117,17 @@ class RobotEKF():
         # Update covariance
         self.P = A @ self.P @ A.T + W @ self.Q @ W.T
 
-    def update(self, z, pose2, dt):
+        real_pose = self.pose
+        real_pose[0,0] += self.wheel_offset - self.wheel_offset * np.cos(self.pose[-1])
+        real_pose[1,0] -= self.wheel_offset * np.sin(self.pose[-1])
+
+        real_pose[2,0] = real_pose[2,0] % (2*np.pi)
+        if real_pose[2,0] > np.pi:             
+            real_pose[2,0] -= 2*np.pi
+
+        return real_pose
+    
+    def update(self, z, pose1, pose2, dt):
         """ Update/Correction step of EKF.
         K = PH'(HPH' + VRV')^-1
         x = x + K(z - h(x,0))
@@ -128,17 +150,21 @@ class RobotEKF():
         self.subs[self.V_vy2] = v[4,4]
         # rospy.loginfo("TEST1 %s",self.pose[2,0])
 
-
         H = np.array(self.H_j.evalf(subs=self.subs)).astype(float) 
-        # rospy.loginfo("TEST3 %s",self.pose[2,0])
 
         V = np.array(self.V_j.evalf(subs=self.subs)).astype(float) 
-        # rospy.loginfo("TEST2 %s",self.pose[2,0])
 
         K = self.P @ H.T @ np.linalg.inv(H @ self.P @ H.T + V @ self.R @ V.T)
 
+        res = self.residual(z, pose1, pose2)
+        rospy.loginfo("RESIDUALLLLLLLLL %s", res.T)
 
-        self.pose += K @ self.residual(z, pose2)
+        self.pose += K @ res#self.residual(z, pose2)
+
+        # self.pose[2,0] = self.pose[2,0] % (2*np.pi)
+        # if self.pose[2,0] > np.pi:             
+        #     self.pose[2,0] -= 2*np.pi
+        # rospy.loginfo("POSEEEEEEEEEEEEE UPDATE%s", self.pose.T)
 
         # Set poses
         self.subs[self.x_x] = self.pose[0,0]
@@ -148,13 +174,26 @@ class RobotEKF():
         # Update covariance, equivalent to P = (I - KH)P
         self.P -= K @ H @ self.P
 
-    def residual(self, z, pose2):
+        real_pose = self.pose
+        real_pose[0] += self.wheel_offset - self.wheel_offset * np.cos(self.pose[2,0])
+        real_pose[1] -= self.wheel_offset * np.sin(self.pose[2,0])
+
+        # x = x + wheeloffst - wheeloffset*cos
+        # y = y - wheeloffset*
+
+        # x = - wheeloffset + wheeloffset*
+
+        return real_pose
+
+    def residual(self, z, pose1, pose2):
         """ Helper function to calculate the residual
         """
         # Set pose
-        self.subs[self.x_x] = self.pose[0,0]
-        self.subs[self.x_y] = self.pose[1,0]
-        self.subs[self.x_theta] = self.pose[2,0]
+        # self.subs[self.x_x] = self.pose[0,0]
+        # self.subs[self.x_y] = self.pose[1,0]
+        self.subs[self.x_x] = pose1[0,0] - self.wheel_offset + self.wheel_offset * np.cos(pose1[2,0])
+        self.subs[self.x_y] = pose1[1,0] + self.wheel_offset * np.sin(pose1[2,0])
+        self.subs[self.x_theta] = pose1[2,0] #self.pose[2,0]
 
         self.subs[self.x2_x] = pose2[0]
         self.subs[self.x2_y] = pose2[1]
@@ -165,19 +204,35 @@ class RobotEKF():
         self.subs[self.V_vthetak] = 0
         self.subs[self.V_vx2] = 0
         self.subs[self.V_vy2] = 0
-        # [theta + vthetak - sympy.atan2(y2+vyk-y-vyk,x2+vx2-x-vxk)]]
+
+
+        # sam = math.atan2(pose2[0] - self.pose[0,0], pose2[1] - self.pose[1,0])
+        rospy.loginfo("PRE INNOVATION POSE %s", self.pose.T)
+        # rospy.loginfo("DELTAX DELTAY (%s, %s)",pose2[0] - self.pose[0,0], pose2[1] - self.pose[1,0])
+
+        # sam = sam % (2*np.pi)
+        # if sam > np.pi:             
+        #     sam -= 2*np.pi
+        # rospy.loginfo("ATAN2 %s", sam)
 
         innovation = np.array(self.h.evalf(subs=self.subs)).astype(float) 
-        # self.subs[self.x_x] = self.pose[0,0]
-        # self.subs[self.x_y] = self.pose[1,0]
-        # self.subs[self.x_theta] = self.pose[2,0]
+        # rospy.loginfo("INNOVATION %s", innovation.T)
+        innovation[1] = innovation[1] % (2*np.pi)
+        if innovation[1] > np.pi:             
+            innovation[1] -= 2*np.pi
+
+        rospy.loginfo("INNOVATION AFTER %s", innovation.T)
+        # rospy.loginfo("Z %s", z.T)
         zx = z - innovation
 
-        # rospy.loginfo("theta %s",self.pose[2,0])
-        # Normalize bearing to [-pi, pi]
-        zx[-1] = zx[-1] % (2 * np.pi)
-        if zx[-1] > np.pi:             
-            zx[-1] -= 2 * np.pi
+        # rospy.loginfo("ZX BEFORE %s", zx.T)
+        # # Normalize bearing to [-pi/2, pi/2]
+        # zx[-1] = zx[-1] % np.pi
+        # # rospy.loginfo("ZX DURING %s", zx.T)
+        # if zx[-1] > np.pi/2:             
+        #     zx[-1] -= 2 * np.pi
+
+        # rospy.loginfo("ZX AFTER %s", zx.T)
 
         return zx
     

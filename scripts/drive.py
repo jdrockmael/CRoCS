@@ -32,7 +32,7 @@ class Main():
     def __init__(self):
         self.cube = rospy.get_param('drive/robot_name')       
         self.cube_id = int(self.cube[-1])
-        self.x_init = rospy.get_param('drive/x_pos')   
+        # self.x_init = rospy.get_param('drive/x_pos')   
         self.vel_pub = rospy.Publisher(str("/" + self.cube + "/diff_drive_controller/cmd_vel"), Twist, queue_size=10)
 
         self.path_state_pub = rospy.Publisher("/path_state", Int64MultiArray, queue_size=1)
@@ -47,12 +47,30 @@ class Main():
         self.d = 0.039624
         self.path_state = [0] * 7
         self.time_step = -1
-        self.turn_speed = math.pi/16
-        self.forward_speed = 0.05
-        self.slow = 0.3
+        self.turn_speed = math.pi/8
+        self.forward_speed = 0.1
+        self.slow = 0.8
         self.rate = rospy.Rate(100)
                 
-        time.sleep(2)
+        time.sleep(5)
+        
+        # dis = 0.2286 * abs(self.cube_id-7)
+        # rospy.loginfo("CUBE %s going %s", self.cube_id, dis)
+        # self.drive(dis, 0.05)
+        # if self.cube_id > 2:
+        #     self.drive(0.2286 * abs(self.cube_id-7), 0.05)
+        # else:
+        #     self.drive(0.2286 * abs(self.cube_id-7 - 0.01), 0.05)
+        # time.sleep(1000)
+        # rospy.loginfo("GAYYYYYYYY %s", self.cube_id)
+
+        # if self.cube_id == 3:
+        #     # self.drive(path2world(0.5), 0.05 )
+        #     self.drive(0.2286, 0.05)
+
+        # if self.cube_id == 2:
+        #     # self.drive(path2world(0.5), 0.05 )
+        #     self.drive(0.2286*2 - 0.01, 0.05)
 
         if rospy.has_param("/cbs_output"):
             self.paths = [None] * 7
@@ -68,12 +86,105 @@ class Main():
         :data: Int64Arr, len = # of cubes in the system, 0 for beginning of time step, 1 for finished turning, and 2 for finished step
         """
         self.path_state = list(data.data)
+        if self.path_state.count(3) > 3:
+            # rospy.loginfo(self.path_state.count(3))
+
+            # delta_x, delta_y = self.dest[0] - self.pos[0], self.dest[1] - self.pos[1]
+
+            # # Calculate angle needed to turn towards goal position
+            # turning_angle = 0
+            # if abs(delta_x) > 0.01 or abs(delta_y) > 0.01:
+            #     turning_angle = math.atan2(delta_y, delta_x) - self.heading
+            # turning_angle = normalize(turning_angle)
+
+            # rospy.loginfo("%s  HEADING %s TURNING_ANGLE %s", self.cube, round(self.heading,5), round(turning_angle, 5))
+            # self.turn(turning_angle, self.turn_speed)
+            # if self.cube_id > 2:
+            #     self.drive(0.2286 * abs(self.cube_id-7), 0.05)
+            # else:
+            self.locking()
+            
+        if self.path_state.count(5) > 3:
+            self.drive(2.5, 0.1)
+
+            time.sleep(3)
+            if self.cube_id == 1:
+                new_state = Int64MultiArray()
+                new_state.data = [6] * 7
+                self.path_state_pub.publish(new_state)
+
+        if self.path_state.count(7) > 5:
+
+            time.sleep((self.slow+2)/self.cube_id)
+
+            if self.cube_id == 7: 
+                self.drive(0.5, 0.1)
+                self.turn(np.pi/2, math.pi/8)
+                self.drive(0.5, 0.1)
+
+            if self.cube_id == 6: 
+                self.drive(0.5, 0.1)
+                self.turn(-np.pi/2, math.pi/8)
+                self.drive(0.5, 0.1)
+
+            if self.cube_id == 5: 
+                self.drive(0.5, 0.1)
+                self.turn(np.pi/2, math.pi/8)
+                self.drive(0.5, 0.1)
+
+            if self.cube_id == 4: 
+                self.drive(0.5, 0.1)
+                self.turn(-np.pi/2, math.pi/8)
+                self.drive(0.5, 0.1)
+
+            if self.cube_id == 3: 
+                self.drive(0.5, 0.1)
+                self.turn(np.pi/2, math.pi/8)
+                self.drive(0.5, 0.1)
+
+            if self.cube_id == 2: 
+                self.drive(0.5, 0.1)
+                self.turn(-np.pi/2, math.pi/8)
+                self.drive(0.5, 0.1)
+
+            if self.cube_id == 1: 
+                self.drive(0.5, 0.1)
+                self.turn(np.pi/2, math.pi/8)
+                self.drive(0.5, 0.1)
+
+    def locking(self):
+        turning_angle = - self.heading
+        # turning_angle = normalize(turning_angle)
+
+        rospy.loginfo("%s  HEADING %s TURNING_ANGLE %s", self.cube, round(self.heading,5), round(turning_angle, 5))
+        self.turn(turning_angle, self.turn_speed)
+
+        if self.cube_id > 2:
+            self.drive(0.2286 * abs(self.cube_id-7), 0.05)
+        else:
+            self.drive(0.2286 * abs(self.cube_id-7-0.09), 0.05)
+
+        time.sleep(self.slow/self.cube_id)
+        if self.cube_id == 1:
+            curr_state = self.path_state
+            curr_state[self.cube_id - 1] = 4
+            new_state = Int64MultiArray()
+            new_state.data = [4] * 7
+            self.path_state_pub.publish(new_state)
+            
 
     def path_step_sub(self, data):
         """ Subscriber for the current time step of the path 
         :data: Int64 time step
         """
         self.time_step = data.data
+
+        # if rospy.has_param("/cbs_output") and self.time_step == 0:
+        #     self.paths = [None] * 7
+        #     for i in range(len(self.paths)):
+        #         self.paths[i] = rospy.get_param("/cbs_output/schedule/cube" + str(i+1))
+
+        #     self.path = self.paths[self.cube_id - 1]
 
         # Get goal position at current time step then drive towards it
         if self.time_step < len(self.path):
@@ -99,7 +210,8 @@ class Main():
         """ Turns and drives to destinated goal location
         :dest: goal coordinate in meters (x, y)
         """
-        delta_x, delta_y = dest[0] - self.pos[0], dest[1] - self.pos[1]
+        self.dest = dest
+        delta_x, delta_y = self.dest[0] - self.pos[0], self.dest[1] - self.pos[1]
 
         # Calculate angle needed to turn towards goal position
         turning_angle = 0
@@ -111,7 +223,7 @@ class Main():
         self.turn(turning_angle, self.turn_speed)
 
         # Calculate the distance forward to travel after turning to take offset wheel center into account
-        delta_x, delta_y = dest[0] - self.pos[0], dest[1] - self.pos[1]
+        delta_x, delta_y = self.dest[0] - self.pos[0], self.dest[1] - self.pos[1]
         distance = math.sqrt(delta_x**2 + delta_y**2)
 
         # Wait until all cubes finished turning before start driving forward

@@ -2,7 +2,7 @@
 import numpy as np
 import rospy
 import time
-from geometry_msgs.msg import PoseStamped, PoseWithCovarianceStamped
+from geometry_msgs.msg import PoseStamped, PoseWithCovarianceStamped, Twist
 from nav_msgs.msg import Path, Odometry
 from std_msgs.msg import String, Int16MultiArray, Float32MultiArray, Bool, Float64
 from sensor_msgs.msg import JointState
@@ -16,6 +16,8 @@ class Main():
         self.cube = rospy.get_param('localization/robot_name')
         self.init_x = rospy.get_param('localization/x_pos')
         self.init_y = rospy.get_param('localization/y_pos')
+        self.init_heading = np.deg2rad(rospy.get_param('localization/theta'))
+        self.pose = np.array([self.init_x, self.init_y, 0]).T
 
         self.start()
         
@@ -23,10 +25,26 @@ class Main():
 
         # Get control input
         rospy.Subscriber(str("/" + self.cube + "/joint_states"), JointState, self.control_callback, queue_size=1)
+        # rospy.Subscriber(str("/" + self.cube + "/diff_drive_controller/cmd_vel"), Twist, self.control_callback, queue_size=1)
 
         # Get other cube pose
-        rospy.Subscriber(str("/cube2/pose"), PoseWithCovarianceStamped, self.com_callback, queue_size=1)
-        self.cube2 = np.array([0, 0])
+        # rospy.Subscriber(str("/cube1/pose"), PoseWithCovarianceStamped, self.com1_callback, queue_size=1)
+        # self.cube1 = np.array([0, 0])
+
+        self.cube_states = {1: np.array([0, 0]),
+                    2: np.array([0, 0]),
+                    3: np.array([0, 0]),
+                    4: np.array([0, 0]),
+                    5: np.array([0, 0]),
+                    6: np.array([0, 0]),
+                    7: np.array([0, 0]),
+                    28: np.array([-0.762, 2.286]),
+                    29: np.array([2.286, 5.334]),
+                    30: np.array([2.286, -0.762]),
+                    31: np.array([10, 2.286])}
+        
+        for key in self.cube_states.keys():
+            rospy.Subscriber(str("/cube" + str(key) + "/pose"), PoseWithCovarianceStamped, self.com_callback, callback_args=key, queue_size=1)
 
         # Get apriltag readings and run kalman update step
         rospy.Subscriber("/" + self.cube + "/apriltag", Float32MultiArray, self.tag_callback, queue_size=1)
@@ -62,20 +80,12 @@ class Main():
         self.wheel_base = 0.10082
         self.wheel_radius = 0.01905
 
-        self.landmark = {}
-        self.landmark[0.0] = np.array([4.0, 0.0])       # for square
-        self.landmark[1.0] = np.array([2.5, 4.0])
-        self.landmark[2.0] = np.array([-1.5, 2.5])
-        self.landmark[3.0] = np.array([0.0, -1.5])
-        self.landmark[10.0] = np.array([1.0, 0.0])      # back april tag
-        self.landmark[11.0] = np.array([1.0, 0.0])      # side april tag
-
         # Initialize kalman filter to None
         self.kalman = None
-        self.last_update_time = rospy.get_time()
-        self.predict_time = rospy.get_time()
+        self.last_update_time = time.time() #rospy.get_time()
+        self.predict_time = time.time()#rospy.get_time()
         self.predict_rate = 5       # EKF Prediction rate (Hz)
-        self.err_threshold = 0.2
+        self.err_threshold = 1000000000
 
     def control_callback(self, data):
         """ Receive control inputs and convert it to linear velocity (m/s)
@@ -84,22 +94,21 @@ class Main():
 
         # Initialize EKF first time when first receive control input
         if self.kalman is None:
-            self.kalman = RobotEKF(wheelbase=self.wheel_base)
+            self.kalman = RobotEKF(wheelbase=self.wheel_base, init_x=self.init_x, init_y=self.init_y, init_heading =self.init_heading)
 
         angular_velocity = np.array([data.velocity[0], data.velocity[1]])
 
         # Convert angular velocity to linear velocity then set control_inputs accordingly
         self.control_inputs = angular_velocity * self.wheel_radius
     
-    def com_callback(self, data):
+    def com_callback(self, data, cube):
         """ Receive other cube pose
         :data: PoseWithCovarianceStamped() message of other cube pose
         """
-
-        cube2_pose = data.pose.pose.position
-        self.cube2 = np.array([cube2_pose.x, cube2_pose.y])
-        self.landmark[10.0] = self.cube2
-        self.landmark[11.0] = self.cube2
+        cube_pose = data.pose.pose.position
+        self.cube_states[cube] = np.array([cube_pose.x, cube_pose.y])
+        # rospy.loginfo("CUBE 7 %s", self.cube_states[7])
+        # rospy.loginfo("CUBE 5 %s", self.cube_states[5])
 
     def tag_callback(self, data):
         """ Update step of EKF when AprilTag detected
@@ -109,23 +118,26 @@ class Main():
             return False
         
         prev_pose = self.kalman.pose    
-        dt_pred = rospy.get_time() - self.predict_time
+        # dt_pred = rospy.get_time() - self.predict_time
+        dt_pred = time.time() - self.predict_time
         dt = 0
 
         # Run prediction step at (self.predict_rate) Hz
         if dt_pred > (1 / self.predict_rate) :
-            dt = rospy.get_time() - self.last_update_time
+            # dt = rospy.get_time() - self.last_update_time
+            dt = time.time() - self.last_update_time
             
             # Prediction step
-            self.kalman.predict(self.control_inputs, dt)
-            self.predict_time = rospy.get_time()
-            self.last_update_time = rospy.get_time()
+            self.pose = self.kalman.predict(self.control_inputs, dt)
+            self.predict_time = time.time()#rospy.get_time()
+            self.last_update_time = time.time()#rospy.get_time()
 
             # Calculates error between EKF estimates and ground-truth
             self.calc_err(True, prev_pose)
 
             # Publishes kalman path
             self.pub_kalman()
+            rospy.loginfo("FINAL POSE %s", self.pose.T)
 
         # Run Update Step
         if data.data:
@@ -133,15 +145,26 @@ class Main():
 
             # If didn't run prediction step, run it
             if dt_pred < (1 / self.predict_rate):
-                dt = rospy.get_time() - self.last_update_time
+                # dt = rospy.get_time() - self.last_update_time
+                dt = time.time() - self.last_update_time
             u = self.control_inputs  #np.array([0, 0])        #self.control_inputs     
             z = np.array([[distance], [yaw]])
-            pose2 = self.landmark[tag_id]   
+
+            rospy.loginfo("DETECTED Z (%s, %s)", z[0], z[1])
+
+            if tag_id < 28:
+                detected_cube = int(tag_id/4)
+                pose2 = self.cube_states[detected_cube]
+            else:
+                pose2 = self.cube_states[int(tag_id)]   
+            # rospy.loginfo("CONTROL INPUTS %s", u)
 
             # Reset prediction + update step
-            self.kalman.predict(u, dt)
-            self.kalman.update(z, pose2, dt)
-            self.last_update_time = rospy.get_time()
+            self.pose = self.kalman.predict(u, dt)
+            self.pose = self.kalman.update(z, self.pose, pose2, dt)
+            rospy.loginfo("POSE UPDATE %s", self.pose.T)
+
+            self.last_update_time = time.time()#rospy.get_time()
 
             # Calculates error between EKF estimates and ground-truth
             self.calc_err(False, prev_pose)
@@ -201,8 +224,8 @@ class Main():
     def pub_kalman(self):
         """ Publish EKF path and pose
         """
-        quat = quaternion_from_euler(0.0, 0.0, self.kalman.pose[2])
-
+        quat = quaternion_from_euler(0.0, 0.0, self.kalman.pose[2,0])
+        
         # Publish EKF pose
         pose_stamped = PoseWithCovarianceStamped()
         pose_stamped.header.frame_id = "odom"
@@ -219,6 +242,8 @@ class Main():
         pose_stamped.pose.covariance[7] = self.kalman.P[1,1]
         pose_stamped.pose.covariance[35] = self.kalman.P[2,2]
         self.pose_pub.publish(pose_stamped)
+
+        
 
         # Publish EKF path
         path_pose = PoseStamped()

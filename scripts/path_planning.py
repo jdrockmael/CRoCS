@@ -10,6 +10,7 @@ import rospy
 import time
 import math
 from std_msgs.msg import Int64, Int64MultiArray
+from gazebo_ros_link_attacher.srv import Attach, AttachRequest, AttachResponse
 
 class Location(object):
     def __init__(self, x=-1, y=-1):
@@ -308,13 +309,17 @@ class Main():
         self.path_state_pub = rospy.Publisher("/path_state", Int64MultiArray, queue_size=1)
         self.path_step_pub = rospy.Publisher("/path_step", Int64, queue_size=1)
         rospy.Subscriber("/path_state", Int64MultiArray, self.path_state_sub, queue_size=1)
+        self.attach_srv = rospy.ServiceProxy('/link_attacher_node/attach', Attach)
+        self.detach_srv = rospy.ServiceProxy('/link_attacher_node/detach', Attach)
+        self.detach_srv.wait_for_service()
+        self.attach_srv.wait_for_service()
 
         self.calc_paths()
-        self.path_state = [0] * 7
+        self.path_state = [0] * self.size
         self.time_step = 0
                 
         time.sleep(2)
-        self.paths = [None] * 7
+        self.paths = [None] * self.size
         for i in range(len(self.paths)):
             self.paths[i] = rospy.get_param("/cbs_output/schedule/cube" + str(i+1))
 
@@ -328,7 +333,8 @@ class Main():
         # ROS
         dimension = rospy.get_param("/cbs_input/map/dimensions")
         agents = rospy.get_param("/cbs_input/agents")
-
+        self.size = len(agents)
+        rospy.loginfo("WITNESS MEEEEEEEEEEE %s", self.size)
         # Sim
         env = Environment(dimension, agents) #, obstacles)
 
@@ -350,7 +356,7 @@ class Main():
         :data: Int64Arr, len = # of cubes in the system, 0 for beginning of time step, 1 for finished turning, and 2 for finished step
         """
         self.path_state = list(data.data)
-
+        rospy.loginfo(self.path_state)
         # If all bots are finished with the current time step
         if self.path_state.count(2) == len(self.paths):
             if self.time_step+1 != len(self.longest_path):
@@ -359,12 +365,127 @@ class Main():
 
                 # Reset path states to 0 and move to the next time step
                 new_state = Int64MultiArray()
-                new_state.data = [0] * 7
+                new_state.data = [0] * self.size
                 self.path_state_pub.publish(new_state)
                 self.path_step_pub.publish(self.time_step)
             else: 
                 rospy.loginfo("FINISH PATH")
+                new_state = Int64MultiArray()
+                new_state.data = [3] * self.size
+                self.path_state_pub.publish(new_state)
+
+        if self.path_state.count(4) == len(self.paths):
+            rospy.loginfo("Attaching cube1 and cube2")
+            req = AttachRequest()
+            req.model_name_1 = "cube1"
+            req.link_name_1 = "cube1_dummy"
+            req.model_name_2 = "cube2"
+            req.link_name_2 = "cube2_dummy"
+
+            self.attach_srv.call(req)
+
+            req = AttachRequest()
+            req.model_name_1 = "cube2"
+            req.link_name_1 = "cube2_dummy"
+            req.model_name_2 = "cube3"
+            req.link_name_2 = "cube3_dummy"
+
+            self.attach_srv.call(req)
+
+            req = AttachRequest()
+            req.model_name_1 = "cube3"
+            req.link_name_1 = "cube3_dummy"
+            req.model_name_2 = "cube4"
+            req.link_name_2 = "cube4_dummy"
+
+            self.attach_srv.call(req)
+
+            req = AttachRequest()
+            req.model_name_1 = "cube4"
+            req.link_name_1 = "cube4_dummy"
+            req.model_name_2 = "cube5"
+            req.link_name_2 = "cube5_dummy"
+
+            self.attach_srv.call(req)
+
+            req = AttachRequest()
+            req.model_name_1 = "cube5"
+            req.link_name_1 = "cube5_dummy"
+            req.model_name_2 = "cube6"
+            req.link_name_2 = "cube6_dummy"
+
+            self.attach_srv.call(req)
+
+            req = AttachRequest()
+            req.model_name_1 = "cube6"
+            req.link_name_1 = "cube6_dummy"
+            req.model_name_2 = "cube7"
+            req.link_name_2 = "cube7_dummy"
+
+            self.attach_srv.call(req)
+
+            time.sleep(2)
+            new_state = Int64MultiArray()
+            new_state.data = [5] * self.size
+            self.path_state_pub.publish(new_state)
+        
+        if self.path_state.count(6) == len(self.paths):
+            rospy.loginfo("Attaching cube1 and cube2")
+            req = AttachRequest()
+            req.model_name_1 = "cube1"
+            req.link_name_1 = "cube1_dummy"
+            req.model_name_2 = "cube2"
+            req.link_name_2 = "cube2_dummy"
+
+            self.detach_srv.call(req)
+
+            req = AttachRequest()
+            req.model_name_1 = "cube2"
+            req.link_name_1 = "cube2_dummy"
+            req.model_name_2 = "cube3"
+            req.link_name_2 = "cube3_dummy"
+
+            self.detach_srv.call(req)
+
+            req = AttachRequest()
+            req.model_name_1 = "cube3"
+            req.link_name_1 = "cube3_dummy"
+            req.model_name_2 = "cube4"
+            req.link_name_2 = "cube4_dummy"
+
+            self.detach_srv.call(req)
+
+            req = AttachRequest()
+            req.model_name_1 = "cube4"
+            req.link_name_1 = "cube4_dummy"
+            req.model_name_2 = "cube5"
+            req.link_name_2 = "cube5_dummy"
+
+            self.detach_srv.call(req)
+
+            req = AttachRequest()
+            req.model_name_1 = "cube5"
+            req.link_name_1 = "cube5_dummy"
+            req.model_name_2 = "cube6"
+            req.link_name_2 = "cube6_dummy"
+
+            self.detach_srv.call(req)
+
+            req = AttachRequest()
+            req.model_name_1 = "cube6"
+            req.link_name_1 = "cube6_dummy"
+            req.model_name_2 = "cube7"
+            req.link_name_2 = "cube7_dummy"
+
+            self.detach_srv.call(req)
+
+            time.sleep(2)
+            new_state = Int64MultiArray()
+            new_state.data = [7] * self.size
+            self.path_state_pub.publish(new_state)
+
     
 if __name__ == '__main__':
     rospy.init_node('path_planning', anonymous=False)
+
     Main()

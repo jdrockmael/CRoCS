@@ -54,26 +54,28 @@ class AprilCam():
                 id = tag_side.tag_id
                 tag = None
                 # Convert reading to proper distance for 1x1 tags
-                if id == 10:
+                if (id % 4) != 0 and id < 28:
                     tag = self.at_detector.detect(grayscale, estimate_tag_pose=True, camera_params=self.cam_param, tag_size=0.02)[i] #V0.01632857142
                 else:
                     tag = tag_side
-
                 x = tag.pose_t[0]
                 z = tag.pose_t[2]
-
+               
                 # # Convert reading to proper distance for 1x1 tags
                 # if id == 10:
                 #     x = self.pose2real(x)
                 #     z = self.pose2real(z)
-                distance = z + 0.0762
+                distance = z + 0.036576#0.0762
                 # rospy.loginfo(z)
                 
                 hor_distance = x
+
+                # rospy.loginfo("FORWARD & HORIZONTAL DISTANCE (%s, %s)", distance, hor_distance)
                 range = math.sqrt(distance**2 + hor_distance**2)
-                bearing = math.atan2(hor_distance, distance)
-                if id == 10:
-                    range += 0.0762
+                bearing = -math.atan2(hor_distance, distance)
+
+                # if id == 10:
+                #     range += 0.0762
 
                 if id not in self.prevM:
                     self.prevM[id] = {"range": collections.deque(maxlen=10), "bearing": collections.deque(maxlen=10)}

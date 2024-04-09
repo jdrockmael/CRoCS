@@ -1,5 +1,6 @@
 <sdf version='1.7'>
   <world name='default'>
+    <plugin name="ros_link_attacher_plugin" filename="libgazebo_ros_link_attacher.so"/>
     <light name='sun' type='directional'>
       <cast_shadows>1</cast_shadows>
       <pose>0 0 10 0 -0 0</pose>
@@ -87,7 +88,6 @@
       <elevation>0</elevation>
       <heading_deg>0</heading_deg>
     </spherical_coordinates>
-
     <model name='Apriltag36_11_00028'>
       <link name='main'>
         <pose>0 0 0 0 -0 0</pose>
@@ -195,10 +195,10 @@
       <iterations>107659</iterations>
 
       <model name='Apriltag36_11_00028'>
-        <pose>-1.0 1.75 0.085823 -3.14159 -1.56787 0</pose>
+        <pose>-0.762 2.286 0.085823 1.56787 -1.56787 1.56787</pose>
         <scale>1 1 1</scale>
         <link name='main'>
-          <pose>-1.0 1.75 0.085823 -3.14159 -1.56787 0</pose>
+          <pose>-0.762 2.286 0.085823 1.56787 -1.56787 1.56787</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
@@ -206,10 +206,10 @@
       </model>
 
       <model name='Apriltag36_11_00029'>
-        <pose>1.5 4.5 0.085823 0 -1.56787 0</pose>
+        <pose>2.286 5.334 0.085823 1.56787 -1.56787 0</pose>
         <scale>1 1 1</scale>
         <link name='main'>
-          <pose>1.5 4.5 0.085823 0 -1.56787 0</pose>
+          <pose>2.286 5.334 0.085823 1.56787 -1.56787 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
@@ -217,10 +217,10 @@
       </model>
 
       <model name='Apriltag36_11_00030'>
-        <pose>1.5 -1.5 0.085823 0 -1.56787 0</pose>
+        <pose>2.286 -0.762 0.085823 -1.56787 -1.56787 0</pose>
         <scale>1 1 1</scale>
         <link name='main'>
-          <pose>1.5 -1.5 0.085823 0 -1.56787 0</pose>
+          <pose>2.286 -0.762 0.085823 -1.56787 -1.56787 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
@@ -228,10 +228,10 @@
       </model>
 
       <model name='Apriltag36_11_00031'>
-        <pose>3.0 1.75 0.085823 0 -1.56787 0</pose>
+        <pose>10 2.286 0.085823 0 -1.56787 0</pose>
         <scale>1 1 1</scale>
         <link name='main'>
-          <pose>3.0 1.75 0.085823 0 -1.56787 0</pose>
+          <pose>10 2.286 0.085823 0 -1.56787 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
