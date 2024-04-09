@@ -67,14 +67,19 @@ def measure():
 
     rospy.loginfo("Starting Arducam node")
     cam = AprilCam()
+    no_tag = False
 
     while not rospy.is_shutdown():
         sleep(0.05)              # Sleep for 5ms
         tags = cam.get_measurements()
         if tags:
+            no_tag = False
             for measurement in tags:
                 range_pub.publish(measurement)
                 #rospy.logerr(measurement)
+        elif not no_tag:
+            no_tag = True
+            range_pub.publish(Float32MultiArray(data=[]))
 
 if __name__ == "__main__":
     try:
