@@ -17,36 +17,22 @@ def update_reading(cam : Float32MultiArray):
         cam_readings = None
 
 def control_loop():
-    prev_error = cam_readings[0]
-    tolerance = 0.1
-    delta_t = 0.05
 
-    p = 1
-    i = 0.5
-    d = 0
+    vel = 1
+    head = None
+    sign_of_head = None
 
-    area = 0.0
-
-    while(cam_readings != None and lock_on and (abs(cam_readings[0]) > tolerance or abs(cam_readings[1]) > 0.5)):
-        if cam_readings == None:
-            break
-        else:
-            curr_error = cam_readings[0]
+    while(not rospy.is_shutdown() and lock_on):
+        if cam_readings != None:
+            head = cam_readings[0]
+            sign_of_head = head / abs(head) if head != 0 else (head + 1) / (abs(head) + 1)
         
-        area += curr_error * delta_t
-        
-        rospy.logerr(cam_readings)
+            rospy.logerr(cam_readings)
 
-        angular_err_p = curr_error *p
-        angular_err_i = area * i
-        angular_err_d = ((curr_error-prev_error)/delta_t) * d
-
-        omega = angular_err_p + angular_err_i + angular_err_d
-
-        speed_pub.publish(Float32MultiArray(data=[0.0, omega]))
-
-        prev_error = curr_error
-        sleep(delta_t)
+            speed_pub.publish(Float32MultiArray(data=[0.0, (sign_of_head * vel)]))
+            sleep(abs(head/vel) + 0.2)
+            speed_pub.publish(Float32MultiArray(data=[0.0, 0.0]))
+            sleep(0.1)
     
     speed_pub.publish(Float32MultiArray(data=[0.0, 0.0]))
 
