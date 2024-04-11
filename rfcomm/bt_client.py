@@ -61,19 +61,9 @@ def rec_msg(socket):
             does = data.split(b'[')
             this = does[1].split(b']')
             work = this[0].split(b',')
-            x, y, theta = work[0], work[1], work[2]
+            x, y, theta = float(work[0]), float(work[1]), float(work[2])
             req_pos = [x, y, theta]
             print(x + y + theta)
-
-
-        if b'desired' in data:
-            does = data.split(b'[')
-            this = does[1].split(b']')
-            work = this[0].split(b',')
-            x, y, theta = float(work[0]), float(work[1]), float(work[2])
-            des_pos = [x, y, theta]
-            print(x + y + theta)
-
         
         if b'locked' in data:
            locked = True
