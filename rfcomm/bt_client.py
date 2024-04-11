@@ -63,7 +63,7 @@ def rec_msg(socket):
             work = this[0].split(b',')
             x, y, theta = float(work[0]), float(work[1]), float(work[2])
             req_pos = [x, y, theta]
-            print(x + y + theta)
+            print(x, y, theta)
         
         if b'locked' in data:
            locked = True
