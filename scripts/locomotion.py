@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 import rospy
 from time import sleep
-from std_msgs.msg import Float32MultiArray
+from std_msgs.msg import Float32MultiArray, Bool
 from gpiozero import Device, PhaseEnableMotor, RotaryEncoder
 from gpiozero.pins.pigpio import PiGPIOFactory
 from math import pi, sin, cos
@@ -36,6 +36,11 @@ def init():
 
     motor_left.stop()
     motor_right.stop()
+
+def kill_motors(turn_off : Bool):
+    if turn_off.data:
+        motor_left.stop()
+        motor_right.stop()
 
 def get_distance():
     tick_per_rev = 128.0
@@ -175,6 +180,7 @@ if __name__ == '__main__':
     rospy.init_node('locomotion')
     init()
     rospy.Subscriber("robot_twist", Float32MultiArray, update_desired)
+    rospy.Subscriber("kill_motors", Bool, kill_motors)
 
     vel_thread = Thread(target=monitor_pose)
     vel_thread.start()
