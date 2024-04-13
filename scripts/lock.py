@@ -23,6 +23,7 @@ def control_loop():
     vel = 1
     head = None
     sign_of_head = None
+    prev = 0.0
 
     while(not rospy.is_shutdown() and lock_on):
         if cam_readings != None:
@@ -31,11 +32,11 @@ def control_loop():
 
             rospy.logerr(cam_readings)
 
-            if abs(head) > tolerance:
+            if abs(head) > tolerance and prev != head:
                 speed_pub.publish(Float32MultiArray(data=[0.0, (sign_of_head * vel)]))
                 sleep(0.01)
                 motor_stop.publish(Bool(data=True))
-                sleep(0.1)
+                prev = head
             else:
                 motor_stop.publish(Bool(data=True))
     
@@ -44,8 +45,6 @@ def control_loop():
 if __name__ == '__main__':
     rospy.init_node('lock')
     rospy.Subscriber("range", Float32MultiArray, update_reading)
-    while cam_readings == None:
-        pass
+
     control_loop()
-    rospy.spin()
     
