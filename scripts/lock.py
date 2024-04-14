@@ -5,6 +5,7 @@ from time import sleep
 
 speed_pub = rospy.Publisher("robot_twist", Float32MultiArray, queue_size=1)
 motor_stop = rospy.Publisher("kill_motors", Bool, queue_size=1)
+grip_pub = rospy.Publisher("gripper_control", Bool, queue_size=1)
 
 cam_readings = None # heading and distance
 lock_on = True
@@ -23,6 +24,7 @@ def control_loop():
     vel = 1
     head = None
     sign_of_head = None
+    prev = 0.0
 
     while(not rospy.is_shutdown() and lock_on):
         if cam_readings != None:
@@ -31,21 +33,19 @@ def control_loop():
 
             rospy.logerr(cam_readings)
 
-            if abs(head) > tolerance:
+            if abs(head) > tolerance and prev != head:
                 speed_pub.publish(Float32MultiArray(data=[0.0, (sign_of_head * vel)]))
                 sleep(0.01)
                 motor_stop.publish(Bool(data=True))
-                sleep(0.1)
+                prev = head
             else:
                 motor_stop.publish(Bool(data=True))
     
-    speed_pub.publish(Float32MultiArray(data=[0.0, 0.0]))
+    motor_stop.publish(Bool(data=True))
 
 if __name__ == '__main__':
     rospy.init_node('lock')
     rospy.Subscriber("range", Float32MultiArray, update_reading)
-    while cam_readings == None:
-        pass
+
     control_loop()
-    rospy.spin()
     
