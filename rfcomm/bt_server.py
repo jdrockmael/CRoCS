@@ -72,10 +72,10 @@ def handle_msg(croc, data):
         elif b'locked' in data[1]:
             list_of_clients[croc].send(b'you_are_locked')
     elif name in list_of_clients:
-        if b'requesting' not in data[1]:
+        if b'path' not in data[1]:
             pos_list[croc] = data[1]
-        elif b'requesting' in data[1]:
-            list_of_clients[croc].send(b'requested_position:' + pos_list[name])
+        elif b'path' in data[1]:
+            list_of_clients[croc].send(b'path:' + pos_list[name])
         list_of_clients[name].send(data[1])
     else:
         print(data[0], "is not a connected croc\n")
