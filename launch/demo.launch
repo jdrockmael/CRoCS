@@ -1,7 +1,7 @@
 <launch>
     <!-- Params for diff driving with odom -->
     <include file="$(find gazebo_ros)/launch/empty_world.launch">
-    <arg name="world_name" value="$(find CRoCS)/worlds/demo_test.sdf"/>
+    <arg name="world_name" value="$(find CRoCS)/worlds/demo.sdf"/>
     </include>
 
     <env name="GAZEBO_MODEL_PATH" value="$GAZEBO_MODEL_PATH:$(find CRoCS)/models"/>
@@ -10,7 +10,6 @@
 
     <!-- Joint velocity is in angular velocity, w = v/r -->
     <node name="cbs" pkg="CRoCS" type="cbs.py" output="screen"/>
-
 
     <!-- BEGIN CUBE 1 -->
     <group ns="cube1">
@@ -104,7 +103,7 @@
         </include>
     </group>
 
-    <arg name="node_start_delay" default="30.0" />  
+    <!-- <arg name="node_start_delay" default="5.0" />   -->
     <node pkg="CRoCS" name="path_planning" type="path_planning.py" output="screen"/> 
     <!-- <node name="visualize" pkg="CRoCS" type="visualize.py" launch-prefix="bash -c 'sleep $(arg node_start_delay); $0 $@' " output="screen"/> -->
 

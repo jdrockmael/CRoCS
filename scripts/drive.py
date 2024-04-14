@@ -6,15 +6,12 @@ import math
 from std_msgs.msg import Bool
 import numpy as np
 
-import yaml
-import argparse
 import math
 from gazebo_msgs.msg import ModelStates, LinkStates
 from tf.transformations import euler_from_quaternion, quaternion_from_euler
 from std_msgs.msg import Int64, Int64MultiArray
-from collections import Counter
 
-# Convert CBS coordinates to real world coordinates and vice versa. 39.37 for inches and meter conversion. 14 is for robot radius 3in + 4in cspace
+# Convert CBS coordinates to real world coordinates and vice versa. 39.37 for inches and meter conversion. 15 is for robot radius 3in*2 + 4.5in*2 cspace
 def path2world(path_pos):
     return (float(path_pos) * 15.0 / 39.37)
 
@@ -30,10 +27,9 @@ def normalize(angle):
 
 class Main():
     def __init__(self):
-        self.cube = rospy.get_param('drive/robot_name')       
-        self.cube_id = int(self.cube[-1])
-        # self.x_init = rospy.get_param('drive/x_pos')   
-        self.vel_pub = rospy.Publisher(str("/" + self.cube + "/diff_drive_controller/cmd_vel"), Twist, queue_size=10)
+        self.cube_id = rospy.get_param('drive/robot_name')       
+        self.cube_id = int(self.cube_id[-1])
+        self.vel_pub = rospy.Publisher(str("/cube" + str(self.cube_id) + "/diff_drive_controller/cmd_vel"), Twist, queue_size=10)
 
         self.path_state_pub = rospy.Publisher("/path_state", Int64MultiArray, queue_size=1)
         self.path_step_pub = rospy.Publisher("/path_step", Int64, queue_size=1)
@@ -47,30 +43,12 @@ class Main():
         self.d = 0.039624
         self.path_state = [0] * 7
         self.time_step = -1
-        self.turn_speed = math.pi/8
-        self.forward_speed = 0.1
-        self.slow = 0.8
+        self.turn_speed = math.pi/16
+        self.forward_speed = 0.05
+        self.slow = self.cube_id / 10
         self.rate = rospy.Rate(100)
                 
         time.sleep(5)
-        
-        # dis = 0.2286 * abs(self.cube_id-7)
-        # rospy.loginfo("CUBE %s going %s", self.cube_id, dis)
-        # self.drive(dis, 0.05)
-        # if self.cube_id > 2:
-        #     self.drive(0.2286 * abs(self.cube_id-7), 0.05)
-        # else:
-        #     self.drive(0.2286 * abs(self.cube_id-7 - 0.01), 0.05)
-        # time.sleep(1000)
-        # rospy.loginfo("GAYYYYYYYY %s", self.cube_id)
-
-        # if self.cube_id == 3:
-        #     # self.drive(path2world(0.5), 0.05 )
-        #     self.drive(0.2286, 0.05)
-
-        # if self.cube_id == 2:
-        #     # self.drive(path2world(0.5), 0.05 )
-        #     self.drive(0.2286*2 - 0.01, 0.05)
 
         if rospy.has_param("/cbs_output"):
             self.paths = [None] * 7
@@ -86,85 +64,48 @@ class Main():
         :data: Int64Arr, len = # of cubes in the system, 0 for beginning of time step, 1 for finished turning, and 2 for finished step
         """
         self.path_state = list(data.data)
-        if self.path_state.count(3) > 3:
-            # rospy.loginfo(self.path_state.count(3))
-
-            # delta_x, delta_y = self.dest[0] - self.pos[0], self.dest[1] - self.pos[1]
-
-            # # Calculate angle needed to turn towards goal position
-            # turning_angle = 0
-            # if abs(delta_x) > 0.01 or abs(delta_y) > 0.01:
-            #     turning_angle = math.atan2(delta_y, delta_x) - self.heading
-            # turning_angle = normalize(turning_angle)
-
-            # rospy.loginfo("%s  HEADING %s TURNING_ANGLE %s", self.cube, round(self.heading,5), round(turning_angle, 5))
-            # self.turn(turning_angle, self.turn_speed)
-            # if self.cube_id > 2:
-            #     self.drive(0.2286 * abs(self.cube_id-7), 0.05)
-            # else:
+        if self.path_state.count(3) == 7:
             self.locking()
             
-        if self.path_state.count(5) > 3:
+        if self.path_state.count(5) == 7:
             self.drive(2.5, 0.1)
 
-            time.sleep(3)
+            time.sleep(2)
             if self.cube_id == 1:
                 new_state = Int64MultiArray()
                 new_state.data = [6] * 7
                 self.path_state_pub.publish(new_state)
 
-        if self.path_state.count(7) > 5:
+        if self.path_state.count(7) == 7:
+            time.sleep((30)/self.cube_id)
 
-            time.sleep((self.slow+2)/self.cube_id)
+            detach_dist = float(self.cube_id/7)
+            self.detach(detach_dist)
 
-            if self.cube_id == 7: 
-                self.drive(0.5, 0.1)
-                self.turn(np.pi/2, math.pi/8)
-                self.drive(0.5, 0.1)
-
-            if self.cube_id == 6: 
-                self.drive(0.5, 0.1)
-                self.turn(-np.pi/2, math.pi/8)
-                self.drive(0.5, 0.1)
-
-            if self.cube_id == 5: 
-                self.drive(0.5, 0.1)
-                self.turn(np.pi/2, math.pi/8)
-                self.drive(0.5, 0.1)
-
-            if self.cube_id == 4: 
-                self.drive(0.5, 0.1)
-                self.turn(-np.pi/2, math.pi/8)
-                self.drive(0.5, 0.1)
-
-            if self.cube_id == 3: 
-                self.drive(0.5, 0.1)
-                self.turn(np.pi/2, math.pi/8)
-                self.drive(0.5, 0.1)
-
-            if self.cube_id == 2: 
-                self.drive(0.5, 0.1)
-                self.turn(-np.pi/2, math.pi/8)
-                self.drive(0.5, 0.1)
-
-            if self.cube_id == 1: 
-                self.drive(0.5, 0.1)
-                self.turn(np.pi/2, math.pi/8)
-                self.drive(0.5, 0.1)
+    def detach(self, dist):
+        turn_angle = np.pi/2
+        if (self.cube_id % 2) == 0:
+            turn_angle = -turn_angle
+        self.drive(dist, 0.1)
+        self.turn(turn_angle)
+        self.drive(dist, 0.1)
 
     def locking(self):
         turning_angle = - self.heading
-        # turning_angle = normalize(turning_angle)
 
-        rospy.loginfo("%s  HEADING %s TURNING_ANGLE %s", self.cube, round(self.heading,5), round(turning_angle, 5))
-        self.turn(turning_angle, self.turn_speed)
+        self.turn(turning_angle)
 
-        if self.cube_id > 2:
-            self.drive(0.2286 * abs(self.cube_id-7), 0.05)
+        if self.cube_id < 6:
+            self.drive(0.24 * abs(self.cube_id-7), 0.05)
+        elif self.cube_id < 5:
+            self.drive(0.245 * abs(self.cube_id-7), 0.05)
+        elif self.cube_id < 4:
+            self.drive(0.248 * abs(self.cube_id-7), 0.05)
         else:
-            self.drive(0.2286 * abs(self.cube_id-7-0.09), 0.05)
+            self.drive(0.25 * abs(self.cube_id-7), 0.05)
 
-        time.sleep(self.slow/self.cube_id)
+        time.sleep(self.slow)
+
         if self.cube_id == 1:
             curr_state = self.path_state
             curr_state[self.cube_id - 1] = 4
@@ -179,25 +120,19 @@ class Main():
         """
         self.time_step = data.data
 
-        # if rospy.has_param("/cbs_output") and self.time_step == 0:
-        #     self.paths = [None] * 7
-        #     for i in range(len(self.paths)):
-        #         self.paths[i] = rospy.get_param("/cbs_output/schedule/cube" + str(i+1))
-
-        #     self.path = self.paths[self.cube_id - 1]
-
         # Get goal position at current time step then drive towards it
         if self.time_step < len(self.path):
             step = self.path[self.time_step]
-            rospy.loginfo("%s TIME %s CURR (%s, %s) GOAL (%s, %s)", self.cube, step['t'], world2path(self.pos[0]), world2path(self.pos[1]), step['x'], step['y'])
+            rospy.loginfo("%s TIME %s CURR (%s, %s) GOAL (%s, %s)", str(self.cube_id), step['t'], world2path(self.pos[0]), world2path(self.pos[1]), step['x'], step['y'])
+
             goal = np.array([path2world(step['x']), path2world(step['y'])])
             self.drive_to_point(goal)
 
         # If finished with the last time step, turn towards the gap/0 heading
         if self.time_step+1 == len(self.path):
-            self.turn(-self.heading, self.turn_speed)
+            self.turn(-self.heading)
 
-        time.sleep(self.slow/self.cube_id)
+        time.sleep(self.slow)
 
         # Update path state to finished time step state (2)
         curr_state = self.path_state
@@ -215,16 +150,22 @@ class Main():
 
         # Calculate angle needed to turn towards goal position
         turning_angle = 0
-        if abs(delta_x) > 0.01 or abs(delta_y) > 0.01:
+        if abs(delta_x) > 0.02 or abs(delta_y) > 0.02:
             turning_angle = math.atan2(delta_y, delta_x) - self.heading
         turning_angle = normalize(turning_angle)
 
-        rospy.loginfo("%s  HEADING %s TURNING_ANGLE %s", self.cube, round(self.heading,5), round(turning_angle, 5))
-        self.turn(turning_angle, self.turn_speed)
-
+        rospy.loginfo("%s  HEADING %s TURNING_ANGLE %s", str(self.cube_id), round(self.heading,5), round(turning_angle, 5))
+        self.turn(turning_angle)
+        
         # Calculate the distance forward to travel after turning to take offset wheel center into account
         delta_x, delta_y = self.dest[0] - self.pos[0], self.dest[1] - self.pos[1]
         distance = math.sqrt(delta_x**2 + delta_y**2)
+
+        if self.time_step == (len(self.path) - 1):
+            if self.heading > 0:
+                distance -= self.d
+            else:
+                distance += self.d
 
         # Wait until all cubes finished turning before start driving forward
         while self.path_state.count(1) + self.path_state.count(2) < len(self.paths):
@@ -235,6 +176,7 @@ class Main():
             distance -= self.d
 
         self.drive(distance, self.forward_speed)
+        # self.drive(path2world(distance), self.forward_speed)
             
     def drive(self, distance, speed):
         """ Drive the robot forward for the given distance at the given speed
@@ -260,9 +202,9 @@ class Main():
         msg.angular.z = 0.0
         self.vel_pub.publish(msg)
 
-        time.sleep(self.slow/self.cube_id)
+        time.sleep(self.slow)
 
-    def turn(self, angle, speed):
+    def turn(self, angle):
         """ Turn the robot at the given angle and speed
         :angle: angle to turn [-pi, pi]. Positive to turn left, negative to turn right
         :speed: angular speed to turn in rad/s
@@ -273,7 +215,7 @@ class Main():
         while abs(self.heading - target) > 0.02:
             msg = Twist()
             msg.linear.x = 0
-            msg.angular.z = speed * np.sign(angle)
+            msg.angular.z = self.turn_speed * np.sign(angle)
             self.vel_pub.publish(msg)
             self.rate.sleep()
 
@@ -284,7 +226,7 @@ class Main():
         self.vel_pub.publish(msg)
 
         # Variable wait to avoid overlapping between bots
-        time.sleep(self.slow/self.cube_id)
+        time.sleep(self.slow)
 
         # Update path state to finished turning state (1)
         curr_state = self.path_state
@@ -292,16 +234,17 @@ class Main():
         new_state = Int64MultiArray()
         new_state.data = curr_state
         self.path_state_pub.publish(new_state)
-        time.sleep(self.slow/self.cube_id)
+        time.sleep(self.slow)
 
     def true_sub(self, data):
         """ Publish ground-truth gazebo path 
         :data: LinkStates message from /gazebo/link_states
         """
+
         # Find index number of cube link
         if self.link_id == 0:
             for i, link in enumerate(data.name):
-                if link == str(self.cube + "::" + self.cube + "_dummy"):
+                if link == str("cube" + str(self.cube_id) + "::cube" + str(self.cube_id) + "_dummy"):
                     self.link_id = i
 
         # Set pose
@@ -313,25 +256,11 @@ class Main():
 
         except IndexError:
             for i, link in enumerate(data.name):
-                if link == str(self.cube + "::" + self.cube + "_dummy"):
+                # if link == str(self.cube + "::" + self.cube + "_dummy"):
+                if link == str("cube" + str(self.cube_id) + "::cube" + str(self.cube_id) + "_dummy"):
                     self.link_id = i
             pose = data.pose[self.link_id]
-            self.pos = np.array([pose.position.x, pose.position.y])
-
-    def square(self, x_init):
-        turn_speed = math.pi / 16
-        turn_angle = math.pi/2
-        forward = 2.5
-        forward_speed = 0.03
-        self.drive(2.5 - x_init, forward_speed)
-        self.turn(turn_angle, turn_speed)
-        self.drive(forward, forward_speed)
-        self.turn(turn_angle, turn_speed)
-        self.drive(forward, forward_speed)
-        self.turn(turn_angle, turn_speed)
-        self.drive(forward, forward_speed)
-        self.turn(turn_angle, turn_speed)
-        
+            self.pos = np.array([pose.position.x, pose.position.y])        
     
 if __name__ == '__main__':
     rospy.init_node('drive', anonymous=False)
