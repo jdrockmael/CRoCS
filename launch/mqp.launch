@@ -4,4 +4,7 @@
     <!--node pkg="CRoCS" type="ik.py" name="ik"/-->
     <node pkg="CRoCS" type="lock.py" name="lock"/>
     <node pkg="CRoCS" type="locomotion.py" name="locomotion"/>
+    <node name="cbs" pkg="CRoCS" type="cbs.py" output="screen"/>
+    <rosparam command="load" file="$(find CRoCS)/scripts/input.yaml" ns="cbs_input" />
 </launch>
+
