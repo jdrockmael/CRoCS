@@ -59,11 +59,12 @@ def rec_msg(socket):
 
     while not flag:
         data = socket.recv(1024)
-        if b'requested' in data:
+        if b'path' in data:
             does = data.split(b'[')
             this = does[1].split(b']')
-            work = this[0].split(b',')
-            x, y, theta = float(work[0]), float(work[1]), float(work[2])
+            work = this[0].split(b', ')
+            x, y = float(work[0]), float(work[1])
+            theta = 0.0
             req_pos = [x, y, theta]
             pose_pub.publish(Float32MultiArray(data=req_pos))
             print(x, y, theta)
@@ -73,7 +74,7 @@ def rec_msg(socket):
            print(b'Locked')
 
         if data:
-            print(data)
+           print(data)
            
 # sends given messages over bluetooth
 # takes the socket the server is connected to
