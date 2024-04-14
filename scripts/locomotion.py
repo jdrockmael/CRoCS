@@ -99,6 +99,11 @@ def drive_one_wheel(pwd, is_left):
     else:
         motor_right.forward(-pwd)
 
+def set_eff(efforts : Float32MultiArray):
+    l, r = efforts.data
+    drive_one_wheel(l, True)
+    drive_one_wheel(r, False)
+
 def calc_fk(wheel_vel, prev_pose, delta_t):
     l = 0.101 # meters
     vl, vr = wheel_vel
@@ -205,6 +210,7 @@ if __name__ == '__main__':
     rospy.Subscriber("robot_twist", Float32MultiArray, update_desired)
     rospy.Subscriber("kill_motors", Bool, kill_motors)
     rospy.Subscriber("gripper_control", Bool, open_grip)
+    rospy.Subscriber("set_effort", Float32MultiArray, set_eff)
 
     vel_thread = Thread(target=monitor_pose)
     vel_thread.start()
