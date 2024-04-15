@@ -27,9 +27,8 @@ def control_loop():
     sign_of_head = None
     prev = 0.0
 
-    grip_pub.publish(Bool(data=True))
     sleep(1)
-    grip_pub.publish(Bool(data=False))
+    grip_pub.publish(Bool(data=True))
 
     while(not rospy.is_shutdown() and lock_on):
         if cam_readings != None:
@@ -38,7 +37,7 @@ def control_loop():
 
             sign_of_head = head / abs(head) if head != 0 else (head + 1) / (abs(head) + 1)
 
-            # rospy.logerr(cam_readings)
+            rospy.logerr(cam_readings)
 
             # if abs(head) > tolerance and prev != head:
             #     #speed_pub.publish(Float32MultiArray(data=[0.0, (sign_of_head * vel)]))
@@ -53,6 +52,8 @@ def control_loop():
                 speed_pub.publish(Float32MultiArray(data=[0.05, 0.0]))
             else:
                 speed_pub.publish(Float32MultiArray(data=[0.0, 0.0]))
+        else:
+            speed_pub.publish(Float32MultiArray(data=[0.0, 0.0]))
 
     speed_pub.publish(Float32MultiArray(data=[0.0, 0.0]))
 
