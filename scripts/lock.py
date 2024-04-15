@@ -30,20 +30,27 @@ def control_loop():
     while(not rospy.is_shutdown() and lock_on):
         if cam_readings != None:
             head = cam_readings[0]
+            dist = cam_readings[1]
+
             sign_of_head = head / abs(head) if head != 0 else (head + 1) / (abs(head) + 1)
 
-            rospy.logerr(cam_readings)
+            # rospy.logerr(cam_readings)
 
-            if abs(head) > tolerance and prev != head:
-                #speed_pub.publish(Float32MultiArray(data=[0.0, (sign_of_head * vel)]))
-                eff_pub.publish(Float32MultiArray(data=[(sign_of_head * 0.2), (sign_of_head * -0.2)]))
-                sleep(0.01)
-                eff_pub.publish(Float32MultiArray(data=[0.0, 0.0]))
-                prev = head
-            else:
-                eff_pub.publish(Float32MultiArray(data=[0.0, 0.0]))
+            # if abs(head) > tolerance and prev != head:
+            #     #speed_pub.publish(Float32MultiArray(data=[0.0, (sign_of_head * vel)]))
+            #     eff_pub.publish(Float32MultiArray(data=[(sign_of_head * 0.2), (sign_of_head * -0.2)]))
+            #     sleep(0.01)
+            #     eff_pub.publish(Float32MultiArray(data=[0.0, 0.0]))
+            #     prev = head
+            # else:
+            #     eff_pub.publish(Float32MultiArray(data=[0.0, 0.0]))
     
-    eff_pub.publish(Float32MultiArray(data=[0.0, 0.0]))
+            if dist > 0.01:
+                speed_pub.publish(Float32MultiArray(data=[0.0, vel]))
+            else:
+                speed_pub.publish(Float32MultiArray(data=[0.0, 0.0]))
+
+    speed_pub.publish(Float32MultiArray(data=[0.0, 0.0]))
 
 if __name__ == '__main__':
     rospy.init_node('lock')
