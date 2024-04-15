@@ -112,7 +112,7 @@ def drive_to_point(desired : Float32MultiArray):
 
     turn_to(desired_heading)
     drive_to(desired_pose)
-    turn_to(desired_pose[2])
+    turn_to(desired_heading)
 
 if __name__ == '__main__':
     rospy.init_node('ik')
