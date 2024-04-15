@@ -50,6 +50,8 @@ def control_loop():
     
             if dist > 0.01:
                 speed_pub.publish(Float32MultiArray(data=[0.05, 0.0]))
+                sleep(dist/0.1)
+                grip_pub.publish(Bool(data=True))
             else: 
                 speed_pub.publish(Float32MultiArray(data=[0.0, 0.0]))
                 sleep(1)
