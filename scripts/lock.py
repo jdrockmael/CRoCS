@@ -27,6 +27,10 @@ def control_loop():
     sign_of_head = None
     prev = 0.0
 
+    grip_pub.publish(Bool(data=True))
+    sleep(1)
+    grip_pub.publish(Bool(data=False))
+
     while(not rospy.is_shutdown() and lock_on):
         if cam_readings != None:
             head = cam_readings[0]
@@ -46,7 +50,7 @@ def control_loop():
             #     eff_pub.publish(Float32MultiArray(data=[0.0, 0.0]))
     
             if dist > 0.01:
-                speed_pub.publish(Float32MultiArray(data=[0.0, vel]))
+                speed_pub.publish(Float32MultiArray(data=[0.05, 0.0]))
             else:
                 speed_pub.publish(Float32MultiArray(data=[0.0, 0.0]))
 
