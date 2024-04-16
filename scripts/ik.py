@@ -36,12 +36,12 @@ def drive_to(pose):
 
     lin_p = 1
     lin_i = 0.5
-    lin_d = 0
+    lin_d = 0.05
 
-    ang_p = 1
+    ang_p = 3
     ang_i = 0.5
 
-    tolerance = 0.02
+    tolerance = 0.1
     delta_t = 0.05
 
     linear_area = 0.0
