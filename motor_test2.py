@@ -1,45 +1,43 @@
-from gpiozero import Device, PhaseEnableMotor, RotaryEncoder
+from gpiozero import Device, PhaseEnableMotor, RotaryEncoder, Servo
 from gpiozero.pins.pigpio import PiGPIOFactory
 #forward ccw, backward cw
 from time import sleep
 
 Device.pin_factory = PiGPIOFactory()
 
-motor1 = PhaseEnableMotor(24, 23)
-motor2 = PhaseEnableMotor(21, 20)
+motor_left = PhaseEnableMotor(24, 23)
+motor_right = PhaseEnableMotor(21, 20)
 
-motor1.stop()
-motor2.stop()
-sleep(1)
+encoder_left = RotaryEncoder(27, 22, max_steps = 256000)
+encoder_right = RotaryEncoder(5, 6, max_steps = 256000)
 
-encoder1 = RotaryEncoder(6, 5, max_steps = 256000)
-encoder2 = RotaryEncoder(22, 27, max_steps = 256000)
+servo1 = Servo(25)
+servo2 = Servo(8)
 
-motor1.forward(0.5)
-motor2.backward(0.5)
+motor_left.stop()
+motor_right.stop()
+
+motor_left.forward(0.5)
+motor_right.backward(0.5)
 sleep(0.01)
 
 i = 0
 while(i < 3000):
-    print("1: ", encoder1.steps)
-    print("2: ", encoder2.steps)
+    print("left: ", encoder_left.steps)
+    print("right: ", encoder_right.steps)
     sleep(0.0001)
     i+=1
 
-'''
-motor1.backward(0.5)
-motor2.forward(0.5)
-sleep(0.01)
-
-
-j = 0
-while(j < 5000):
-    print("1: ", encoder1.steps)
-    print("2: ", encoder2.steps)
-    sleep(0.0001)
-    j+=1
-'''
 sleep(0.0001)
-motor1.stop()
-motor2.stop()
+motor_left.stop()
+motor_right.stop()
 
+# open
+servo1.value = -1
+servo2.value = 1
+sleep(2)
+
+# close
+servo1.value = 1
+servo2.value = -1
+sleep(2)
