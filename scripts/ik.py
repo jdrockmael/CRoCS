@@ -39,7 +39,7 @@ def drive_to(pose):
     lin_d = 0.05
 
     ang_p = 3
-    ang_i = 0.5
+    ang_i = 0.6
 
     tolerance = 0.1
     delta_t = 0.05
