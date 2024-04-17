@@ -27,12 +27,12 @@ servo1.value = -1
 servo2.value = 1
 sleep(2)
 
-motor_left.forward(0.5)
-motor_right.backward(0.5)
+motor_left.forward(0.7)
+motor_right.backward(0.7)
 sleep(0.01)
 
 i = 0
-while(i < 3000):
+while(i < 6000):
     print("left: ", encoder_left.steps)
     print("right: ", encoder_right.steps)
     sleep(0.0001)
