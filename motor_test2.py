@@ -17,6 +17,16 @@ servo2 = Servo(8)
 motor_left.stop()
 motor_right.stop()
 
+# open
+servo1.value = -1
+servo2.value = 1
+sleep(2)
+
+# close
+servo1.value = 1
+servo2.value = -1
+sleep(2)
+
 motor_left.forward(0.5)
 motor_right.backward(0.5)
 sleep(0.01)
@@ -32,12 +42,4 @@ sleep(0.0001)
 motor_left.stop()
 motor_right.stop()
 
-# open
-servo1.value = -1
-servo2.value = 1
-sleep(2)
 
-# close
-servo1.value = 1
-servo2.value = -1
-sleep(2)
