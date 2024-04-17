@@ -32,7 +32,7 @@ motor_right.backward(0.7)
 sleep(0.01)
 
 i = 0
-while(i < 6000):
+while(i < 7000):
     print("left: ", encoder_left.steps)
     print("right: ", encoder_right.steps)
     sleep(0.0001)
