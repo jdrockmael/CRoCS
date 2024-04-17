@@ -18,13 +18,13 @@ motor_left.stop()
 motor_right.stop()
 
 # open
-servo1.value = -1
-servo2.value = 1
+servo1.value = 1
+servo2.value = -1
 sleep(2)
 
 # close
-servo1.value = 1
-servo2.value = -1
+servo1.value = -1
+servo2.value = 1
 sleep(2)
 
 motor_left.forward(0.5)
