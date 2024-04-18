@@ -121,12 +121,20 @@ if __name__ == "__main__":
         client_threads.append(curr_thread)
         curr_thread.start()
 
+    # paths = [None] * list_of_clients.size()
+    time_step = 0
+    paths = {}
     if rospy.has_param("/cbs_output"):
-            self.paths = [None] * list_of_clients.size()
-            for i in range(len(self.paths)):
-                self.paths[i] = rospy.get_param("/cbs_output/schedule/cube" + str(i+1))
+            for i in range(len(paths)):     # Replace this for loop to iterating through list of clients instead 
+            
+                paths[i] = rospy.get_param("/cbs_output/schedule/croc" + str(i+1))      
 
-            self.path = self.paths[self.cube_id - 1]
+    longest_path = max(paths, key= lambda croc: len(set(paths[croc])))
+
+
+    step = paths[time_step]
+    x, y = step['x'], step['y']
+
     # kill threads once they finish
     send_thread.join()
     for t in client_threads:
