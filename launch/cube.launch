@@ -84,7 +84,7 @@
     <param name="default_topic" value="diff_drive_controller/cmd_vel"/>
   </node>
 
-  <node if="$(arg localization)" pkg="CRoCS" name="cam" type="cam.py" output="screen">
+  <node if="$(arg localization)" pkg="CRoCS" name="cam" type="simCam.py" output="screen">
       <param name="robot_name" value="$(arg robot_name)" />
       <param name="sim" value="$(arg sim)" />
   </node>
