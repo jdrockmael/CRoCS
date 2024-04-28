@@ -7,6 +7,7 @@ from math import atan2, sqrt, pi
 curr_pose = [0.0, 0.0, 0.0]
 speed_pub = rospy.Publisher("robot_twist", Float32MultiArray, queue_size=1)
 
+#Calculates the difference between the current and desired headings
 def calc_angle_diff(desired, actual):
     diff = desired - actual
     if diff >= pi:
@@ -15,6 +16,7 @@ def calc_angle_diff(desired, actual):
         diff = 2*pi + diff
     return diff
 
+#Calculates euclidean distance between two points
 def calc_distance(from_point, to_point):
     curr_distance = sqrt(pow(to_point[0]-from_point[0], 2) + pow(to_point[1]-from_point[1], 2))
     vector_heading = atan2(to_point[1] - from_point[1], to_point[0] - from_point[0])
@@ -25,10 +27,12 @@ def calc_distance(from_point, to_point):
     else:
         return curr_distance
 
+#Simple updater for the current pose for the ROS publisher
 def update_pose(pose : Float32MultiArray):
     global curr_pose
     curr_pose = pose.data
 
+#Does a drive to point with PID controller
 def drive_to(pose):
     prev_distance = calc_distance((curr_pose[0], curr_pose[1]), (pose[0], pose[1]))
     desired_heading = atan2(pose[1] - curr_pose[1], pose[0] - curr_pose[0])
@@ -77,6 +81,7 @@ def drive_to(pose):
 
     speed_pub.publish(Float32MultiArray(data=[0.0, 0.0]))
 
+#Turns to a desired heading using PID control
 def turn_to(heading): 
     prev_error = calc_angle_diff(heading, curr_pose[2])
     tolerance = 0.1
@@ -105,6 +110,7 @@ def turn_to(heading):
     
     speed_pub.publish(Float32MultiArray(data=[0.0, 0.0]))
 
+#Uses both the drive to and turn to functions to turn to the point, drive to it, then turn to the desired heaading at the end
 def drive_to_point(desired : Float32MultiArray):
     desired_pose = desired.data
     desired_heading = atan2(desired_pose[1] - curr_pose[1], desired_pose[0] - curr_pose[0])
