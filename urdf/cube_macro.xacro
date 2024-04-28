@@ -1,0 +1,218 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <!-- Set constants -->
+  <!-- Mass in kg, distance in meter -->
+  <xacro:property name="cube_length" value="0.1524" />
+  <xacro:property name="cube_mass" value="1" />
+
+  <xacro:property name="wheel_radius" value="0.01905"/>
+  <xacro:property name="wheel_length" value="0.00635"/>
+  <xacro:property name="wheel_mass" value="0.1"/>
+  <xacro:property name="wheel_offset_up" value="0.015243"/>
+  <xacro:property name="wheel_offset_forward" value="0.039624"/>
+  <xacro:property name="wheel_offset_side" value="0.05041"/>
+
+  <xacro:property name="caster_radius" value="0.006"/>
+  <xacro:property name="caster_mass" value="0.1"/>
+  <xacro:property name="caster_offset_back" value="-0.0508"/>
+
+  <!-- Intertial for cube -->
+  <xacro:macro name="cube_inertial">
+    <inertial>
+      <mass value="${cube_mass}"/>
+      <inertia ixx="${cube_mass / 12 * (cube_length*cube_length*2)}" iyy="${cube_mass / 12 * (cube_length*cube_length*2)}" izz="${cube_mass / 12 * (cube_length*cube_length*2)}" ixy="0.0" ixz="0.0" iyz="0.0"/>
+    </inertial>
+  </xacro:macro>
+
+  <!-- Intertial for cylinder -->
+  <xacro:macro name="wheel_inertial">
+    <inertial>
+      <mass value="${wheel_mass}"/>
+      <inertia ixx="${wheel_mass/12 * (3*wheel_radius*wheel_radius + wheel_length*wheel_length)}" iyy="${wheel_mass/12 * (3*wheel_radius*wheel_radius + wheel_length*wheel_length)}" izz="${wheel_mass/2 * wheel_radius*wheel_radius}" ixy="0.0" ixz="0.0" iyz="0.0"/>
+    </inertial>
+  </xacro:macro>
+
+  <!-- Intertial for sphere -->
+  <xacro:macro name="caster_intertial">
+    <inertial>
+      <mass value="${caster_mass}"/>
+      <inertia ixx="${2 * caster_mass / 5 * caster_radius*caster_radius}" iyy="${2 * caster_mass / 5 * caster_radius*caster_radius}" izz="${2 * caster_mass / 5 * caster_radius*caster_radius}" ixy="0.0" ixz="0.0" iyz="0.0"/>
+    </inertial>
+  </xacro:macro>
+
+  <!-- Create cube -->
+  <xacro:macro name="cube" params="name">
+    <!-- Dummy to attach cube to and get rid of warning and stuffs -->
+    <link name="${name}_dummy">
+    </link>
+
+    <!-- Build cube shape -->
+    <link name="${name}">
+      <visual>
+        <geometry>
+          <box size="${cube_length} ${cube_length} ${cube_length}"/>
+        </geometry>
+        <!-- Lift it up a bit to avoid clipping -->
+        <origin xyz="0 0 0.08" />
+      </visual>
+      <collision>
+        <geometry>
+          <box size="${cube_length} ${cube_length} ${cube_length}"/>
+        </geometry>
+        <origin xyz="0 0 0.08" />
+      </collision>
+
+      <xacro:cube_inertial/>
+    </link>
+
+    <joint name="${name}_dummy_joint" type="fixed">
+      <parent link="${name}_dummy"/>
+      <child link="${name}"/>
+      <!-- Rotate the robot by (rotate) degrees, after converting it to radians -->
+      <origin xyz="0 0 0" rpy="0 0 ${rotate}"/>
+    </joint>
+  </xacro:macro>
+
+
+  <!-- Create wheel -->
+  <xacro:macro name="wheel" params="direction name">
+    <!-- Build the shape -->
+    <link name="${name}_${direction}_wheel">
+      <visual>
+        <geometry>
+          <cylinder length="${wheel_length}" radius="${wheel_radius}"/>
+        </geometry>
+        <origin rpy="${pi/2} 0 0"/>
+      </visual>
+      <collision>
+        <geometry>
+          <cylinder length="${wheel_length}" radius="${wheel_radius}"/>
+        </geometry>
+        <origin rpy="${pi/2} 0 0"/>
+      </collision>
+
+      <xacro:wheel_inertial/>
+    </link>
+
+    <!-- Add gazebo physics -->
+    <gazebo reference="${name}_${direction}_wheel">
+      <mu1 value="200.0"/>
+      <mu2 value="100.0"/>
+      <kp value="10000000.0" />
+      <kd value="1.0" />
+      <material>Gazebo/Grey</material>
+    </gazebo>
+
+    <!-- Attach to cube accordingly based on left/right wheel -->
+    <joint name="${name}_${direction}_wheel_joint" type="continuous">
+      <parent link="${name}"/>
+      <child link="${name}_${direction}_wheel"/>
+
+      <xacro:if value="${direction=='left'}"> 
+        <origin xyz="${wheel_offset_forward} ${wheel_offset_side} ${wheel_offset_up}" />
+      </xacro:if>
+
+      <xacro:if value="${direction=='right'}"> 
+        <origin xyz="${wheel_offset_forward} ${-wheel_offset_side} ${wheel_offset_up}" />
+      </xacro:if>
+      <axis xyz="0 1 0"/>
+    </joint>
+
+    <!-- For control -->
+    <transmission name="${name}_${direction}_wheel_trans">
+      <type>transmission_interface/SimpleTransmission</type>
+      <actuator name="${name}_${direction}_wheel_motor">
+        <mechanicalReduction>1</mechanicalReduction>
+      </actuator>
+      <joint name="${name}_${direction}_wheel_joint">
+        <hardwareInterface>hardware_interface/VelocityJointInterface</hardwareInterface>
+      </joint>
+    </transmission>
+  </xacro:macro>
+
+  <!-- Create caster -->
+  <xacro:macro name="caster" params="name">
+    <link name="${name}_caster">
+      <visual>
+        <geometry>
+          <sphere radius="${caster_radius}"/>
+        </geometry>
+      </visual>
+      <collision>
+        <geometry>
+          <sphere radius="${caster_radius}"/>
+        </geometry>
+      </collision>
+      <xacro:caster_intertial/>
+    </link>
+
+    <joint name="${name}_to_caster" type="fixed">
+      <parent link="${name}"/>
+      <child link="${name}_caster"/>
+      <origin xyz="${caster_offset_back} 0 0" />
+    </joint>
+
+    <gazebo reference="${name}_caster">
+      <mu1 value="0.0"/>
+      <mu2 value="0.0"/>
+      <kp value="10000000.0" />
+      <kd value="1.0" />
+      <material>Gazebo/Grey</material>
+    </gazebo>
+  </xacro:macro>
+
+  <!-- Create camera -->
+  <xacro:macro name="cam" params="name">
+      <link name="${name}_camera_link">
+          <visual>
+              <geometry>
+                  <box size="0.010 0.03 0.03"/>
+              </geometry>
+          </visual>
+      </link>
+
+      <joint name="${name}_camera_joint" type="fixed">
+          <parent link="${name}"/>
+          <child link="${name}_camera_link"/>
+          <origin xyz="0.0762 0 0.0762" />
+      </joint>
+
+      <link name="${name}_camera_link_optical"></link>
+
+      <joint name="${name}_camera_optical_joint" type="fixed">
+          <parent link="${name}_camera_link"/>
+          <child link="${name}_camera_link_optical"/>
+          <origin xyz="0 0 0" rpy="${-pi/2} 0 ${-pi/2}"/>
+      </joint>
+
+      <gazebo reference="${name}_camera_link">
+          <material>Gazebo/Red</material>
+
+          <sensor name="${name}_cam" type="camera">
+              <pose> 0 0 0 0 0 0 </pose>
+              <visualize>false</visualize>
+              <update_rate>10</update_rate>
+              <camera>
+                  <horizontal_fov>1.0821</horizontal_fov>
+                  <vertical_fov>0.820305</vertical_fov>
+                  <image>
+                      <format>R8G8B8</format>
+                      <width>640</width>
+                      <height>480</height>
+                  </image>
+                  <clip>
+                      <near>0.05</near>
+                      <far>8.0</far>
+                  </clip>
+              </camera>
+              <plugin name="${name}_camera_controller" filename="libgazebo_ros_camera.so">
+                  <cameraName>camera</cameraName>
+                  <imageTopicName>image_raw</imageTopicName>
+                  <cameraInfoTopicName>camera_info</cameraInfoTopicName>
+                  <frameName>${name}_camera_link</frameName>
+                  <!-- <frame_name>camera_link_optical</frame_name> -->
+              </plugin>
+          </sensor>
+      </gazebo>
+  </xacro:macro>
+</robot>
