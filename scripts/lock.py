@@ -11,6 +11,7 @@ eff_pub = rospy.Publisher("set_effort", Float32MultiArray, queue_size=1)
 cam_readings = None # heading and distance
 lock_on = True
 
+#Updates the camera readings for the main control loop
 def update_reading(cam : Float32MultiArray):
     global cam_readings
     data = cam.data
@@ -21,7 +22,9 @@ def update_reading(cam : Float32MultiArray):
         cam_readings = None
 
 def control_loop():
+    #Variable for tolerance of the desired point in meters
     tolerance = 0.1
+    #Variable that sets maximum velocity 
     vel = 1
     head = None
     sign_of_head = None
@@ -30,11 +33,13 @@ def control_loop():
     sleep(1)
     grip_pub.publish(Bool(data=True))
 
+    #while loop that continuously runs the camera
     while(not rospy.is_shutdown() and lock_on):
         if cam_readings != None:
             head = cam_readings[0]
             dist = cam_readings[1]
 
+            #Determines sign of the angle you have to turn to
             sign_of_head = head / abs(head) if head != 0 else (head + 1) / (abs(head) + 1)
 
             rospy.logerr(cam_readings)
@@ -49,14 +54,17 @@ def control_loop():
             #     eff_pub.publish(Float32MultiArray(data=[0.0, 0.0]))
     
             if dist > 0.01:
+                #if camera readings above 1cm open the gripper and keep open
                 speed_pub.publish(Float32MultiArray(data=[0.05, 0.0]))
                 sleep(dist/0.1)
                 grip_pub.publish(Bool(data=True))
             else: 
+                #if camera readings below 1cm close the gripper
                 speed_pub.publish(Float32MultiArray(data=[0.0, 0.0]))
                 sleep(1)
                 grip_pub.publish(Bool(data=False))
         else:
+            #if no camera readings close the gripper
             speed_pub.publish(Float32MultiArray(data=[0.0, 0.0]))
             sleep(1)
             grip_pub.publish(Bool(data=False))
