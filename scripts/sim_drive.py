@@ -9,7 +9,8 @@ from gazebo_msgs.msg import LinkStates
 from tf.transformations import euler_from_quaternion
 from std_msgs.msg import Int64, Int64MultiArray
 
-# Convert CBS coordinates to real world coordinates and vice versa. 39.37 for inches and meter conversion. 15 is for robot radius 3in*2 + 4.5in*2 cspace
+# Convert CBS coordinates to real world coordinates and vice versa. 
+# 39.37 for inches and meter conversion. 15 is for robot radius 3in*2 + 4.5in*2 cspace
 def path2world(path_pos):
     return (float(path_pos) * 15.0 / 39.37)
 
@@ -23,6 +24,7 @@ def normalize(angle):
         angle -= 2 * np.pi
     return angle
 
+# Not sure why it was coded this way (C++ is great)
 class Main():
     def __init__(self):
         self.cube_id = rospy.get_param('drive/robot_name')       
@@ -82,7 +84,6 @@ class Main():
     def locking(self):
         self.turn(- self.heading)
 
-        # fuck this shite, could make it dynamic w apriltag reading
         if self.cube_id < 6:
             self.drive(0.24 * abs(self.cube_id-7), 0.05)
         elif self.cube_id < 5:
