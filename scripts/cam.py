@@ -2,11 +2,10 @@
 #/bin/python3.9
 import cv2
 from dt_apriltags import Detector
-import numpy as np
 import math
-import collections
 import rospy
-from std_msgs.msg import Float32MultiArray, Bool
+from std_msgs.msg import Float32MultiArray
+from time import sleep
 # from CRoCs.msg import April
 
 
@@ -48,7 +47,7 @@ class AprilCam():
                 distance = z
                 hor_distance = x
                 hyp = math.sqrt(distance**2 + hor_distance**2)  # Range to april tag
-                bearing = math.atan2(hor_distance, distance)
+                bearing = -math.atan2(hor_distance, distance)
 
                 # print(id)
                 # Return an array of [ID, range(m), bearing(radian)]
@@ -68,14 +67,18 @@ def measure():
 
     rospy.loginfo("Starting Arducam node")
     cam = AprilCam()
+    no_tag = False
 
     while not rospy.is_shutdown():
-        rospy.sleep(0.15)              # Sleep for 5ms
+        sleep(0.05)              # Sleep for 5ms
         tags = cam.get_measurements()
         if tags:
+            no_tag = False
             for measurement in tags:
                 range_pub.publish(measurement)
-        else:
+                #rospy.logerr(measurement)
+        elif not no_tag:
+            no_tag = True
             range_pub.publish(Float32MultiArray(data=[]))
 
 if __name__ == "__main__":

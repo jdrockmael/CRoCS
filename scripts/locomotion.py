@@ -1,8 +1,8 @@
 #!/usr/bin/python3
 import rospy
 from time import sleep
-from std_msgs.msg import Float32MultiArray
-from gpiozero import Device, PhaseEnableMotor, RotaryEncoder
+from std_msgs.msg import Float32MultiArray, Bool
+from gpiozero import Device, PhaseEnableMotor, RotaryEncoder, Servo
 from gpiozero.pins.pigpio import PiGPIOFactory
 from math import pi, sin, cos
 from threading import Thread, Lock
@@ -11,6 +11,8 @@ motor_left = None
 motor_right = None
 encoder_left = None
 encoder_right = None
+servo1 = None
+servo2 = None
 
 desired_vel = None
 curr_vel = (0.0, 0.0)
@@ -25,6 +27,8 @@ def init():
     global motor_right
     global encoder_left
     global encoder_right
+    global servo1
+    global servo2
 
     Device.pin_factory = PiGPIOFactory()
 
@@ -34,8 +38,32 @@ def init():
     encoder_left = RotaryEncoder(27, 22, max_steps = 256000)
     encoder_right = RotaryEncoder(5, 6, max_steps = 256000)
 
+    servo1 = Servo(25)
+    servo2 = Servo(8)
+
     motor_left.stop()
     motor_right.stop()
+
+def kill_motors(turn_off : Bool):
+    global desired_vel
+    global curr_vel
+
+    if turn_off.data:
+        motor_left.stop()
+        motor_right.stop()
+
+        with desired_lock:
+            desired_vel = None
+
+def open_grip(want_open : Bool):
+    if want_open.data:
+        servo1.value = -1
+        servo2.value = 1
+        sleep(2)
+    else:
+        servo1.value = 1
+        servo2.value = -1
+        sleep(2)
 
 def get_distance():
     tick_per_rev = 128.0
@@ -70,6 +98,11 @@ def drive_one_wheel(pwd, is_left):
         motor_right.backward(pwd)
     else:
         motor_right.forward(-pwd)
+
+def set_eff(efforts : Float32MultiArray):
+    l, r = efforts.data
+    drive_one_wheel(l, True)
+    drive_one_wheel(r, False)
 
 def calc_fk(wheel_vel, prev_pose, delta_t):
     l = 0.101 # meters
@@ -175,6 +208,9 @@ if __name__ == '__main__':
     rospy.init_node('locomotion')
     init()
     rospy.Subscriber("robot_twist", Float32MultiArray, update_desired)
+    rospy.Subscriber("kill_motors", Bool, kill_motors)
+    rospy.Subscriber("gripper_control", Bool, open_grip)
+    rospy.Subscriber("set_effort", Float32MultiArray, set_eff)
 
     vel_thread = Thread(target=monitor_pose)
     vel_thread.start()

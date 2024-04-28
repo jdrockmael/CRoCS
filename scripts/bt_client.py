@@ -2,8 +2,6 @@ from enum import Enum
 import bluetooth
 import threading
 from time import sleep
-import rospy 
-from std_msgs.msg import Float32MultiArray
 
 # list of bt mac addresses that will be running server
 class server_macs(Enum):
@@ -13,12 +11,12 @@ class server_macs(Enum):
 # lock so threads can share a variable 
 lock = threading.Lock()
 
-pose_pub = rospy.Publisher("target_pose", Float32MultiArray, queue_size=1)
 # shared variable so recieving thread can end when sending thread ends
 # false if sending thread has not ended and true if it has
 flag = False
 
 locked = False
+des_pos = [0, 0, 0]
 req_pos = [0, 0, 0]
 # Finds which of the above listed macs are hosting the server and connect
 # returns the sockect object used to send messages
@@ -59,22 +57,30 @@ def rec_msg(socket):
 
     while not flag:
         data = socket.recv(1024)
-        if b'path' in data:
+        if b'requested' in data:
             does = data.split(b'[')
             this = does[1].split(b']')
-            work = this[0].split(b', ')
-            x, y = float(work[0]), float(work[1])
-            theta = 0.0
+            work = this[0].split(b',')
+            x, y, theta = work[0], work[1], work[2]
             req_pos = [x, y, theta]
-            pose_pub.publish(Float32MultiArray(data=req_pos))
-            print(x, y, theta)
+            print(x + y + theta)
+
+
+        if b'desired' in data:
+            does = data.split(b'[')
+            this = does[1].split(b']')
+            work = this[0].split(b',')
+            x, y, theta = work[0], work[1], work[2]
+            des_pos = [x, y, theta]
+            print(x + y + theta)
+
         
         if b'locked' in data:
            locked = True
            print(b'Locked')
 
         if data:
-           print(data)
+            print(data)
            
 # sends given messages over bluetooth
 # takes the socket the server is connected to
@@ -90,7 +96,6 @@ def send_msg(socket):
                 break
 
 if __name__ == '__main__':
-    rospy.init_node('comm')
     # make sockect
     s = find_and_connect(4)
     
@@ -101,7 +106,6 @@ if __name__ == '__main__':
     # start threads
     rec_thread.start()
     send_thread.start()
-    rospy.spin()
 
     # kill threads once they end
     rec_thread.join()

@@ -2,31 +2,10 @@
 import rospy
 from std_msgs.msg import Float32MultiArray
 from time import sleep
-from math import atan2, sqrt, sin, cos, pi
+from math import atan2, sqrt, pi
 
 curr_pose = [0.0, 0.0, 0.0]
-eff_pub = rospy.Publisher("robot_twist", Float32MultiArray, queue_size=1)
-
-# def control_loop(cam : Float32MultiArray):
-#     data = cam.data
-#     delta_t = 0.001
-
-#     if len(data) != 0:
-#         heading_err = data[2] - 0.0
-#         distance_err = data[1] - 0.2 # in meters
-        
-#         linear = distance_err * 5
-#         angular_l = heading_err * 1
-#         angular_r = -heading_err * 1
-
-#         l_eff = linear + angular_l
-#         r_eff = linear + angular_r
-
-#         motor.drive(l_eff, r_eff)
-
-#         sleep(delta_t)
-#     else:
-#         motor.stop()
+speed_pub = rospy.Publisher("robot_twist", Float32MultiArray, queue_size=1)
 
 def calc_angle_diff(desired, actual):
     diff = desired - actual
@@ -57,12 +36,12 @@ def drive_to(pose):
 
     lin_p = 1
     lin_i = 0.5
-    lin_d = 0
+    lin_d = 0.05
 
-    ang_p = 1
-    ang_i = 0.5
+    ang_p = 3
+    ang_i = 0.6
 
-    tolerance = 0.01 
+    tolerance = 0.1
     delta_t = 0.05
 
     linear_area = 0.0
@@ -70,11 +49,9 @@ def drive_to(pose):
 
     done = 1
     
-    while(prev_distance > tolerance or prev_distance < -tolerance):
+    while(abs(prev_distance) > tolerance):
         curr_distance = calc_distance((curr_pose[0], curr_pose[1]), (pose[0], pose[1]))
         curr_err_heading = calc_angle_diff(desired_heading, curr_pose[2])
-
-        rospy.logerr(curr_distance)
         
         linear_area += curr_distance * delta_t * done
         
@@ -93,12 +70,12 @@ def drive_to(pose):
 
         angular_eff = angular_eff_p + angular_eff_i
 
-        eff_pub.publish(Float32MultiArray(data=[linear_eff, angular_eff]))
+        speed_pub.publish(Float32MultiArray(data=[linear_eff, angular_eff]))
 
         prev_distance = curr_distance
         sleep(delta_t)
 
-    eff_pub.publish(Float32MultiArray(data=[0.0, 0.0]))
+    speed_pub.publish(Float32MultiArray(data=[0.0, 0.0]))
 
 def turn_to(heading): 
     prev_error = calc_angle_diff(heading, curr_pose[2])
@@ -113,7 +90,6 @@ def turn_to(heading):
 
     while(abs(prev_error) > tolerance):
         curr_error = calc_angle_diff(heading, curr_pose[2])
-        rospy.logerr(curr_error)
         area += curr_error * delta_t
         
         angular_err_p = curr_error *p
@@ -122,12 +98,12 @@ def turn_to(heading):
 
         omega = angular_err_p + angular_err_i + angular_err_d
 
-        eff_pub.publish(Float32MultiArray(data=[0.0, omega]))
+        speed_pub.publish(Float32MultiArray(data=[0.0, omega]))
 
         prev_error = curr_error
         sleep(delta_t)
     
-    eff_pub.publish(Float32MultiArray(data=[0.0, 0.0]))
+    speed_pub.publish(Float32MultiArray(data=[0.0, 0.0]))
 
 def drive_to_point(desired : Float32MultiArray):
     desired_pose = desired.data
@@ -136,7 +112,9 @@ def drive_to_point(desired : Float32MultiArray):
 
     turn_to(desired_heading)
     drive_to(desired_pose)
-    turn_to(desired_pose[2])
+
+    if len(desired_pose) >= 3:
+        turn_to(desired_pose[2])
 
 if __name__ == '__main__':
     rospy.init_node('ik')
